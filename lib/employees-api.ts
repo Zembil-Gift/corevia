@@ -52,6 +52,8 @@ export interface EmployeeAttendanceApi {
   updatedAt: string
 }
 
+// Manager-facing payroll row. amountMinor is the net (disbursed) amount; the breakdown
+// exposes the government income tax and the employer-paid 11% pension the company remits.
 export interface EmployeePaymentApi {
   id: number
   employeeId: number
@@ -59,11 +61,34 @@ export interface EmployeePaymentApi {
   cycleStartDate: string
   dueDate: string
   amountMinor: number
+  grossAmountMinor: number
+  incomeTaxMinor: number
+  employeePensionMinor: number
+  employerPensionMinor: number
+  retirementSavingMinor: number
   paidAmountMinor: number | null
   status: PaymentStatusApi
   transactionReference: string | null
   paidAt: string | null
   lastReminderSentAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+// Employee-facing payroll row. taxMinor is the variable income tax + the 7% pension;
+// retirementSavingMinor is the total retirement saving (7% + 11%).
+export interface EmployeePaymentSelfApi {
+  id: number
+  cycleStartDate: string
+  dueDate: string
+  grossAmountMinor: number
+  netAmountMinor: number
+  taxMinor: number
+  retirementSavingMinor: number
+  paidAmountMinor: number | null
+  status: PaymentStatusApi
+  transactionReference: string | null
+  paidAt: string | null
   createdAt: string
   updatedAt: string
 }

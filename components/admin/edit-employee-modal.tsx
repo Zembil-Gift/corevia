@@ -224,7 +224,7 @@ export function EditEmployeeModal({
               </div>
               <div className="space-y-2">
                 <Label htmlFor="edit-employee-salary-amount" className="text-zinc-200">
-                  Salary amount
+                  Gross salary amount
                 </Label>
                 <Input
                   id="edit-employee-salary-amount"
@@ -235,6 +235,9 @@ export function EditEmployeeModal({
                   onChange={(e) => setSalaryAmountMajor(e.target.value)}
                   className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
                 />
+                <p className="text-xs text-zinc-500">
+                  Enter the gross salary. Income tax and pension are deducted automatically.
+                </p>
               </div>
             </div>
             <div className="space-y-2">

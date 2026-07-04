@@ -3,11 +3,11 @@
 import { useCallback, useEffect, useState } from "react"
 import { CreditCard, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import type { EmployeePaymentApi } from "@/lib/employees-api"
+import type { EmployeePaymentSelfApi } from "@/lib/employees-api"
 
 export function EmployeePayments() {
-  const [payments, setPayments] = useState<EmployeePaymentApi[]>([])
-  const [paidPayments, setPaidPayments] = useState<EmployeePaymentApi[]>([])
+  const [payments, setPayments] = useState<EmployeePaymentSelfApi[]>([])
+  const [paidPayments, setPaidPayments] = useState<EmployeePaymentSelfApi[]>([])
   const [paymentsLoading, setPaymentsLoading] = useState(false)
   const [paymentsError, setPaymentsError] = useState("")
   const [paymentTab, setPaymentTab] = useState<"all" | "paid">("all")
@@ -48,11 +48,10 @@ export function EmployeePayments() {
   const formatMoney = (amountMinor: number | null) =>
     amountMinor === null
       ? "-"
-      : new Intl.NumberFormat(undefined, {
-          style: "currency",
-          currency: "USD",
+      : `${new Intl.NumberFormat(undefined, {
           minimumFractionDigits: 2,
-        }).format(amountMinor / 100)
+          maximumFractionDigits: 2,
+        }).format(amountMinor / 100)} ETB`
 
   return (
     <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
@@ -101,14 +100,20 @@ export function EmployeePayments() {
       ) : paymentRows.length === 0 ? (
         <p className="text-sm text-zinc-500">No payment records found.</p>
       ) : (
-        <div className="overflow-hidden rounded-lg border border-zinc-800">
+        <div className="overflow-x-auto rounded-lg border border-zinc-800">
+          <p className="border-b border-zinc-800 bg-zinc-900/60 px-3 py-2 text-xs text-zinc-500">
+            Tax = income tax + your 7% pension. Retirement = your 7% + the company&apos;s 11%. Net is what you receive.
+          </p>
           <table className="w-full text-left text-sm">
             <thead className="bg-zinc-900">
               <tr className="border-b border-zinc-800">
                 <th className="px-3 py-2 text-zinc-400">No.</th>
                 <th className="px-3 py-2 text-zinc-400">Cycle</th>
                 <th className="px-3 py-2 text-zinc-400">Due</th>
-                <th className="px-3 py-2 text-zinc-400">Amount</th>
+                <th className="px-3 py-2 text-zinc-400">Gross</th>
+                <th className="px-3 py-2 text-zinc-400">Tax</th>
+                <th className="px-3 py-2 text-zinc-400">Retirement</th>
+                <th className="px-3 py-2 text-zinc-400">Net</th>
                 <th className="px-3 py-2 text-zinc-400">Status</th>
                 <th className="px-3 py-2 text-zinc-400">Tx-Ref</th>
               </tr>
@@ -125,7 +130,16 @@ export function EmployeePayments() {
                   </td>
                   <td className="px-3 py-2 text-zinc-300">{payment.dueDate}</td>
                   <td className="px-3 py-2 text-zinc-300">
-                    {formatMoney(payment.amountMinor)}
+                    {formatMoney(payment.grossAmountMinor)}
+                  </td>
+                  <td className="px-3 py-2 text-zinc-300">
+                    {formatMoney(payment.taxMinor)}
+                  </td>
+                  <td className="px-3 py-2 text-zinc-300">
+                    {formatMoney(payment.retirementSavingMinor)}
+                  </td>
+                  <td className="px-3 py-2 font-medium text-white">
+                    {formatMoney(payment.netAmountMinor)}
                   </td>
                   <td className="px-3 py-2">
                     <span

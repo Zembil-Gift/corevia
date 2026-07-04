@@ -54,11 +54,10 @@ export default function AdminEmployeesPage() {
 
   const formatSalaryAmount = (amountMinor: number | null | undefined) => {
     if (typeof amountMinor !== "number") return "-"
-    return new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency: "USD",
+    return `${new Intl.NumberFormat(undefined, {
       minimumFractionDigits: 2,
-    }).format(amountMinor / 100)
+      maximumFractionDigits: 2,
+    }).format(amountMinor / 100)} ETB`
   }
 
   const handleDelete = async (employee: EmployeeApi) => {
@@ -115,7 +114,7 @@ export default function AdminEmployeesPage() {
                   <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Name</th>
                   <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Email</th>
                   <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Position</th>
-                  <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Salary</th>
+                  <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Gross salary</th>
                   <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Status</th>
                   <th className="w-24 px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Actions</th>
                 </tr>

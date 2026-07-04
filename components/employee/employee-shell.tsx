@@ -259,11 +259,10 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
   const formatMoney = (amountMinor: number | null) =>
     amountMinor === null
       ? "-"
-      : new Intl.NumberFormat(undefined, {
-          style: "currency",
-          currency: "USD",
+      : `${new Intl.NumberFormat(undefined, {
           minimumFractionDigits: 2,
-        }).format(amountMinor / 100)
+          maximumFractionDigits: 2,
+        }).format(amountMinor / 100)} ETB`
 
   if (loading) {
     return (
@@ -350,7 +349,7 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
                 {(employee.salaryDate ||
                   typeof employee.salaryAmountMinor === "number") && (
                   <p className="mt-1 text-sm text-zinc-400">
-                    Salary: {formatMoney(employee.salaryAmountMinor ?? null)}
+                    Gross salary: {formatMoney(employee.salaryAmountMinor ?? null)}
                     {employee.salaryDate ? ` • Due ${employee.salaryDate}` : ""}
                   </p>
                 )}

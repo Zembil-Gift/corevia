@@ -86,11 +86,10 @@ export default function AdminPaymentsPage() {
   const formatMoney = (amountMinor: number | null) =>
     amountMinor === null
       ? "-"
-      : new Intl.NumberFormat(undefined, {
-          style: "currency",
-          currency: "USD",
+      : `${new Intl.NumberFormat(undefined, {
           minimumFractionDigits: 2,
-        }).format(amountMinor / 100)
+          maximumFractionDigits: 2,
+        }).format(amountMinor / 100)} ETB`
 
   const handleMarkPaid = async (payment: EmployeePaymentApi) => {
     const transactionReference = (transactionRefs[payment.id] ?? "").trim()
@@ -208,14 +207,19 @@ export default function AdminPaymentsPage() {
           No paid payrolls found.
         </div>
       ) : activeTab === "due" ? (
-        <div className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/50">
+        <div className="overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-900/50">
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-zinc-800 bg-zinc-900">
                 <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Employee</th>
                 <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Cycle</th>
                 <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Due date</th>
-                <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Amount</th>
+                <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Gross</th>
+                <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Income tax</th>
+                <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Pension 7%</th>
+                <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Employer 11%</th>
+                <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Retirement</th>
+                <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Net</th>
                 <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Status</th>
                 <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Mark paid</th>
               </tr>
@@ -226,7 +230,12 @@ export default function AdminPaymentsPage() {
                   <td className="px-4 py-3 text-zinc-300">{payment.employeeName}</td>
                   <td className="px-4 py-3 text-zinc-300">{payment.cycleStartDate}</td>
                   <td className="px-4 py-3 text-zinc-300">{payment.dueDate}</td>
-                  <td className="px-4 py-3 text-zinc-300">{formatMoney(payment.amountMinor)}</td>
+                  <td className="px-4 py-3 text-zinc-300">{formatMoney(payment.grossAmountMinor)}</td>
+                  <td className="px-4 py-3 text-zinc-300">{formatMoney(payment.incomeTaxMinor)}</td>
+                  <td className="px-4 py-3 text-zinc-300">{formatMoney(payment.employeePensionMinor)}</td>
+                  <td className="px-4 py-3 text-zinc-300">{formatMoney(payment.employerPensionMinor)}</td>
+                  <td className="px-4 py-3 text-zinc-300">{formatMoney(payment.retirementSavingMinor)}</td>
+                  <td className="px-4 py-3 font-medium text-white">{formatMoney(payment.amountMinor)}</td>
                   <td className="px-4 py-3">
                     <span className="inline-flex rounded-full bg-amber-500/20 px-2.5 py-0.5 text-xs font-medium text-amber-400">
                       {payment.status}
@@ -274,14 +283,19 @@ export default function AdminPaymentsPage() {
           </table>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/50">
+        <div className="overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-900/50">
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-zinc-800 bg-zinc-900">
                 <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Employee</th>
                 <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Cycle</th>
                 <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Due date</th>
-                <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Amount</th>
+                <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Gross</th>
+                <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Income tax</th>
+                <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Pension 7%</th>
+                <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Employer 11%</th>
+                <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Retirement</th>
+                <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Net</th>
                 <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Paid amount</th>
                 <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Status</th>
                 <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">
@@ -296,7 +310,12 @@ export default function AdminPaymentsPage() {
                   <td className="px-4 py-3 text-zinc-300">{payment.employeeName}</td>
                   <td className="px-4 py-3 text-zinc-300">{payment.cycleStartDate}</td>
                   <td className="px-4 py-3 text-zinc-300">{payment.dueDate}</td>
-                  <td className="px-4 py-3 text-zinc-300">{formatMoney(payment.amountMinor)}</td>
+                  <td className="px-4 py-3 text-zinc-300">{formatMoney(payment.grossAmountMinor)}</td>
+                  <td className="px-4 py-3 text-zinc-300">{formatMoney(payment.incomeTaxMinor)}</td>
+                  <td className="px-4 py-3 text-zinc-300">{formatMoney(payment.employeePensionMinor)}</td>
+                  <td className="px-4 py-3 text-zinc-300">{formatMoney(payment.employerPensionMinor)}</td>
+                  <td className="px-4 py-3 text-zinc-300">{formatMoney(payment.retirementSavingMinor)}</td>
+                  <td className="px-4 py-3 font-medium text-white">{formatMoney(payment.amountMinor)}</td>
                   <td className="px-4 py-3 text-zinc-300">{formatMoney(payment.paidAmountMinor)}</td>
                   <td className="px-4 py-3">
                     <span className="inline-flex rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-xs font-medium text-emerald-400">
