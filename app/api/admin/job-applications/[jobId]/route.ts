@@ -1,0 +1,41 @@
+import { NextRequest, NextResponse } from "next/server"
+import { getAdminToken } from "@/lib/auth"
+
+const CMS_BASE_URL = process.env.NEXT_PUBLIC_CMS_BASE_URL!
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ jobId: string }> }
+) {
+  const token = getAdminToken(request.headers.get("cookie"))
+  if (!token) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  const { jobId } = await params
+  if (!jobId) {
+    return NextResponse.json({ error: "Missing job id" }, { status: 400 })
+  }
+
+  try {
+    const res = await fetch(`${CMS_BASE_URL}/manager/job-applications/${encodeURIComponent(jobId)}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    })
+
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      return NextResponse.json(
+        { error: (data as { message?: string }).message ?? "Failed to fetch job applicants" },
+        { status: res.status }
+      )
+    }
+
+    return NextResponse.json(data)
+  } catch (err) {
+    console.error("Admin job applicants error:", err)
+    return NextResponse.json({ error: "Failed to fetch job applicants" }, { status: 500 })
+  }
+}
