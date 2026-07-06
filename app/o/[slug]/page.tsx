@@ -87,7 +87,7 @@ export default async function OrgProfilePage({
     <>
       {/* Hero */}
       <section className="relative">
-        <div className="h-40 w-full overflow-hidden sm:h-56">
+        <div className="relative h-40 w-full overflow-hidden sm:h-56">
           {org.coverImageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={org.coverImageUrl} alt="" className="h-full w-full object-cover" />
@@ -100,9 +100,28 @@ export default async function OrgProfilePage({
               }}
             />
           )}
+
+          {socials.length > 0 && (
+            <div className="pointer-events-none absolute inset-x-0 bottom-3 z-20">
+              <div className="mx-auto flex max-w-5xl justify-end gap-2 px-6">
+                {socials.map((s) => (
+                  <a
+                    key={s.label}
+                    href={s.href!}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    aria-label={s.label}
+                    className="pointer-events-auto grid h-9 w-9 place-items-center rounded-lg border border-white/20 bg-black/40 text-white backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-400/60 hover:bg-black/60 hover:text-emerald-300 hover:shadow-[0_0_16px_rgba(16,185,129,0.75)]"
+                  >
+                    <s.icon className="h-4 w-4" />
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
-        <div className="mx-auto max-w-5xl px-6">
+        <div className="relative z-10 mx-auto max-w-5xl px-6">
           <div className="-mt-12 flex flex-col gap-4 sm:-mt-14 sm:flex-row sm:items-end">
             {org.logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -195,26 +214,6 @@ export default async function OrgProfilePage({
                     </li>
                   ))}
                 </ul>
-              </div>
-            )}
-
-            {socials.length > 0 && (
-              <div className="rounded-2xl border border-border bg-card p-5">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Follow</h3>
-                <div className="mt-3 flex gap-2">
-                  {socials.map((s) => (
-                    <a
-                      key={s.label}
-                      href={s.href!}
-                      target="_blank"
-                      rel="noreferrer noopener"
-                      aria-label={s.label}
-                      className="grid h-9 w-9 place-items-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-emerald-500/40 hover:text-emerald-400"
-                    >
-                      <s.icon className="h-4 w-4" />
-                    </a>
-                  ))}
-                </div>
               </div>
             )}
           </aside>

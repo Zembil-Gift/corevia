@@ -3,7 +3,7 @@ import { ArrowRight, CheckCircle2 } from "lucide-react"
 import { brand } from "@/lib/brand"
 import { DashboardPreview } from "./dashboard-preview"
 
-const bullets = ["No credit card required", "14-day free trial", "Cancel anytime"]
+const bullets = [ "31-day free trial"]
 
 export function Hero() {
   return (
