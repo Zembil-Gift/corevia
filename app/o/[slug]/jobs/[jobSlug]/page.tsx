@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { ArrowLeft, MapPin, Briefcase } from "lucide-react"
-import { fetchOrgJobBySlug } from "@/lib/org-content-api"
+import { fetchOrgJobBySlug, fetchOrgInfo } from "@/lib/org-content-api"
 import { formatJobEmploymentType } from "@/lib/jobs-api"
 
 export default async function OrgJobDetailPage({
@@ -10,16 +10,19 @@ export default async function OrgJobDetailPage({
   params: Promise<{ slug: string; jobSlug: string }>
 }) {
   const { slug, jobSlug } = await params
-  const job = await fetchOrgJobBySlug(slug, jobSlug)
+  const [job, org] = await Promise.all([
+    fetchOrgJobBySlug(slug, jobSlug),
+    fetchOrgInfo(slug),
+  ])
   if (!job) notFound()
 
   return (
-    <article className="max-w-2xl">
+    <article className="mx-auto max-w-3xl px-6 py-10">
       <Link
-        href={`/o/${slug}/jobs`}
+        href={`/o/${slug}#jobs`}
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
-        <ArrowLeft className="h-4 w-4" /> All jobs
+        <ArrowLeft className="h-4 w-4" /> Back to {org?.name ?? "company"}
       </Link>
 
       <h1 className="mt-4 text-2xl font-bold tracking-tight text-foreground">{job.title}</h1>

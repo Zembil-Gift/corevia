@@ -130,7 +130,7 @@ export default function AdminPaymentsPage() {
     <div>
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-white">Payroll</h1>
-        <p className="mt-1 text-zinc-400">Review due and paid payrolls.</p>
+
       </div>
 
       <div className="mb-4 flex gap-2">

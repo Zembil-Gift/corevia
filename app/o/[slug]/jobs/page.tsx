@@ -2,6 +2,7 @@ import Link from "next/link"
 import { MapPin, Briefcase } from "lucide-react"
 import { fetchOrgJobs } from "@/lib/org-content-api"
 import { formatJobEmploymentType } from "@/lib/jobs-api"
+import { OrgSubShell } from "@/components/org/org-subpage"
 
 export default async function OrgJobsPage({
   params,
@@ -11,12 +12,12 @@ export default async function OrgJobsPage({
   const { slug } = await params
   const jobs = await fetchOrgJobs(slug)
 
-  if (jobs.length === 0) {
-    return <p className="text-sm text-muted-foreground">No open positions right now.</p>
-  }
-
   return (
-    <div className="space-y-3">
+    <OrgSubShell slug={slug} title="Open positions">
+      {jobs.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No open positions right now.</p>
+      ) : (
+        <div className="space-y-3">
       {jobs.map((job) => (
         <Link
           key={job.id}
@@ -41,8 +42,10 @@ export default async function OrgJobsPage({
               </span>
             )}
           </div>
-        </Link>
-      ))}
-    </div>
+            </Link>
+          ))}
+        </div>
+      )}
+    </OrgSubShell>
   )
 }

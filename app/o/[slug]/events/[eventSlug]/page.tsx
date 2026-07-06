@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { ArrowLeft, MapPin, CalendarDays, Globe } from "lucide-react"
-import { fetchOrgEventBySlug } from "@/lib/org-content-api"
+import { fetchOrgEventBySlug, fetchOrgInfo } from "@/lib/org-content-api"
 
 function formatDate(value?: string) {
   if (!value) return null
@@ -20,19 +20,22 @@ export default async function OrgEventDetailPage({
   params: Promise<{ slug: string; eventSlug: string }>
 }) {
   const { slug, eventSlug } = await params
-  const ev = await fetchOrgEventBySlug(slug, eventSlug)
+  const [ev, org] = await Promise.all([
+    fetchOrgEventBySlug(slug, eventSlug),
+    fetchOrgInfo(slug),
+  ])
   if (!ev) notFound()
 
   const start = formatDate(ev.startDate)
   const end = formatDate(ev.endDate)
 
   return (
-    <article className="max-w-2xl">
+    <article className="mx-auto max-w-3xl px-6 py-10">
       <Link
-        href={`/o/${slug}/events`}
+        href={`/o/${slug}#events`}
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
-        <ArrowLeft className="h-4 w-4" /> All events
+        <ArrowLeft className="h-4 w-4" /> Back to {org?.name ?? "company"}
       </Link>
 
       <h1 className="mt-4 text-2xl font-bold tracking-tight text-foreground">{ev.title}</h1>

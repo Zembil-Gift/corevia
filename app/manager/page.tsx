@@ -1,182 +1,142 @@
-import Link from "next/link"
 import { headers } from "next/headers"
 import { getAdminToken } from "@/lib/auth"
+import { DashboardView, type DashboardData } from "@/components/admin/dashboard-view"
+import type { EmployeeApi, EmployeeAttendanceApi, EmployeePaymentApi } from "@/lib/employees-api"
+import type { JobApi } from "@/lib/jobs-api"
+import type { JobApplicationApi } from "@/lib/job-applications-api"
 
 const CMS_BASE_URL = process.env.NEXT_PUBLIC_CMS_BASE_URL
 
-// Tenant-scoped count helper: hits a /manager/* list endpoint with the manager's token
-// so every number reflects only the logged-in organization.
-async function managerCount(
-  path: string,
-  token: string,
-  isPublished: (row: { status?: string }) => boolean
-): Promise<{ total: number; published: number }> {
+async function managerGet<T>(path: string, token: string): Promise<T | null> {
   try {
-    const res = await fetch(`${CMS_BASE_URL}${path}?page=0&size=200`, {
+    const res = await fetch(`${CMS_BASE_URL}${path}`, {
       headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",
     })
-    if (!res.ok) return { total: 0, published: 0 }
-    const data = (await res.json()) as {
-      totalElements: number
-      content: Array<{ status?: string }>
-    }
-    return {
-      total: data.totalElements ?? 0,
-      published: (data.content ?? []).filter(isPublished).length,
-    }
+    if (!res.ok) return null
+    return (await res.json()) as T
   } catch {
-    return { total: 0, published: 0 }
+    return null
   }
+}
+
+type Page<T> = { totalElements: number; content: T[] }
+
+function todayIso(): string {
+  const now = new Date()
+  const y = now.getFullYear()
+  const m = String(now.getMonth() + 1).padStart(2, "0")
+  const d = String(now.getDate()).padStart(2, "0")
+  return `${y}-${m}-${d}`
 }
 
 export default async function AdminDashboardPage() {
   const cookieHeader = (await headers()).get("cookie")
   const token = getAdminToken(cookieHeader)
 
-  let jobsCount = 0
-  let openJobsCount = 0
-  let eventsCount = 0
-  let publishedEventsCount = 0
-  let blogsCount = 0
-  let publishedBlogsCount = 0
-  let employeesCount = 0
-  let activeEmployeesCount = 0
-  let duePaymentsCount = 0
-
-  if (token) {
-    const [jobs, events, blogs] = await Promise.all([
-      managerCount("/manager/jobs", token, (r) => r.status === "OPEN"),
-      managerCount("/manager/events", token, (r) => r.status === "PUBLISHED"),
-      managerCount("/manager/blogs", token, (r) => r.status === "PUBLISHED"),
-    ])
-    jobsCount = jobs.total
-    openJobsCount = jobs.published
-    eventsCount = events.total
-    publishedEventsCount = events.published
-    blogsCount = blogs.total
-    publishedBlogsCount = blogs.published
+  const empty: DashboardData = {
+    counts: { blogs: 0, publishedBlogs: 0, events: 0, publishedEvents: 0, jobs: 0, openJobs: 0 },
+    employees: { total: 0, active: 0 },
+    attendance: { present: 0, clockedOut: 0, absent: 0 },
+    upcomingPayroll: { count: 0, totalMinor: 0, items: [] },
+    openJobApplicants: { totalApplicants: 0, newApplicants: 0, jobs: [] },
+    orgSlug: null,
   }
 
-  // Resolve this org's slug so the "public" quick links point to /o/{slug}, not the
-  // single hard-coded public site.
-  let orgSlug: string | null = null
-  if (token) {
-    try {
-      const meRes = await fetch(`${CMS_BASE_URL}/manager/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-        cache: "no-store",
-      })
-      if (meRes.ok) orgSlug = ((await meRes.json()) as { orgSlug?: string }).orgSlug ?? null
-    } catch {
-      // non-fatal
-    }
+  if (!token) {
+    return <DashboardView data={empty} />
   }
 
-  try {
-    if (token) {
-      const [employeesRes, duePaymentsRes] = await Promise.all([
-        fetch(
-          `${process.env.NEXT_PUBLIC_CMS_BASE_URL}/manager/employees?page=0&size=100&sortBy=createdAt&direction=desc`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-            cache: "no-store",
-          }
-        ),
-        fetch(`${process.env.NEXT_PUBLIC_CMS_BASE_URL}/manager/payments/due`, {
-          headers: { Authorization: `Bearer ${token}` },
-          cache: "no-store",
-        }),
-      ])
-      if (employeesRes.ok) {
-        const employeesData = (await employeesRes.json()) as {
-          totalElements: number
-          content: Array<{ active: boolean }>
-        }
-        employeesCount = employeesData.totalElements
-        activeEmployeesCount = employeesData.content.filter((employee) => employee.active).length
-      }
-      if (duePaymentsRes.ok) {
-        const dueData = (await duePaymentsRes.json()) as unknown[]
-        duePaymentsCount = Array.isArray(dueData) ? dueData.length : 0
-      }
-    }
-  } catch {
-    // ignore
-  }
+  const [blogPage, eventPage, jobPage, employeePage, duePayments, me] = await Promise.all([
+    managerGet<Page<{ status?: string }>>("/manager/blogs?page=0&size=200", token),
+    managerGet<Page<{ status?: string }>>("/manager/events?page=0&size=200", token),
+    managerGet<Page<JobApi>>("/manager/jobs?page=0&size=200", token),
+    managerGet<Page<EmployeeApi>>(
+      "/manager/employees?page=0&size=200&sortBy=createdAt&direction=desc",
+      token
+    ),
+    managerGet<EmployeePaymentApi[]>("/manager/payments/due", token),
+    managerGet<{ orgSlug?: string }>("/manager/me", token),
+  ])
 
-  return (
-    <div>
-      <h1 className="text-2xl font-bold text-white mb-2">Dashboard</h1>
-      <p className="text-zinc-400 mb-8">Manage blog, jobs, events, and employees.</p>
+  const blogs = blogPage?.content ?? []
+  const events = eventPage?.content ?? []
+  const jobs = jobPage?.content ?? []
+  const employees = employeePage?.content ?? []
+  const due = Array.isArray(duePayments) ? duePayments : []
 
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <Link
-          href="/manager/blog"
-          className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 transition-colors hover:border-[#e78a53]/40 hover:bg-zinc-900"
-        >
-          <h2 className="text-lg font-semibold text-white mb-1">Blog</h2>
-          <p className="text-3xl font-bold text-[#e78a53]">{blogsCount}</p>
-          <p className="text-sm text-zinc-500 mt-1">{publishedBlogsCount} published</p>
-        </Link>
-        <Link
-          href="/manager/jobs"
-          className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 transition-colors hover:border-[#e78a53]/40 hover:bg-zinc-900"
-        >
-          <h2 className="text-lg font-semibold text-white mb-1">Jobs</h2>
-          <p className="text-3xl font-bold text-[#e78a53]">{jobsCount}</p>
-          <p className="text-sm text-zinc-500 mt-1">
-            {openJobsCount} open
-          </p>
-        </Link>
-        <Link
-          href="/manager/events"
-          className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 transition-colors hover:border-[#e78a53]/40 hover:bg-zinc-900"
-        >
-          <h2 className="text-lg font-semibold text-white mb-1">Events</h2>
-          <p className="text-3xl font-bold text-[#e78a53]">{eventsCount}</p>
-          <p className="text-sm text-zinc-500 mt-1">
-            {publishedEventsCount} published
-          </p>
-        </Link>
-        <Link
-          href="/manager/employees"
-          className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 transition-colors hover:border-[#e78a53]/40 hover:bg-zinc-900"
-        >
-          <h2 className="text-lg font-semibold text-white mb-1">Employees</h2>
-          <p className="text-3xl font-bold text-[#e78a53]">{employeesCount}</p>
-          <p className="text-sm text-zinc-500 mt-1">{activeEmployeesCount} active</p>
-        </Link>
-        <Link
-          href="/manager/payments"
-          className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 transition-colors hover:border-[#e78a53]/40 hover:bg-zinc-900"
-        >
-          <h2 className="text-lg font-semibold text-white mb-1">Payroll</h2>
-          <p className="text-3xl font-bold text-[#e78a53]">{duePaymentsCount}</p>
-          <p className="text-sm text-zinc-500 mt-1">due payments</p>
-        </Link>
-      </div>
+  const openJobs = jobs.filter((j) => j.status === "OPEN")
 
-      <div className="mt-10 rounded-xl border border-zinc-800 bg-zinc-900/30 p-6">
-        <h2 className="text-lg font-semibold text-white mb-4">Quick links</h2>
-        <ul className="space-y-2 text-sm">
-          <li>
-            <Link href={orgSlug ? `/o/${orgSlug}/blog` : "/blog"} className="text-[#e78a53] hover:underline">
-              View public blog →
-            </Link>
-          </li>
-          <li>
-            <Link href={orgSlug ? `/o/${orgSlug}/jobs` : "/jobs"} className="text-[#e78a53] hover:underline">
-              View public jobs →
-            </Link>
-          </li>
-          <li>
-            <Link href={orgSlug ? `/o/${orgSlug}/events` : "/events"} className="text-[#e78a53] hover:underline">
-              View public events →
-            </Link>
-          </li>
-        </ul>
-      </div>
-    </div>
+  // Attendance for today: fetch each active employee's history and look for a record
+  // dated today. Capped so the dashboard never fans out to an unbounded request count.
+  const activeEmployees = employees.filter((e) => e.active).slice(0, 60)
+  const today = todayIso()
+  const attendanceResults = await Promise.all(
+    activeEmployees.map((e) =>
+      managerGet<EmployeeAttendanceApi[]>(`/manager/employees/${e.id}/attendance`, token)
+    )
   )
+  let present = 0
+  let clockedOut = 0
+  for (const history of attendanceResults) {
+    const record = (history ?? []).find((r) => r.date === today)
+    if (!record) continue
+    if (record.clockOutAt) clockedOut += 1
+    else present += 1
+  }
+  const absent = Math.max(0, activeEmployees.length - present - clockedOut)
+
+  // Applicants across currently open jobs (top jobs by applicant volume).
+  const openJobApplicantResults = await Promise.all(
+    openJobs.slice(0, 20).map(async (job) => {
+      const apps = await managerGet<JobApplicationApi[]>(
+        `/manager/job-applications/${job.id}`,
+        token
+      )
+      const list = Array.isArray(apps) ? apps : []
+      return {
+        jobId: job.id,
+        title: job.title,
+        total: list.length,
+        newCount: list.filter((a) => a.status === "APPLIED").length,
+      }
+    })
+  )
+  const jobsWithApplicants = openJobApplicantResults
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 6)
+  const totalApplicants = openJobApplicantResults.reduce((sum, j) => sum + j.total, 0)
+  const newApplicants = openJobApplicantResults.reduce((sum, j) => sum + j.newCount, 0)
+
+  const upcomingItems = [...due]
+    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+    .slice(0, 6)
+    .map((p) => ({
+      id: p.id,
+      employeeName: p.employeeName,
+      dueDate: p.dueDate,
+      amountMinor: p.amountMinor,
+    }))
+  const totalDueMinor = due.reduce((sum, p) => sum + (p.amountMinor ?? 0), 0)
+
+  const data: DashboardData = {
+    counts: {
+      blogs: blogPage?.totalElements ?? 0,
+      publishedBlogs: blogs.filter((b) => b.status === "PUBLISHED").length,
+      events: eventPage?.totalElements ?? 0,
+      publishedEvents: events.filter((e) => e.status === "PUBLISHED").length,
+      jobs: jobPage?.totalElements ?? 0,
+      openJobs: openJobs.length,
+    },
+    employees: {
+      total: employeePage?.totalElements ?? 0,
+      active: employees.filter((e) => e.active).length,
+    },
+    attendance: { present, clockedOut, absent },
+    upcomingPayroll: { count: due.length, totalMinor: totalDueMinor, items: upcomingItems },
+    openJobApplicants: { totalApplicants, newApplicants, jobs: jobsWithApplicants },
+    orgSlug: me?.orgSlug ?? null,
+  }
+
+  return <DashboardView data={data} />
 }

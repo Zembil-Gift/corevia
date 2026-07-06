@@ -14,6 +14,24 @@ export interface OrgInfo {
   name: string
   slug: string
   plan: string
+  tagline?: string | null
+  description?: string | null
+  logoUrl?: string | null
+  coverImageUrl?: string | null
+  businessType?: string | null
+  industry?: string | null
+  companySize?: string | null
+  foundedYear?: number | null
+  phone?: string | null
+  companyEmail?: string | null
+  websiteUrl?: string | null
+  addressLine?: string | null
+  city?: string | null
+  country?: string | null
+  linkedinUrl?: string | null
+  twitterUrl?: string | null
+  facebookUrl?: string | null
+  instagramUrl?: string | null
 }
 
 interface Page<T> {

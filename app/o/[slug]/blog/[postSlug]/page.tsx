@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
-import { fetchOrgBlogBySlug } from "@/lib/org-content-api"
+import { fetchOrgBlogBySlug, fetchOrgInfo } from "@/lib/org-content-api"
 
 export default async function OrgBlogDetailPage({
   params,
@@ -9,16 +9,19 @@ export default async function OrgBlogDetailPage({
   params: Promise<{ slug: string; postSlug: string }>
 }) {
   const { slug, postSlug } = await params
-  const post = await fetchOrgBlogBySlug(slug, postSlug)
+  const [post, org] = await Promise.all([
+    fetchOrgBlogBySlug(slug, postSlug),
+    fetchOrgInfo(slug),
+  ])
   if (!post) notFound()
 
   return (
-    <article className="max-w-2xl">
+    <article className="mx-auto max-w-3xl px-6 py-10">
       <Link
-        href={`/o/${slug}/blog`}
+        href={`/o/${slug}#blog`}
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
-        <ArrowLeft className="h-4 w-4" /> All articles
+        <ArrowLeft className="h-4 w-4" /> Back to {org?.name ?? "company"}
       </Link>
 
       {post.publishedAt && (

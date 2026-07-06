@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { MapPin, CalendarDays, Globe } from "lucide-react"
 import { fetchOrgEvents } from "@/lib/org-content-api"
+import { OrgSubShell } from "@/components/org/org-subpage"
 
 export default async function OrgEventsPage({
   params,
@@ -10,12 +11,12 @@ export default async function OrgEventsPage({
   const { slug } = await params
   const events = await fetchOrgEvents(slug)
 
-  if (events.length === 0) {
-    return <p className="text-sm text-muted-foreground">No published events yet.</p>
-  }
-
   return (
-    <div className="space-y-3">
+    <OrgSubShell slug={slug} title="Events">
+      {events.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No published events yet.</p>
+      ) : (
+        <div className="space-y-3">
       {events.map((ev) => (
         <Link
           key={ev.id}
@@ -49,8 +50,10 @@ export default async function OrgEventsPage({
           {ev.description && (
             <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{ev.description}</p>
           )}
-        </Link>
-      ))}
-    </div>
+            </Link>
+          ))}
+        </div>
+      )}
+    </OrgSubShell>
   )
 }

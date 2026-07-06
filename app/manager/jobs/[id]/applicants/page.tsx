@@ -349,7 +349,7 @@ export default function AdminJobApplicantsPage() {
       <div className="mb-8 flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">Applicants</h1>
-          <p className="mt-1 text-zinc-400">Manage applicants for job #{jobId}</p>
+          {/*<p className="mt-1 text-zinc-400">Manage applicants for Software Engineer Role</p>*/}
         </div>
         <div className="flex items-center gap-3">
           <select

@@ -122,6 +122,22 @@ export default function SignupRequestsPage() {
                         {req.email}
                       </a>
                     </p>
+                    {(req.phone || req.industry || req.websiteUrl) && (
+                      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                        {req.industry && <span>{req.industry}</span>}
+                        {req.phone && <span>{req.phone}</span>}
+                        {req.websiteUrl && (
+                          <a
+                            href={req.websiteUrl}
+                            target="_blank"
+                            rel="noreferrer noopener"
+                            className="text-emerald-400 hover:underline"
+                          >
+                            {req.websiteUrl.replace(/^https?:\/\//, "")}
+                          </a>
+                        )}
+                      </div>
+                    )}
                     {req.message && (
                       <p className="mt-2 max-w-prose rounded-lg bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
                         {req.message}

@@ -16,6 +16,9 @@ export default function SignupPage() {
     company: "",
     name: "",
     email: "",
+    phone: "",
+    industry: "",
+    website: "",
     message: "",
   })
   const [isLoading, setIsLoading] = useState(false)
@@ -40,6 +43,9 @@ export default function SignupPage() {
           companyName: formData.company.trim(),
           contactName: formData.name.trim(),
           email: formData.email.trim(),
+          phone: formData.phone.trim() || undefined,
+          industry: formData.industry.trim() || undefined,
+          websiteUrl: formData.website.trim() || undefined,
           message: formData.message.trim() || undefined,
         }),
       })
@@ -85,9 +91,7 @@ export default function SignupPage() {
             <Logo className="[&_span:last-child]:text-xl" />
           </Link>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Start for free</h1>
-          <p className="mt-2 text-muted-foreground">
-            Tell us about your team. We&apos;ll set up your workspace and email your login details.
-          </p>
+         
         </div>
 
         <motion.div
@@ -119,7 +123,9 @@ export default function SignupPage() {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="company">Company name</Label>
+                <Label htmlFor="company">
+                  Company name <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   id="company"
                   name="company"
@@ -132,7 +138,9 @@ export default function SignupPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="name">Your name</Label>
+                <Label htmlFor="name">
+                  Your name <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   id="name"
                   name="name"
@@ -146,7 +154,9 @@ export default function SignupPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Work email</Label>
+                <Label htmlFor="email">
+                  Work email <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   id="email"
                   name="email"
@@ -159,20 +169,45 @@ export default function SignupPage() {
                 />
               </div>
 
+              
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    autoComplete="tel"
+                    placeholder="+251 …"
+                    value={formData.phone}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="industry">Industry</Label>
+                  <Input
+                    id="industry"
+                    name="industry"
+                    type="text"
+                    placeholder="e.g. Retail, Healthcare, Fintech"
+                    value={formData.industry}
+                    onChange={handleChange}
+                  />
+                </div>
+              
+
               <div className="space-y-2">
-                <Label htmlFor="message">
-                  Anything we should know? <span className="text-muted-foreground">(optional)</span>
-                </Label>
-                <textarea
-                  id="message"
-                  name="message"
-                  rows={3}
-                  placeholder="Team size, what you're hoping to use Corevia for…"
-                  value={formData.message}
+                <Label htmlFor="website">Website</Label>
+                <Input
+                  id="website"
+                  name="website"
+                  type="url"
+                  placeholder="https://company.com"
+                  value={formData.website}
                   onChange={handleChange}
-                  className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 />
               </div>
+
+             
 
               <div className="flex items-start gap-2">
                 <input

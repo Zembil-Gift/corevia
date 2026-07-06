@@ -49,6 +49,9 @@ export interface SignupRequest {
   companyName: string
   contactName: string
   email: string
+  phone: string | null
+  industry: string | null
+  websiteUrl: string | null
   message: string | null
   status: string
   createdAt: string

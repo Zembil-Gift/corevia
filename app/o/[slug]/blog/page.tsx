@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { fetchOrgBlogs } from "@/lib/org-content-api"
+import { OrgSubShell } from "@/components/org/org-subpage"
 
 export default async function OrgBlogPage({
   params,
@@ -9,12 +10,12 @@ export default async function OrgBlogPage({
   const { slug } = await params
   const posts = await fetchOrgBlogs(slug)
 
-  if (posts.length === 0) {
-    return <p className="text-sm text-muted-foreground">No published articles yet.</p>
-  }
-
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <OrgSubShell slug={slug} title="Blog">
+      {posts.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No published articles yet.</p>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2">
       {posts.map((post) => (
         <Link
           key={post.id}
@@ -48,8 +49,10 @@ export default async function OrgBlogPage({
               <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">{post.excerpt}</p>
             )}
           </div>
-        </Link>
-      ))}
-    </div>
+            </Link>
+          ))}
+        </div>
+      )}
+    </OrgSubShell>
   )
 }

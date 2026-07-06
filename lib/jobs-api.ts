@@ -18,6 +18,7 @@ export interface JobApi {
   location: string
   description: string
   status: JobStatusApi
+  createdAt?: string
 }
 
 export interface JobListResponse {
