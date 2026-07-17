@@ -17,7 +17,7 @@ const faqs = [
   },
   {
     q: "What happens after the free trial?",
-    a: "You keep full access for 14 days with no credit card. Pick a plan when you're ready — nothing is charged automatically.",
+    a: "You keep full access for 31 days with no credit card. Pick a plan when you're ready nothing is charged automatically.",
   },
 ]
 

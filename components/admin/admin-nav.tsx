@@ -13,6 +13,7 @@ import {
   Wallet,
   Mail,
   Building2,
+  Trello,
   LogOut,
   type LucideIcon,
 } from "lucide-react"
@@ -30,6 +31,7 @@ const navItems: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/manager/peer-reviews", label: "Peer Reviews", icon: Star },
   { href: "/manager/payments", label: "Payroll", icon: Wallet },
   { href: "/manager/email-notifications", label: "Email Notifications", icon: Mail },
+  { href: "/manager/integrations", label: "Integrations", icon: Trello },
 ]
 
 export function AdminNav({ onNavigate }: { onNavigate?: () => void }) {

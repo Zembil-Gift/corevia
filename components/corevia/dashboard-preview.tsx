@@ -9,10 +9,10 @@ const navItems = [
 ]
 
 const stats = [
-  { label: "Active employees", value: "128", trend: "+6 this month", accent: "text-emerald-400" },
-  { label: "Open roles", value: "12", trend: "34 applicants", accent: "text-indigo-400" },
-  { label: "Present today", value: "94%", trend: "120 / 128", accent: "text-teal-400" },
-  { label: "Payroll due", value: "$48.2k", trend: "in 4 days", accent: "text-amber-400" },
+  { label: "Active employees", value: "5", trend: "+2 this month", accent: "text-emerald-400" },
+  { label: "Open roles", value: "3", trend: "34 applicants", accent: "text-indigo-400" },
+  { label: "Present today", value: "94%", trend: "4 / 6", accent: "text-teal-400" },
+  { label: "Payroll due", value: "ETB37.5k", trend: "in 4 days", accent: "text-amber-400" },
 ]
 
 const bars = [42, 66, 51, 78, 60, 88, 72]

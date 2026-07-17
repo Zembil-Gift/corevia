@@ -12,9 +12,8 @@ export const brand = {
   email: "hello@corevia.com",
   // Primary marketing nav (section anchors on the landing page).
   nav: [
-    { label: "Product", href: "#features" },
-    { label: "How it works", href: "#how" },
-    { label: "Pricing", href: "#pricing" },
+    { label: "Features", href: "#features" },
+    { label: "Tour", href: "#showcase" },
     { label: "FAQ", href: "#faq" },
   ],
   social: {

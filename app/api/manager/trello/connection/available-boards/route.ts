@@ -1,0 +1,28 @@
+import { NextRequest, NextResponse } from "next/server"
+import { getAdminToken } from "@/lib/auth"
+
+const CMS_BASE_URL = process.env.NEXT_PUBLIC_CMS_BASE_URL!
+
+// Live list of the manager's Trello boards (fetched from Trello with their stored token).
+export async function GET(request: NextRequest) {
+  const token = getAdminToken(request.headers.get("cookie"))
+  if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  try {
+    const res = await fetch(`${CMS_BASE_URL}/manager/trello/connection/available-boards`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      return NextResponse.json(
+        { error: (data as { message?: string }).message ?? "Failed to load Trello boards" },
+        { status: res.status }
+      )
+    }
+    return NextResponse.json(data)
+  } catch (err) {
+    console.error("Trello available-boards proxy error:", err)
+    return NextResponse.json({ error: "Failed to reach Trello service" }, { status: 500 })
+  }
+}

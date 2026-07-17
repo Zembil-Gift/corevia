@@ -1442,10 +1442,10 @@ export default function AdminMetricsPage() {
                     </div>
                   ) : selectedEmployeeId ? (
                     <div className="mt-8">
-                      <h3 className="text-base font-semibold text-white">Telegram Support</h3>
+                      {/*<h3 className="text-base font-semibold text-white">Telegram Support</h3>
                       <p className="mt-1 text-sm text-zinc-500">
                         Telegram is not connected for this employee.
-                      </p>
+                      </p>*/}
                     </div>
                   ) : null}
 

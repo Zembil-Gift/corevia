@@ -274,7 +274,7 @@ export default async function OrgProfilePage({
           <ProfileSection
             id="blog"
             icon={Newspaper}
-            title="Latest from the blog"
+            title="Blogs"
             count={blogs.length}
             allHref={`/o/${slug}/blog`}
           >
