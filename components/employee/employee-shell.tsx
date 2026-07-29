@@ -21,7 +21,46 @@ import QRCode from "react-qr-code"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { LangToggle } from "@/components/corevia/lang-toggle"
+import { useLang, pick } from "@/lib/i18n"
 import { clearAdminClientToken } from "@/lib/admin-client-auth"
+
+const t = {
+  portal: { en: "Employee Portal", am: "የሰራተኛ ፖርታል" },
+  portalSub: { en: "Manage your account, reports, and payments.", am: "መለያዎን፣ ሪፖርቶችዎን እና ክፍያዎችዎን ያስተዳድሩ።" },
+  connect: { en: "Connect", am: "አገናኝ" },
+  password: { en: "Password", am: "የይለፍ ቃል" },
+  logout: { en: "Log out", am: "ውጣ" },
+  cancel: { en: "Cancel", am: "ሰርዝ" },
+  update: { en: "Update", am: "አዘምን" },
+  grossSalary: { en: "Gross salary", am: "ጠቅላላ ደመወዝ" },
+  due: { en: "Due", am: "የሚከፈልበት" },
+  officeDays: { en: "Office Days", am: "የቢሮ ቀናት" },
+  report: { en: "Report", am: "ሪፖርት" },
+  payments: { en: "Payments", am: "ክፍያዎች" },
+  peerReview: { en: "Peer Review", am: "የእኩዮች ግምገማ" },
+  myReview: { en: "My Review", am: "የእኔ ግምገማ" },
+  changePassword: { en: "Change Password", am: "የይለፍ ቃል ቀይር" },
+  currentPassword: { en: "Current password", am: "የአሁኑ የይለፍ ቃል" },
+  newPassword: { en: "New password", am: "አዲስ የይለፍ ቃል" },
+  updating: { en: "Updating...", am: "በማዘመን ላይ..." },
+  updatePassword: { en: "Update password", am: "የይለፍ ቃል አዘምን" },
+  attendanceQr: { en: "Attendance QR", am: "የመገኘት QR" },
+  connectedAccounts: { en: "Connected Accounts", am: "የተገናኙ መለያዎች" },
+  githubUsername: { en: "GitHub username", am: "የGitHub የተጠቃሚ ስም" },
+  trelloUsername: { en: "Trello username", am: "የTrello የተጠቃሚ ስም" },
+  telegramUsername: { en: "Telegram username", am: "የTelegram የተጠቃሚ ስም" },
+  connectWarn: {
+    en: "Updating your connected accounts will reset your existing report progress. Your previous stats will be lost.",
+    am: "የተገናኙ መለያዎችዎን ማዘመን ነባር የሪፖርት እድገትዎን ዳግም ያስጀምራል። የቀድሞ ስታቲስቲክስዎ ይጠፋል።",
+  },
+  saving: { en: "Saving...", am: "በማስቀመጥ ላይ..." },
+  editPhoto: { en: "Edit Photo", am: "ፎቶ አርትዕ" },
+  changePhoto: { en: "Change photo", am: "ፎቶ ቀይር" },
+  uploadPhoto: { en: "Upload photo", am: "ፎቶ ስቀል" },
+  photoHint: { en: "PNG, JPG, GIF, or WEBP (max 5 MB)", am: "PNG, JPG, GIF ወይም WEBP (ቢበዛ 5 ሜባ)" },
+  uploading: { en: "Uploading...", am: "በመስቀል ላይ..." },
+}
 
 interface EmployeeInfo {
   id: number
@@ -41,6 +80,7 @@ type EmployeeShellProps = {
 }
 
 export function EmployeeShell({ children }: EmployeeShellProps) {
+  const { lang } = useLang()
   const pathname = usePathname()
   const [employee, setEmployee] = useState<EmployeeInfo | null>(null)
   const [loading, setLoading] = useState(true)
@@ -71,10 +111,10 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
 
   const tabs = useMemo(
     () => [
-      { href: "/employee/reports", label: "Report", icon: BarChart3 },
-      { href: "/employee/payments", label: "Payments", icon: CreditCard },
-      { href: "/employee/peer-reviews", label: "Peer Review", icon: MessageSquare },
-      { href: "/employee/my-review", label: "My Review", icon: Star },
+      { href: "/employee/reports", label: t.report, icon: BarChart3 },
+      { href: "/employee/payments", label: t.payments, icon: CreditCard },
+      { href: "/employee/peer-reviews", label: t.peerReview, icon: MessageSquare },
+      { href: "/employee/my-review", label: t.myReview, icon: Star },
     ],
     []
   )
@@ -277,12 +317,13 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
       <main className="mx-auto max-w-5xl p-6 md:p-10">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-white">Employee Portal</h1>
+            <h1 className="text-2xl font-bold text-white">{pick(lang, t.portal)}</h1>
             <p className="mt-1 text-zinc-400">
-              Manage your account, reports, and payments.
+              {pick(lang, t.portalSub)}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <LangToggle />
             <Button
               variant="outline"
               size="sm"
@@ -298,7 +339,7 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
               onClick={handleOpenConnect}
             >
               <Link2 className="mr-2 size-4" />
-              Connect
+              {pick(lang, t.connect)}
             </Button>
             <Button
               variant="outline"
@@ -306,7 +347,7 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
               onClick={() => setShowPasswordForm(true)}
             >
               <Key className="mr-2 size-4" />
-              Password
+              {pick(lang, t.password)}
             </Button>
             <Button
               variant="outline"
@@ -314,7 +355,7 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
               onClick={handleLogout}
             >
               <LogOut className="mr-2 size-4" />
-              Log out
+              {pick(lang, t.logout)}
             </Button>
           </div>
         </div>
@@ -349,13 +390,13 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
                 {(employee.salaryDate ||
                   typeof employee.salaryAmountMinor === "number") && (
                   <p className="mt-1 text-sm text-zinc-400">
-                    Gross salary: {formatMoney(employee.salaryAmountMinor ?? null)}
-                    {employee.salaryDate ? ` • Due ${employee.salaryDate}` : ""}
+                    {pick(lang, t.grossSalary)}: {formatMoney(employee.salaryAmountMinor ?? null)}
+                    {employee.salaryDate ? ` • ${pick(lang, t.due)} ${employee.salaryDate}` : ""}
                   </p>
                 )}
                 {(employee.salaryScheduleDays && employee.salaryScheduleDays.length > 0) && (
                   <p className="mt-1 text-sm text-zinc-400">
-                    Office Days: {employee.salaryScheduleDays.join(", ")}
+                    {pick(lang, t.officeDays)}: {employee.salaryScheduleDays.join(", ")}
                   </p>
                 )}
               </div>
@@ -386,7 +427,7 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
               >
                 <Link href={tab.href}>
                   <Icon className="mr-2 size-4" />
-                  {tab.label}
+                  {pick(lang, tab.label)}
                 </Link>
               </Button>
             )
@@ -400,7 +441,7 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
           <div className="w-full max-w-md rounded-xl border border-zinc-800 bg-zinc-900 p-6">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-white">Change Password</h3>
+              <h3 className="text-lg font-semibold text-white">{pick(lang, t.changePassword)}</h3>
               <Button variant="ghost" size="sm" onClick={() => setShowPasswordForm(false)}>
                 <span className="text-zinc-400 hover:text-white">✕</span>
               </Button>
@@ -408,7 +449,7 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
             <form onSubmit={handleChangePassword} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="current-password" className="text-zinc-200">
-                  Current password
+                  {pick(lang, t.currentPassword)}
                 </Label>
                 <Input
                   id="current-password"
@@ -421,7 +462,7 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="new-password" className="text-zinc-200">
-                  New password
+                  {pick(lang, t.newPassword)}
                 </Label>
                 <Input
                   id="new-password"
@@ -452,7 +493,7 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
                   disabled={isSubmitting}
                   className="flex-1 bg-[#e78a53] text-white hover:bg-[#e78a53]/90"
                 >
-                  {isSubmitting ? "Updating..." : "Update password"}
+                  {isSubmitting ? pick(lang, t.updating) : pick(lang, t.updatePassword)}
                 </Button>
                 <Button
                   type="button"
@@ -460,7 +501,7 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
                   onClick={() => setShowPasswordForm(false)}
                   className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
                 >
-                  Cancel
+                  {pick(lang, t.cancel)}
                 </Button>
               </div>
             </form>
@@ -472,7 +513,7 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
           <div className="w-full max-w-md rounded-xl border border-zinc-800 bg-zinc-900 p-6">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-white">Attendance QR</h3>
+              <h3 className="text-lg font-semibold text-white">{pick(lang, t.attendanceQr)}</h3>
               <Button variant="ghost" size="sm" onClick={() => setShowQrModal(false)}>
                 <span className="text-zinc-400 hover:text-white">✕</span>
               </Button>
@@ -492,7 +533,7 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
           <div className="w-full max-w-md rounded-xl border border-zinc-800 bg-zinc-900 p-6">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-white">Connected Accounts</h3>
+              <h3 className="text-lg font-semibold text-white">{pick(lang, t.connectedAccounts)}</h3>
               <Button variant="ghost" size="sm" onClick={() => setShowConnectForm(false)}>
                 <span className="text-zinc-400 hover:text-white">✕</span>
               </Button>
@@ -501,7 +542,7 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
             <form onSubmit={handleConnectSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="connect-github" className="text-zinc-200">
-                  GitHub username
+                  {pick(lang, t.githubUsername)}
                 </Label>
                 <Input
                   id="connect-github"
@@ -515,7 +556,7 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="connect-trello" className="text-zinc-200">
-                  Trello username
+                  {pick(lang, t.trelloUsername)}
                 </Label>
                 <Input
                   id="connect-trello"
@@ -529,7 +570,7 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="connect-telegram" className="text-zinc-200">
-                  Telegram username
+                  {pick(lang, t.telegramUsername)}
                 </Label>
                 <Input
                   id="connect-telegram"
@@ -544,7 +585,7 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
 
               {connectedAccounts && (connectedAccounts.githubUsername || connectedAccounts.trelloUsername || connectedAccounts.telegramUsername) && (
                 <p className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-sm text-amber-400">
-                  Updating your connected accounts will reset your existing report progress. Your previous stats will be lost.
+                  {pick(lang, t.connectWarn)}
                 </p>
               )}
 
@@ -565,7 +606,7 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
                   disabled={connectSubmitting}
                   className="flex-1 bg-[#e78a53] text-white hover:bg-[#e78a53]/90"
                 >
-                  {connectSubmitting ? "Saving..." : connectedAccounts && (connectedAccounts.githubUsername || connectedAccounts.trelloUsername || connectedAccounts.telegramUsername) ? "Update" : "Connect"}
+                  {connectSubmitting ? pick(lang, t.saving) : connectedAccounts && (connectedAccounts.githubUsername || connectedAccounts.trelloUsername || connectedAccounts.telegramUsername) ? pick(lang, t.update) : pick(lang, t.connect)}
                 </Button>
                 <Button
                   type="button"
@@ -573,7 +614,7 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
                   onClick={() => setShowConnectForm(false)}
                   className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
                 >
-                  Cancel
+                  {pick(lang, t.cancel)}
                 </Button>
               </div>
             </form>
@@ -585,7 +626,7 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
           <div className="w-full max-w-md rounded-xl border border-zinc-800 bg-zinc-900 p-6">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-white">Edit Photo</h3>
+              <h3 className="text-lg font-semibold text-white">{pick(lang, t.editPhoto)}</h3>
               <Button variant="ghost" size="sm" onClick={() => setShowPhotoForm(false)}>
                 <span className="text-zinc-400 hover:text-white">✕</span>
               </Button>
@@ -608,7 +649,7 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
                   htmlFor="profile-photo"
                   className="cursor-pointer text-sm text-[#e78a53] hover:underline"
                 >
-                  {photoPreview && photoPreview !== employee?.photo ? "Change photo" : "Upload photo"}
+                  {photoPreview && photoPreview !== employee?.photo ? pick(lang, t.changePhoto) : pick(lang, t.uploadPhoto)}
                 </Label>
                 <Input
                   id="profile-photo"
@@ -617,7 +658,7 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
                   onChange={handlePhotoChange}
                   className="hidden"
                 />
-                <p className="text-xs text-zinc-500">PNG, JPG, GIF, or WEBP (max 5 MB)</p>
+                <p className="text-xs text-zinc-500">{pick(lang, t.photoHint)}</p>
               </div>
 
               {photoError && (
@@ -637,7 +678,7 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
                   disabled={photoSubmitting || !photoFile}
                   className="flex-1 bg-[#e78a53] text-white hover:bg-[#e78a53]/90"
                 >
-                  {photoSubmitting ? "Uploading..." : "Upload photo"}
+                  {photoSubmitting ? pick(lang, t.uploading) : pick(lang, t.uploadPhoto)}
                 </Button>
                 <Button
                   type="button"
@@ -645,7 +686,7 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
                   onClick={() => setShowPhotoForm(false)}
                   className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
                 >
-                  Cancel
+                  {pick(lang, t.cancel)}
                 </Button>
               </div>
             </form>

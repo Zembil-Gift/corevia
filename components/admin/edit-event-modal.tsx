@@ -6,11 +6,27 @@ import { X, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useLang, pick } from "@/lib/i18n"
+import { a } from "@/lib/i18n-admin"
 import type { EventApi, EventTypeApi, EventStatusApi } from "@/lib/events-api"
 import { ImageUpload } from "@/components/admin/image-upload"
 
 const EVENT_TYPES: EventTypeApi[] = ["ONLINE", "IN_PERSON"]
 const STATUS_OPTIONS: EventStatusApi[] = ["DRAFT", "PUBLISHED"]
+
+const c = {
+  editEvent: { en: "Edit event", am: "ዝግጅት አርትዕ" },
+  titlePlaceholder: { en: "Event title", am: "የዝግጅት ርዕስ" },
+  descPlaceholder: { en: "Event description...", am: "የዝግጅት መግለጫ..." },
+  eventType: { en: "Event type", am: "የዝግጅት አይነት" },
+  online: { en: "Online", am: "በመስመር ላይ" },
+  inPerson: { en: "In-person", am: "በአካል" },
+  locationPlaceholder: { en: "e.g. Online (Zoom) or City, Country", am: "ለምሳሌ በመስመር (Zoom) ወይም ከተማ፣ አገር" },
+  startLabel: { en: "Start date & time", am: "የመጀመሪያ ቀን እና ሰዓት" },
+  endLabel: { en: "End date & time", am: "የመጨረሻ ቀን እና ሰዓት" },
+  registrationUrl: { en: "Registration URL", am: "የምዝገባ URL" },
+  failed: { en: "Failed to update event", am: "ዝግጅት ማዘመን አልተሳካም" },
+}
 
 function toISOString(localDateTime: string): string {
   if (!localDateTime) return ""
@@ -43,6 +59,7 @@ export function EditEventModal({
   onSuccess,
   event,
 }: EditEventModalProps) {
+  const { lang } = useLang()
   const [title, setTitle] = useState("")
   const [slug, setSlug] = useState("")
   const [description, setDescription] = useState("")
@@ -96,14 +113,14 @@ export function EditEventModal({
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        setError((data as { error?: string }).error ?? "Failed to update event")
+        setError((data as { error?: string }).error ?? pick(lang, c.failed))
         setSubmitting(false)
         return
       }
       onOpenChange(false)
       onSuccess?.()
     } catch {
-      setError("Something went wrong")
+      setError(pick(lang, a.somethingWrong))
     }
     setSubmitting(false)
   }
@@ -123,13 +140,13 @@ export function EditEventModal({
         >
           <div className="flex items-center justify-between mb-6">
             <Dialog.Title className="text-xl font-semibold text-white">
-              Edit event
+              {pick(lang, c.editEvent)}
             </Dialog.Title>
             <Dialog.Close asChild>
               <button
                 type="button"
                 className="rounded-full p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
-                aria-label="Close"
+                aria-label={pick(lang, a.close)}
               >
                 <X className="size-5" />
               </button>
@@ -138,11 +155,11 @@ export function EditEventModal({
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-event-title" className="text-zinc-200">Title</Label>
+              <Label htmlFor="edit-event-title" className="text-zinc-200">{pick(lang, a.title)}</Label>
               <Input
                 id="edit-event-title"
                 type="text"
-                placeholder="Event title"
+                placeholder={pick(lang, c.titlePlaceholder)}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
@@ -150,7 +167,7 @@ export function EditEventModal({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-event-slug" className="text-zinc-200">Slug</Label>
+              <Label htmlFor="edit-event-slug" className="text-zinc-200">{pick(lang, a.slug)}</Label>
               <Input
                 id="edit-event-slug"
                 type="text"
@@ -162,34 +179,34 @@ export function EditEventModal({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-event-description" className="text-zinc-200">Description</Label>
+              <Label htmlFor="edit-event-description" className="text-zinc-200">{pick(lang, a.description)}</Label>
               <textarea
                 id="edit-event-description"
                 rows={3}
-                placeholder="Event description..."
+                placeholder={pick(lang, c.descPlaceholder)}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white placeholder:text-zinc-500 focus:border-[#e78a53] focus:outline-none focus:ring-1 focus:ring-[#e78a53]/20 resize-y"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-event-type" className="text-zinc-200">Event type</Label>
+              <Label htmlFor="edit-event-type" className="text-zinc-200">{pick(lang, c.eventType)}</Label>
               <select
                 id="edit-event-type"
                 value={eventType}
                 onChange={(e) => setEventType(e.target.value as EventTypeApi)}
                 className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white focus:border-[#e78a53] focus:outline-none focus:ring-1 focus:ring-[#e78a53]/20"
               >
-                <option value="ONLINE">Online</option>
-                <option value="IN_PERSON">In-person</option>
+                <option value="ONLINE">{pick(lang, c.online)}</option>
+                <option value="IN_PERSON">{pick(lang, c.inPerson)}</option>
               </select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-event-location" className="text-zinc-200">Location</Label>
+              <Label htmlFor="edit-event-location" className="text-zinc-200">{pick(lang, a.location)}</Label>
               <Input
                 id="edit-event-location"
                 type="text"
-                placeholder="e.g. Online (Zoom) or City, Country"
+                placeholder={pick(lang, c.locationPlaceholder)}
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 required
@@ -198,7 +215,7 @@ export function EditEventModal({
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="edit-event-start" className="text-zinc-200">Start date & time</Label>
+                <Label htmlFor="edit-event-start" className="text-zinc-200">{pick(lang, c.startLabel)}</Label>
                 <Input
                   id="edit-event-start"
                   type="datetime-local"
@@ -209,7 +226,7 @@ export function EditEventModal({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-event-end" className="text-zinc-200">End date & time</Label>
+                <Label htmlFor="edit-event-end" className="text-zinc-200">{pick(lang, c.endLabel)}</Label>
                 <Input
                   id="edit-event-end"
                   type="datetime-local"
@@ -221,7 +238,7 @@ export function EditEventModal({
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-event-registration" className="text-zinc-200">Registration URL</Label>
+              <Label htmlFor="edit-event-registration" className="text-zinc-200">{pick(lang, c.registrationUrl)}</Label>
               <Input
                 id="edit-event-registration"
                 type="url"
@@ -234,7 +251,7 @@ export function EditEventModal({
             <ImageUpload value={coverImageUrl} onChange={setCoverImageUrl} />
 
             <div className="space-y-2">
-              <Label htmlFor="edit-event-status" className="text-zinc-200">Status</Label>
+              <Label htmlFor="edit-event-status" className="text-zinc-200">{pick(lang, a.status)}</Label>
               <select
                 id="edit-event-status"
                 value={status}
@@ -242,7 +259,9 @@ export function EditEventModal({
                 className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white focus:border-[#e78a53] focus:outline-none focus:ring-1 focus:ring-[#e78a53]/20"
               >
                 {STATUS_OPTIONS.map((s) => (
-                  <option key={s} value={s}>{s}</option>
+                  <option key={s} value={s}>
+                    {pick(lang, s === "DRAFT" ? a.draft : a.published)}
+                  </option>
                 ))}
               </select>
             </div>
@@ -262,10 +281,10 @@ export function EditEventModal({
                 {submitting ? (
                   <>
                     <Loader2 className="size-4 animate-spin mr-2" />
-                    Saving…
+                    {pick(lang, a.saving)}
                   </>
                 ) : (
-                  "Save changes"
+                  pick(lang, a.saveChanges)
                 )}
               </Button>
               <Dialog.Close asChild>
@@ -274,7 +293,7 @@ export function EditEventModal({
                   variant="outline"
                   className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
                 >
-                  Cancel
+                  {pick(lang, a.cancel)}
                 </Button>
               </Dialog.Close>
             </div>

@@ -6,10 +6,21 @@ import { X, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useLang, pick } from "@/lib/i18n"
+import { a } from "@/lib/i18n-admin"
 import type { JobApi, JobEmploymentTypeApi, JobStatusApi } from "@/lib/jobs-api"
 import { JOB_EMPLOYMENT_TYPES, formatJobEmploymentType } from "@/lib/jobs-api"
 
 const STATUS_OPTIONS: JobStatusApi[] = ["DRAFT", "OPEN", "CLOSED"]
+
+const c = {
+  editJob: { en: "Edit job", am: "ስራ አርትዕ" },
+  titlePlaceholder: { en: "Job title", am: "የስራ ርዕስ" },
+  deptPlaceholder: { en: "e.g. Engineering", am: "ለምሳሌ ኢንጂነሪንግ" },
+  locationPlaceholder: { en: "e.g. Remote", am: "ለምሳሌ ከርቀት" },
+  descPlaceholder: { en: "Job description...", am: "የስራ መግለጫ..." },
+  failed: { en: "Failed to update job", am: "ስራ ማዘመን አልተሳካም" },
+}
 
 interface EditJobModalProps {
   open: boolean
@@ -24,6 +35,7 @@ export function EditJobModal({
   onSuccess,
   job,
 }: EditJobModalProps) {
+  const { lang } = useLang()
   const [title, setTitle] = useState("")
   const [slug, setSlug] = useState("")
   const [department, setDepartment] = useState("")
@@ -68,14 +80,14 @@ export function EditJobModal({
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        setError((data as { error?: string }).error ?? "Failed to update job")
+        setError((data as { error?: string }).error ?? pick(lang, c.failed))
         setSubmitting(false)
         return
       }
       onOpenChange(false)
       onSuccess?.()
     } catch {
-      setError("Something went wrong")
+      setError(pick(lang, a.somethingWrong))
     }
     setSubmitting(false)
   }
@@ -95,13 +107,13 @@ export function EditJobModal({
         >
           <div className="flex items-center justify-between mb-6">
             <Dialog.Title className="text-xl font-semibold text-white">
-              Edit job
+              {pick(lang, c.editJob)}
             </Dialog.Title>
             <Dialog.Close asChild>
               <button
                 type="button"
                 className="rounded-full p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
-                aria-label="Close"
+                aria-label={pick(lang, a.close)}
               >
                 <X className="size-5" />
               </button>
@@ -110,11 +122,11 @@ export function EditJobModal({
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-job-title" className="text-zinc-200">Title</Label>
+              <Label htmlFor="edit-job-title" className="text-zinc-200">{pick(lang, a.title)}</Label>
               <Input
                 id="edit-job-title"
                 type="text"
-                placeholder="Job title"
+                placeholder={pick(lang, c.titlePlaceholder)}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
@@ -122,7 +134,7 @@ export function EditJobModal({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-job-slug" className="text-zinc-200">Slug</Label>
+              <Label htmlFor="edit-job-slug" className="text-zinc-200">{pick(lang, a.slug)}</Label>
               <Input
                 id="edit-job-slug"
                 type="text"
@@ -134,11 +146,11 @@ export function EditJobModal({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-job-department" className="text-zinc-200">Department</Label>
+              <Label htmlFor="edit-job-department" className="text-zinc-200">{pick(lang, a.department)}</Label>
               <Input
                 id="edit-job-department"
                 type="text"
-                placeholder="e.g. Engineering"
+                placeholder={pick(lang, c.deptPlaceholder)}
                 value={department}
                 onChange={(e) => setDepartment(e.target.value)}
                 required
@@ -146,7 +158,7 @@ export function EditJobModal({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-job-employment-type" className="text-zinc-200">Employment type</Label>
+              <Label htmlFor="edit-job-employment-type" className="text-zinc-200">{pick(lang, a.employmentType)}</Label>
               <select
                 id="edit-job-employment-type"
                 value={employmentType}
@@ -159,11 +171,11 @@ export function EditJobModal({
               </select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-job-location" className="text-zinc-200">Location</Label>
+              <Label htmlFor="edit-job-location" className="text-zinc-200">{pick(lang, a.location)}</Label>
               <Input
                 id="edit-job-location"
                 type="text"
-                placeholder="e.g. Remote"
+                placeholder={pick(lang, c.locationPlaceholder)}
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 required
@@ -171,18 +183,18 @@ export function EditJobModal({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-job-description" className="text-zinc-200">Description</Label>
+              <Label htmlFor="edit-job-description" className="text-zinc-200">{pick(lang, a.description)}</Label>
               <textarea
                 id="edit-job-description"
                 rows={4}
-                placeholder="Job description..."
+                placeholder={pick(lang, c.descPlaceholder)}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white placeholder:text-zinc-500 focus:border-[#e78a53] focus:outline-none focus:ring-1 focus:ring-[#e78a53]/20 resize-y min-h-[100px]"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-job-status" className="text-zinc-200">Status</Label>
+              <Label htmlFor="edit-job-status" className="text-zinc-200">{pick(lang, a.status)}</Label>
               <select
                 id="edit-job-status"
                 value={status}
@@ -190,7 +202,9 @@ export function EditJobModal({
                 className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white focus:border-[#e78a53] focus:outline-none focus:ring-1 focus:ring-[#e78a53]/20"
               >
                 {STATUS_OPTIONS.map((s) => (
-                  <option key={s} value={s}>{s}</option>
+                  <option key={s} value={s}>
+                    {pick(lang, s === "DRAFT" ? a.draft : s === "OPEN" ? a.open : a.closed)}
+                  </option>
                 ))}
               </select>
             </div>
@@ -210,10 +224,10 @@ export function EditJobModal({
                 {submitting ? (
                   <>
                     <Loader2 className="size-4 animate-spin mr-2" />
-                    Saving…
+                    {pick(lang, a.saving)}
                   </>
                 ) : (
-                  "Save changes"
+                  pick(lang, a.saveChanges)
                 )}
               </Button>
               <Dialog.Close asChild>
@@ -222,7 +236,7 @@ export function EditJobModal({
                   variant="outline"
                   className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
                 >
-                  Cancel
+                  {pick(lang, a.cancel)}
                 </Button>
               </Dialog.Close>
             </div>

@@ -3,12 +3,28 @@
 import { useCallback, useEffect, useState } from "react"
 import { Loader2, Pencil, Plus, Trash2, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useLang, pick } from "@/lib/i18n"
+import { a } from "@/lib/i18n-admin"
 import type { EmployeeApi } from "@/lib/employees-api"
 import { CreateEmployeeModal } from "@/components/admin/create-employee-modal"
 import { EditEmployeeModal } from "@/components/admin/edit-employee-modal"
 import { AttendanceModal } from "@/components/admin/attendance-modal"
 
+const t = {
+  employees: { en: "Employees", am: "ሰራተኞች" },
+  subtitle: { en: "Manage employee accounts", am: "የሰራተኞች መለያዎችን ያስተዳድሩ" },
+  addEmployee: { en: "Add employee", am: "ሰራተኛ ጨምር" },
+  grossSalary: { en: "Gross salary", am: "ጠቅላላ ደመወዝ" },
+  dateLabel: { en: "Date", am: "ቀን" },
+  viewAttendance: { en: "View attendance for", am: "መገኘት ይመልከቱ ለ" },
+  employeesCount: { en: "employees", am: "ሰራተኞች" },
+  confirmDelete: { en: "Delete", am: "ይሰረዝ" },
+  failedLoad: { en: "Failed to load employees", am: "ሰራተኞችን መጫን አልተሳካም" },
+  failedDelete: { en: "Failed to delete employee", am: "ሰራተኛ መሰረዝ አልተሳካም" },
+}
+
 export default function AdminEmployeesPage() {
+  const { lang } = useLang()
   const [employees, setEmployees] = useState<EmployeeApi[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -31,7 +47,7 @@ export default function AdminEmployeesPage() {
       const data = await res.json()
       setEmployees(data.content ?? [])
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load employees")
+      setError(err instanceof Error ? err.message : pick(lang, t.failedLoad))
       setEmployees([])
     } finally {
       setLoading(false)
@@ -61,7 +77,7 @@ export default function AdminEmployeesPage() {
   }
 
   const handleDelete = async (employee: EmployeeApi) => {
-    if (!confirm(`Delete "${employee.name}"?`)) return
+    if (!confirm(`${pick(lang, t.confirmDelete)} "${employee.name}"?`)) return
     setDeletingId(employee.id)
     setError(null)
     try {
@@ -72,11 +88,11 @@ export default function AdminEmployeesPage() {
         fetchEmployeesList()
       } else {
         const data = await res.json().catch(() => ({}))
-        setError((data as { error?: string }).error ?? "Failed to delete employee")
+        setError((data as { error?: string }).error ?? pick(lang, t.failedDelete))
       }
 
     } catch {
-      setError("Failed to delete employee")
+      setError(pick(lang, t.failedDelete))
     } finally {
       setDeletingId(null)
     }
@@ -86,8 +102,8 @@ export default function AdminEmployeesPage() {
     <div>
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Employees</h1>
-          <p className="mt-1 text-zinc-400">Manage employee accounts</p>
+          <h1 className="text-2xl font-bold text-white">{pick(lang, t.employees)}</h1>
+          <p className="mt-1 text-zinc-400">{pick(lang, t.subtitle)}</p>
         </div>
         <Button
           type="button"
@@ -95,7 +111,7 @@ export default function AdminEmployeesPage() {
           className="bg-[#e78a53] text-white hover:bg-[#e78a53]/90"
         >
           <Plus className="mr-2 size-4" />
-          Add employee
+          {pick(lang, t.addEmployee)}
         </Button>
       </div>
 
@@ -111,12 +127,12 @@ export default function AdminEmployeesPage() {
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-zinc-800 bg-zinc-900">
-                  <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Name</th>
-                  <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Email</th>
-                  <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Position</th>
-                  <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Gross salary</th>
-                  <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Status</th>
-                  <th className="w-24 px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Actions</th>
+                  <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">{pick(lang, a.name)}</th>
+                  <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">{pick(lang, a.email)}</th>
+                  <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">{pick(lang, a.position)}</th>
+                  <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">{pick(lang, t.grossSalary)}</th>
+                  <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">{pick(lang, a.status)}</th>
+                  <th className="w-24 px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">{pick(lang, a.actions)}</th>
                 </tr>
               </thead>
               <tbody>
@@ -130,7 +146,7 @@ export default function AdminEmployeesPage() {
                     <td className="px-4 py-3 text-zinc-400">
                       <div className="text-sm text-zinc-300">{formatSalaryAmount(employee.salaryAmountMinor)}</div>
                       {employee.salaryDate && (
-                        <div className="text-xs text-zinc-500">Date: {employee.salaryDate}</div>
+                        <div className="text-xs text-zinc-500">{pick(lang, t.dateLabel)}: {employee.salaryDate}</div>
                       )}
                       {employee.salaryScheduleDays && employee.salaryScheduleDays.length > 0 && (
                         <div className="text-xs text-zinc-500">
@@ -146,7 +162,7 @@ export default function AdminEmployeesPage() {
                             : "bg-zinc-600/30 text-zinc-400"
                         }`}
                       >
-                        {employee.active ? "ACTIVE" : "INACTIVE"}
+                        {pick(lang, employee.active ? a.active : a.inactive)}
                       </span>
                     </td>
                     <td className="px-4 py-3">
@@ -157,7 +173,7 @@ export default function AdminEmployeesPage() {
                           size="sm"
                           className="h-8 w-8 p-1 text-zinc-400 hover:text-white"
                           onClick={() => openEditModal(employee)}
-                          aria-label={`Edit ${employee.name}`}
+                          aria-label={`${pick(lang, a.edit)} ${employee.name}`}
                         >
                           <Pencil className="size-4" />
                         </Button>
@@ -170,7 +186,7 @@ export default function AdminEmployeesPage() {
                             setAttendanceEmployee(employee)
                             setAttendanceModalOpen(true)
                           }}
-                          aria-label={`View attendance for ${employee.name}`}
+                          aria-label={`${pick(lang, t.viewAttendance)} ${employee.name}`}
                         >
                           <Clock className="size-4" />
                         </Button>
@@ -181,7 +197,7 @@ export default function AdminEmployeesPage() {
                           className="h-8 w-8 p-1 text-zinc-400 hover:text-red-400"
                           onClick={() => handleDelete(employee)}
                           disabled={deletingId === employee.id}
-                          aria-label={`Delete ${employee.name}`}
+                          aria-label={`${pick(lang, a.delete)} ${employee.name}`}
                         >
                           {deletingId === employee.id ? (
                             <Loader2 className="size-4 animate-spin" />
@@ -197,7 +213,7 @@ export default function AdminEmployeesPage() {
             </table>
           </div>
           <p className="mt-4 text-sm text-zinc-500">
-            {employees.length} employee{employees.length !== 1 ? "s" : ""}
+            {employees.length} {pick(lang, t.employeesCount)}
           </p>
         </>
       )}

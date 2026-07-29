@@ -6,11 +6,27 @@ import { X, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useLang, pick } from "@/lib/i18n"
+import { a } from "@/lib/i18n-admin"
 import type { EventTypeApi, EventStatusApi } from "@/lib/events-api"
 import { ImageUpload } from "@/components/admin/image-upload"
 
 const EVENT_TYPES: EventTypeApi[] = ["ONLINE", "IN_PERSON"]
 const STATUS_OPTIONS: EventStatusApi[] = ["DRAFT", "PUBLISHED"]
+
+const c = {
+  createEvent: { en: "Create event", am: "ዝግጅት ፍጠር" },
+  titlePlaceholder: { en: "Event title", am: "የዝግጅት ርዕስ" },
+  descPlaceholder: { en: "Event description...", am: "የዝግጅት መግለጫ..." },
+  eventType: { en: "Event type", am: "የዝግጅት አይነት" },
+  online: { en: "Online", am: "በመስመር ላይ" },
+  inPerson: { en: "In-person", am: "በአካል" },
+  locationPlaceholder: { en: "e.g. Online (Zoom) or City, Country", am: "ለምሳሌ በመስመር (Zoom) ወይም ከተማ፣ አገር" },
+  startLabel: { en: "Start date & time", am: "የመጀመሪያ ቀን እና ሰዓት" },
+  endLabel: { en: "End date & time", am: "የመጨረሻ ቀን እና ሰዓት" },
+  registrationUrl: { en: "Registration URL", am: "የምዝገባ URL" },
+  failed: { en: "Failed to create event", am: "ዝግጅት መፍጠር አልተሳካም" },
+}
 
 /** Convert datetime-local value to ISO string for API */
 function toISOString(localDateTime: string): string {
@@ -29,6 +45,7 @@ export function CreateEventModal({
   onOpenChange,
   onSuccess,
 }: CreateEventModalProps) {
+  const { lang } = useLang()
   const [title, setTitle] = useState("")
   const [slug, setSlug] = useState("")
   const [description, setDescription] = useState("")
@@ -65,7 +82,7 @@ export function CreateEventModal({
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        setError((data as { error?: string }).error ?? "Failed to create event")
+        setError((data as { error?: string }).error ?? pick(lang, c.failed))
         setSubmitting(false)
         return
       }
@@ -82,7 +99,7 @@ export function CreateEventModal({
       onOpenChange(false)
       onSuccess?.()
     } catch {
-      setError("Something went wrong")
+      setError(pick(lang, a.somethingWrong))
     }
     setSubmitting(false)
   }
@@ -102,13 +119,13 @@ export function CreateEventModal({
         >
           <div className="flex items-center justify-between mb-6">
             <Dialog.Title className="text-xl font-semibold text-white">
-              Create event
+              {pick(lang, c.createEvent)}
             </Dialog.Title>
             <Dialog.Close asChild>
               <button
                 type="button"
                 className="rounded-full p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
-                aria-label="Close"
+                aria-label={pick(lang, a.close)}
               >
                 <X className="size-5" />
               </button>
@@ -117,11 +134,11 @@ export function CreateEventModal({
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="event-title" className="text-zinc-200">Title</Label>
+              <Label htmlFor="event-title" className="text-zinc-200">{pick(lang, a.title)}</Label>
               <Input
                 id="event-title"
                 type="text"
-                placeholder="Event title"
+                placeholder={pick(lang, c.titlePlaceholder)}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
@@ -129,7 +146,7 @@ export function CreateEventModal({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="event-slug" className="text-zinc-200">Slug</Label>
+              <Label htmlFor="event-slug" className="text-zinc-200">{pick(lang, a.slug)}</Label>
               <Input
                 id="event-slug"
                 type="text"
@@ -141,34 +158,34 @@ export function CreateEventModal({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="event-description" className="text-zinc-200">Description</Label>
+              <Label htmlFor="event-description" className="text-zinc-200">{pick(lang, a.description)}</Label>
               <textarea
                 id="event-description"
                 rows={3}
-                placeholder="Event description..."
+                placeholder={pick(lang, c.descPlaceholder)}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white placeholder:text-zinc-500 focus:border-[#e78a53] focus:outline-none focus:ring-1 focus:ring-[#e78a53]/20 resize-y"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="event-type" className="text-zinc-200">Event type</Label>
+              <Label htmlFor="event-type" className="text-zinc-200">{pick(lang, c.eventType)}</Label>
               <select
                 id="event-type"
                 value={eventType}
                 onChange={(e) => setEventType(e.target.value as EventTypeApi)}
                 className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white focus:border-[#e78a53] focus:outline-none focus:ring-1 focus:ring-[#e78a53]/20"
               >
-                <option value="ONLINE">Online</option>
-                <option value="IN_PERSON">In-person</option>
+                <option value="ONLINE">{pick(lang, c.online)}</option>
+                <option value="IN_PERSON">{pick(lang, c.inPerson)}</option>
               </select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="event-location" className="text-zinc-200">Location</Label>
+              <Label htmlFor="event-location" className="text-zinc-200">{pick(lang, a.location)}</Label>
               <Input
                 id="event-location"
                 type="text"
-                placeholder="e.g. Online (Zoom) or City, Country"
+                placeholder={pick(lang, c.locationPlaceholder)}
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 required
@@ -177,7 +194,7 @@ export function CreateEventModal({
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="event-start" className="text-zinc-200">Start date & time</Label>
+                <Label htmlFor="event-start" className="text-zinc-200">{pick(lang, c.startLabel)}</Label>
                 <Input
                   id="event-start"
                   type="datetime-local"
@@ -188,7 +205,7 @@ export function CreateEventModal({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="event-end" className="text-zinc-200">End date & time</Label>
+                <Label htmlFor="event-end" className="text-zinc-200">{pick(lang, c.endLabel)}</Label>
                 <Input
                   id="event-end"
                   type="datetime-local"
@@ -200,7 +217,7 @@ export function CreateEventModal({
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="event-registration" className="text-zinc-200">Registration URL</Label>
+              <Label htmlFor="event-registration" className="text-zinc-200">{pick(lang, c.registrationUrl)}</Label>
               <Input
                 id="event-registration"
                 type="url"
@@ -213,7 +230,7 @@ export function CreateEventModal({
             <ImageUpload value={coverImageUrl} onChange={setCoverImageUrl} />
 
             <div className="space-y-2">
-              <Label htmlFor="event-status" className="text-zinc-200">Status</Label>
+              <Label htmlFor="event-status" className="text-zinc-200">{pick(lang, a.status)}</Label>
               <select
                 id="event-status"
                 value={status}
@@ -221,7 +238,9 @@ export function CreateEventModal({
                 className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white focus:border-[#e78a53] focus:outline-none focus:ring-1 focus:ring-[#e78a53]/20"
               >
                 {STATUS_OPTIONS.map((s) => (
-                  <option key={s} value={s}>{s}</option>
+                  <option key={s} value={s}>
+                    {pick(lang, s === "DRAFT" ? a.draft : a.published)}
+                  </option>
                 ))}
               </select>
             </div>
@@ -241,10 +260,10 @@ export function CreateEventModal({
                 {submitting ? (
                   <>
                     <Loader2 className="size-4 animate-spin mr-2" />
-                    Creating…
+                    {pick(lang, a.creating)}
                   </>
                 ) : (
-                  "Create event"
+                  pick(lang, c.createEvent)
                 )}
               </Button>
               <Dialog.Close asChild>
@@ -253,7 +272,7 @@ export function CreateEventModal({
                   variant="outline"
                   className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
                 >
-                  Cancel
+                  {pick(lang, a.cancel)}
                 </Button>
               </Dialog.Close>
             </div>

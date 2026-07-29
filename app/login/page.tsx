@@ -11,9 +11,29 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Logo } from "@/components/corevia/logo"
+import { LangToggle } from "@/components/corevia/lang-toggle"
+import { useLang, pick } from "@/lib/i18n"
 import { clearAdminClientToken, setAdminClientToken } from "@/lib/admin-client-auth"
 
+const copy = {
+  back: { en: "Back to home", am: "ወደ መነሻ ተመለስ" },
+  title: { en: "Welcome back", am: "እንኳን ደህና ተመለሱ" },
+  subtitle: { en: "Sign in to your workspace to continue", am: "ለመቀጠል ወደ የስራ ቦታዎ ይግቡ" },
+  email: { en: "Email", am: "ኢሜይል" },
+  password: { en: "Password", am: "የይለፍ ቃል" },
+  passwordPlaceholder: { en: "Enter your password", am: "የይለፍ ቃልዎን ያስገቡ" },
+  remember: { en: "Remember me", am: "አስታውሰኝ" },
+  forgot: { en: "Forgot password?", am: "የይለፍ ቃል ረሱ?" },
+  signingIn: { en: "Signing in...", am: "በመግባት ላይ..." },
+  signIn: { en: "Sign in", am: "ግባ" },
+  newHere: { en: "New to Corevia?", am: "Corevia አዲስ ነዎት?" },
+  startTrial: { en: "Start your free trial", am: "ነጻ ሙከራዎን ይጀምሩ" },
+  invalid: { en: "Invalid email or password", am: "የተሳሳተ ኢሜይል ወይም የይለፍ ቃል" },
+  wrong: { en: "Something went wrong. Please try again.", am: "የሆነ ስህተት ተፈጥሯል። እባክዎ እንደገና ይሞክሩ።" },
+}
+
 export default function LoginPage() {
+  const { lang } = useLang()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get("callbackUrl")
   const [email, setEmail] = useState("")
@@ -33,7 +53,7 @@ export default function LoginPage() {
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        setError(data.error || "Invalid email or password")
+        setError(data.error || pick(lang, copy.invalid))
         setIsLoading(false)
         return
       }
@@ -49,7 +69,7 @@ export default function LoginPage() {
       window.location.href = isRoleMatchingCallback ? callbackUrl : prefix
       return
     } catch {
-      setError("Something went wrong. Please try again.")
+      setError(pick(lang, copy.wrong))
     }
     setIsLoading(false)
   }
@@ -70,8 +90,12 @@ export default function LoginPage() {
         className="absolute left-6 top-6 z-20 flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
-        <span>Back to home</span>
+        <span>{pick(lang, copy.back)}</span>
       </Link>
+
+      <div className="absolute right-6 top-6 z-20">
+        <LangToggle />
+      </div>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -83,8 +107,8 @@ export default function LoginPage() {
           <Link href="/" className="mb-6 inline-block">
             <Logo className="[&_span:last-child]:text-xl" />
           </Link>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Welcome back</h1>
-          <p className="mt-2 text-muted-foreground">Sign in to your workspace to continue</p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">{pick(lang, copy.title)}</h1>
+          <p className="mt-2 text-muted-foreground">{pick(lang, copy.subtitle)}</p>
         </div>
 
         <motion.div
@@ -95,7 +119,7 @@ export default function LoginPage() {
         >
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{pick(lang, copy.email)}</Label>
               <Input
                 id="email"
                 type="email"
@@ -108,12 +132,12 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{pick(lang, copy.password)}</Label>
               <Input
                 id="password"
                 type="password"
                 autoComplete="current-password"
-                placeholder="Enter your password"
+                placeholder={pick(lang, copy.passwordPlaceholder)}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -123,10 +147,10 @@ export default function LoginPage() {
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 text-sm text-muted-foreground">
                 <input type="checkbox" className="rounded border-input text-emerald-400 focus:ring-emerald-500/30" />
-                <span>Remember me</span>
+                <span>{pick(lang, copy.remember)}</span>
               </label>
               <Link href="#" className="text-sm font-medium text-emerald-400 hover:text-emerald-300">
-                Forgot password?
+                {pick(lang, copy.forgot)}
               </Link>
             </div>
 
@@ -141,15 +165,15 @@ export default function LoginPage() {
               disabled={isLoading}
               className="w-full rounded-xl bg-emerald-500 py-3 font-semibold text-emerald-950 transition-colors hover:bg-emerald-400"
             >
-              {isLoading ? "Signing in..." : "Sign in"}
+              {isLoading ? pick(lang, copy.signingIn) : pick(lang, copy.signIn)}
             </Button>
           </form>
         </motion.div>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
-          New to Corevia?{" "}
+          {pick(lang, copy.newHere)}{" "}
           <Link href="/signup" className="font-semibold text-emerald-400 hover:text-emerald-300">
-            Start your free trial
+            {pick(lang, copy.startTrial)}
           </Link>
         </p>
       </motion.div>

@@ -1,7 +1,21 @@
+"use client"
+
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
+import { useLang, pick } from "@/lib/i18n"
+
+const copy = {
+  title: { en: "Bring your whole company onto one platform", am: "ሙሉ ኩባንያዎን ወደ አንድ መድረክ ያምጡ" },
+  body: {
+    en: "Start your free trial today. Set up your organization, invite your team, and run operations from a single dashboard.",
+    am: "ዛሬ ነጻ ሙከራዎን ይጀምሩ። ድርጅትዎን ያዋቅሩ፣ ቡድንዎን ይጋብዙ፣ እና ስራዎችን ከአንድ ዳሽቦርድ ያንቀሳቅሱ።",
+  },
+  startTrial: { en: "Start free trial", am: "ነጻ ሙከራ ጀምር" },
+  signIn: { en: "Sign in", am: "ግባ" },
+}
 
 export function CtaBand() {
+  const { lang } = useLang()
   return (
     <section className="border-t border-border bg-background py-20 sm:py-28">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
@@ -16,25 +30,24 @@ export function CtaBand() {
           />
           <div className="relative mx-auto max-w-2xl">
             <h2 className="text-balance text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-              Bring your whole company onto one platform
+              {pick(lang, copy.title)}
             </h2>
             <p className="mt-4 text-pretty text-lg text-slate-300">
-              Start your free trial today. Set up your organization, invite your team, and run operations from a single
-              dashboard.
+              {pick(lang, copy.body)}
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link
                 href="/signup"
                 className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-emerald-500 px-6 py-3 text-base font-semibold text-emerald-950 shadow-lg transition-all hover:-translate-y-0.5 hover:bg-emerald-400 sm:w-auto"
               >
-                Start free trial
+                {pick(lang, copy.startTrial)}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
               <Link
                 href="/login"
                 className="inline-flex w-full items-center justify-center rounded-full border border-white/20 bg-white/5 px-6 py-3 text-base font-semibold text-white backdrop-blur transition-colors hover:bg-white/10 sm:w-auto"
               >
-                Sign in
+                {pick(lang, copy.signIn)}
               </Link>
             </div>
           </div>

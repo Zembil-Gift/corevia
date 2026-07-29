@@ -1,13 +1,23 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Plus_Jakarta_Sans } from "next/font/google"
+import { Plus_Jakarta_Sans, Noto_Sans_Ethiopic } from "next/font/google"
 import { brand } from "@/lib/brand"
+import { LangProvider } from "@/lib/i18n"
 import "./globals.css"
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700", "800"],
   variable: "--font-jakarta",
+})
+
+// Ethiopic script for Amharic — the Latin fonts above have no ኡ/ሀ glyphs,
+// so this is required for Amharic to render. Listed as a fallback in the
+// font stack, so English is unaffected and Amharic glyphs resolve here.
+const ethiopic = Noto_Sans_Ethiopic({
+  subsets: ["ethiopic"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-ethiopic",
 })
 
 export const metadata: Metadata = {
@@ -30,12 +40,14 @@ export default function RootLayout({
       <head>
         <style>{`
 html {
-  font-family: ${jakarta.style.fontFamily};
-  --font-sans: ${jakarta.style.fontFamily};
+  font-family: ${jakarta.style.fontFamily}, ${ethiopic.style.fontFamily};
+  --font-sans: ${jakarta.style.fontFamily}, ${ethiopic.style.fontFamily};
 }
         `}</style>
       </head>
-      <body className={`${jakarta.variable} antialiased`}>{children}</body>
+      <body className={`${jakarta.variable} ${ethiopic.variable} antialiased`}>
+        <LangProvider>{children}</LangProvider>
+      </body>
     </html>
   )
 }

@@ -4,12 +4,27 @@ import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import { Loader2, Plus, Pencil } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useLang, pick } from "@/lib/i18n"
+import { a } from "@/lib/i18n-admin"
 import { formatEventDateShort } from "@/lib/event-data"
 import type { EventApi } from "@/lib/events-api"
 import { CreateEventModal } from "@/components/admin/create-event-modal"
 import { EditEventModal } from "@/components/admin/edit-event-modal"
 
+const t = {
+  events: { en: "Events", am: "ዝግጅቶች" },
+  subtitle: { en: "Manage events", am: "ዝግጅቶችን ያስተዳድሩ" },
+  createEvent: { en: "Create event", am: "ዝግጅት ፍጠር" },
+  viewPublic: { en: "View public events", am: "የህዝብ ዝግጅቶችን ይመልከቱ" },
+  type: { en: "Type", am: "አይነት" },
+  online: { en: "Online", am: "በመስመር ላይ" },
+  inPerson: { en: "In-person", am: "በአካል" },
+  eventsCount: { en: "events", am: "ዝግጅቶች" },
+  failedLoad: { en: "Failed to load events", am: "ዝግጅቶችን መጫን አልተሳካም" },
+}
+
 export default function AdminEventsPage() {
+  const { lang } = useLang()
   const [events, setEvents] = useState<EventApi[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -29,7 +44,7 @@ export default function AdminEventsPage() {
       const data = await res.json()
       setEvents(data.content ?? [])
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load events")
+      setError(err instanceof Error ? err.message : pick(lang, t.failedLoad))
       setEvents([])
     } finally {
       setLoading(false)
@@ -54,8 +69,8 @@ export default function AdminEventsPage() {
     <div>
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Events</h1>
-          <p className="text-zinc-400 mt-1">Manage events</p>
+          <h1 className="text-2xl font-bold text-white">{pick(lang, t.events)}</h1>
+          <p className="text-zinc-400 mt-1">{pick(lang, t.subtitle)}</p>
         </div>
         <div className="flex items-center gap-3">
           <Button
@@ -64,13 +79,13 @@ export default function AdminEventsPage() {
             className="bg-[#e78a53] hover:bg-[#e78a53]/90 text-white"
           >
             <Plus className="size-4 mr-2" />
-            Create event
+            {pick(lang, t.createEvent)}
           </Button>
           <Link
             href="/events"
             className="rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm font-medium text-zinc-200 hover:bg-zinc-700 hover:text-white transition-colors"
           >
-            View public events
+            {pick(lang, t.viewPublic)}
           </Link>
         </div>
       </div>
@@ -89,11 +104,11 @@ export default function AdminEventsPage() {
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-zinc-800 bg-zinc-900">
-                  <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Title</th>
-                  <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Type</th>
-                  <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Date</th>
-                  <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Status</th>
-                  <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500 w-24">Actions</th>
+                  <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">{pick(lang, a.title)}</th>
+                  <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">{pick(lang, t.type)}</th>
+                  <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">{pick(lang, a.date)}</th>
+                  <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">{pick(lang, a.status)}</th>
+                  <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500 w-24">{pick(lang, a.actions)}</th>
                 </tr>
               </thead>
               <tbody>
@@ -103,7 +118,7 @@ export default function AdminEventsPage() {
                       <span className="font-medium text-white">{event.title}</span>
                     </td>
                     <td className="px-4 py-3 text-zinc-400">
-                      {event.eventType === "ONLINE" ? "Online" : "In-person"}
+                      {pick(lang, event.eventType === "ONLINE" ? t.online : t.inPerson)}
                     </td>
                     <td className="px-4 py-3 text-zinc-400 text-sm">{formatEventDateShort(event.startDate)}</td>
                     <td className="px-4 py-3">
@@ -114,7 +129,7 @@ export default function AdminEventsPage() {
                             : "bg-amber-500/20 text-amber-400"
                         }`}
                       >
-                        {event.status}
+                        {pick(lang, event.status === "PUBLISHED" ? a.published : a.draft)}
                       </span>
                     </td>
                     <td className="px-4 py-3">
@@ -125,7 +140,7 @@ export default function AdminEventsPage() {
                           rel="noopener noreferrer"
                           className="text-sm text-[#e78a53] hover:underline"
                         >
-                          View
+                          {pick(lang, a.view)}
                         </Link>
                         <Button
                           type="button"
@@ -133,7 +148,7 @@ export default function AdminEventsPage() {
                           size="sm"
                           className="text-zinc-400 hover:text-white p-1 h-8 w-8"
                           onClick={() => openEditModal(event)}
-                          aria-label={`Edit ${event.title}`}
+                          aria-label={`${pick(lang, a.edit)} ${event.title}`}
                         >
                           <Pencil className="size-4" />
                         </Button>
@@ -145,7 +160,7 @@ export default function AdminEventsPage() {
             </table>
           </div>
           <p className="mt-4 text-sm text-zinc-500">
-            {events.length} event{events.length !== 1 ? "s" : ""}
+            {events.length} {pick(lang, t.eventsCount)}
           </p>
         </>
       )}

@@ -18,18 +18,17 @@ import {
   GitBranch,
   type LucideIcon,
 } from "lucide-react"
+import { useLang, pick } from "@/lib/i18n"
 
 const ease = [0.22, 1, 0.36, 1] as const
 
+type Copy = { eyebrow: string; lead: string; accent: string; body: string; bullets: string[] }
 type Feature = {
   id: string
   n: string
   icon: LucideIcon
-  eyebrow: string
-  lead: string
-  accent: string
-  body: string
-  bullets: string[]
+  en: Copy
+  am: Copy
   image: { src: string; w: number; h: number; alt: string; video?: string }
   frameMax: string
   glow: string
@@ -41,11 +40,20 @@ const features: Feature[] = [
     id: "profile",
     n: "01",
     icon: Building2,
-    eyebrow: "Company profile",
-    lead: "Create your profile",
-    accent: "then start publishing.",
-    body: "Set up your company profile in minutes — logo, description and links. Once it's live, use it as your home base to publish blog posts, open job listings and upcoming events straight to your public page.",
-    bullets: ["Branded public page", "Post blog articles", "List open jobs", "Share upcoming events"],
+    en: {
+      eyebrow: "Company profile",
+      lead: "Create your profile",
+      accent: "then start publishing.",
+      body: "Set up your company profile in minutes — logo, description and links. Once it's live, use it as your home base to publish blog posts, open job listings and upcoming events straight to your public page.",
+      bullets: ["Branded public page", "Post blog articles", "List open jobs", "Share upcoming events"],
+    },
+    am: {
+      eyebrow: "የኩባንያ መገለጫ",
+      lead: "መገለጫዎን ይፍጠሩ",
+      accent: "ከዚያም ማውጣት ይጀምሩ።",
+      body: "የኩባንያዎን መገለጫ በደቂቃዎች ውስጥ ያዋቅሩ — አርማ፣ መግለጫ እና አገናኞች። ከቀጥታ በኋላ ብሎጎችን፣ የስራ ማስታወቂያዎችን እና መጪ ዝግጅቶችን ወደ የህዝብ ገጽዎ ለማውጣት እንደ መነሻ ይጠቀሙበት።",
+      bullets: ["የግል የህዝብ ገጽ", "ብሎግ ጽሁፎችን ይለጥፉ", "ክፍት ስራዎችን ይዘርዝሩ", "መጪ ዝግጅቶችን ያጋሩ"],
+    },
     image: { src: "/assets/Z_company_profile_1180x741.png", w: 1180, h: 741, alt: "Company profile page in Corevia" },
     frameMax: "max-w-[52.8rem]",
     glow: "rgba(52,211,153,0.26)",
@@ -60,11 +68,20 @@ const features: Feature[] = [
     id: "hiring",
     n: "02",
     icon: Briefcase,
-    eyebrow: "Hiring & applicant tracking",
-    lead: "Fill roles",
-    accent: "without the spreadsheet chaos.",
-    body: "Post openings to your public careers page, gather every application in one inbox, and screen candidates with AI-assisted overviews. Move people through stages, schedule interviews, and hire or reject in bulk.",
-    bullets: ["Public careers page", "AI candidate overviews", "Interview scheduling", "Bulk hire & reject"],
+    en: {
+      eyebrow: "Hiring & applicant tracking",
+      lead: "Fill roles",
+      accent: "without the spreadsheet chaos.",
+      body: "Post openings to your public careers page, gather every application in one inbox, and screen candidates with AI-assisted overviews. Move people through stages, schedule interviews, and hire or reject in bulk.",
+      bullets: ["Public careers page", "AI candidate overviews", "Interview scheduling", "Bulk hire & reject"],
+    },
+    am: {
+      eyebrow: "ቅጥር እና የአመልካች ክትትል",
+      lead: "ቦታዎችን ይሙሉ",
+      accent: "ያለ ስፕሬድሺት ትርምስ።",
+      body: "ማስታወቂያዎችን ወደ የህዝብ የስራ ገጽዎ ይለጥፉ፣ ሁሉንም ማመልከቻ በአንድ ኢንቦክስ ይሰብስቡ፣ እና በAI በታገዙ ማጠቃለያዎች አመልካቾችን ይምረጡ። ሰዎችን በደረጃዎች ያንቀሳቅሱ፣ ቃለ መጠይቆችን ያቀናብሩ፣ እና በጅምላ ይቅጠሩ ወይም ውድቅ ያድርጉ።",
+      bullets: ["የህዝብ የስራ ገጽ", "የAI አመልካች ማጠቃለያ", "የቃለ መጠይቅ ዕቅድ", "በጅምላ ቅጥር እና ውድቅ"],
+    },
     image: { src: "/assets/Z_jobs_1650x482.png", w: 1650, h: 482, alt: "Jobs and applicants pipeline in Corevia" },
     frameMax: "max-w-6xl",
     glow: "rgba(52,211,153,0.28)",
@@ -79,11 +96,20 @@ const features: Feature[] = [
     id: "payroll",
     n: "03",
     icon: Wallet,
-    eyebrow: "Payments & payroll",
-    lead: "Pay your team",
-    accent: "and keep a clean record.",
-    body: "See exactly what each person is owed, mark payments as paid in a click, and give every employee a transparent record of their own history.",
-    bullets: ["What's due at a glance", "Mark as paid in one click", "Per-employee history", "Tied to attendance"],
+    en: {
+      eyebrow: "Payments & payroll",
+      lead: "Pay your team",
+      accent: "and keep a clean record.",
+      body: "See exactly what each person is owed, mark payments as paid in a click, and give every employee a transparent record of their own history.",
+      bullets: ["What's due at a glance", "Mark as paid in one click", "Per-employee history", "Tied to attendance"],
+    },
+    am: {
+      eyebrow: "ክፍያዎች እና ደመወዝ",
+      lead: "ቡድንዎን ይክፈሉ",
+      accent: "እና ንጹህ መዝገብ ይያዙ።",
+      body: "እያንዳንዱ ሰው ምን ያህል እንደሚገባው በትክክል ይመልከቱ፣ ክፍያዎችን በአንድ ጠቅታ እንደተከፈሉ ምልክት ያድርጉ፣ እና ለእያንዳንዱ ሰራተኛ ግልጽ የሆነ የራሱ ታሪክ ይስጡ።",
+      bullets: ["የሚከፈለው በአንድ እይታ", "በአንድ ጠቅታ እንደተከፈለ ምልክት", "የእያንዳንዱ ሰራተኛ ታሪክ", "ከመገኘት ጋር የተያያዘ"],
+    },
     image: { src: "/assets/Z_payroll_1661x637.png", w: 1661, h: 637, alt: "Payroll and payments dashboard in Corevia" },
     frameMax: "max-w-6xl",
     glow: "rgba(250,204,21,0.22)",
@@ -98,11 +124,20 @@ const features: Feature[] = [
     id: "attendance",
     n: "04",
     icon: MapPin,
-    eyebrow: "Geofenced attendance",
-    lead: "Know who's in",
-    accent: "wherever the work happens.",
-    body: "Location-aware clock-in and clock-out with lunch breaks, tied to each employee. ",
-    bullets: ["GPS clock-in / out", "Lunch break tracking", "Live present-today view", "Feeds payroll & reviews"],
+    en: {
+      eyebrow: "Geofenced attendance",
+      lead: "Know who's in",
+      accent: "wherever the work happens.",
+      body: "Location-aware clock-in and clock-out with lunch breaks, tied to each employee. ",
+      bullets: ["GPS clock-in / out", "Lunch break tracking", "Live present-today view", "Feeds payroll & reviews"],
+    },
+    am: {
+      eyebrow: "በጂኦ የተከለለ መገኘት",
+      lead: "ማን እንዳለ ይወቁ",
+      accent: "ስራው በሚሰራበት ቦታ ሁሉ።",
+      body: "ከእያንዳንዱ ሰራተኛ ጋር የተያያዘ በአካባቢ የሚያውቅ መግቢያ እና መውጫ ከምሳ እረፍት ጋር። ",
+      bullets: ["በጂፒኤስ መግቢያ / መውጫ", "የምሳ እረፍት ክትትል", "የዛሬ መገኘት ቀጥታ እይታ", "ደመወዝ እና ግምገማ ይመግባል"],
+    },
     image: { src: "/assets/Z_attendance_953x647.png", w: 953, h: 647, alt: "Geofenced attendance tracking in Corevia" },
     frameMax: "max-w-[52.8rem]",
     glow: "rgba(45,212,191,0.26)",
@@ -117,11 +152,20 @@ const features: Feature[] = [
     id: "reports",
     n: "05",
     icon: BarChart3,
-    eyebrow: "Employee reports",
-    lead: "One report",
-    accent: "for the whole picture.",
-    body: "Pull peer reviews, attendance, Trello activity and GitHub stats into a single employee report. No tab-hopping — every signal on a person's performance lives on one page.",
-    bullets: ["Peer review scores", "Attendance summary", "Trello activity", "GitHub stats"],
+    en: {
+      eyebrow: "Employee reports",
+      lead: "One report",
+      accent: "for the whole picture.",
+      body: "Pull peer reviews, attendance, Trello activity and GitHub stats into a single employee report. No tab-hopping — every signal on a person's performance lives on one page.",
+      bullets: ["Peer review scores", "Attendance summary", "Trello activity", "GitHub stats"],
+    },
+    am: {
+      eyebrow: "የሰራተኛ ሪፖርቶች",
+      lead: "አንድ ሪፖርት",
+      accent: "ለሙሉ ምስሉ።",
+      body: "የእኩዮች ግምገማ፣ መገኘት፣ የTrello እንቅስቃሴ እና የGitHub ስታቲስቲክስ ወደ አንድ የሰራተኛ ሪፖርት ያሰባስቡ። ትር መዝለል የለም — በአንድ ሰው አፈጻጸም ላይ ያለ እያንዳንዱ ምልክት በአንድ ገጽ ላይ ይኖራል።",
+      bullets: ["የእኩዮች ግምገማ ውጤት", "የመገኘት ማጠቃለያ", "የTrello እንቅስቃሴ", "የGitHub ስታቲስቲክስ"],
+    },
     image: { src: "", w: 1300, h: 850, alt: "Employee report combining peer reviews, attendance, Trello and GitHub", video: "/assets/employee_report_1300x850.mp4" },
     frameMax: "max-w-5xl",
     glow: "rgba(52,211,153,0.26)",
@@ -168,6 +212,8 @@ export function Showcase() {
 }
 
 function FeatureChapter({ f, last }: { f: Feature; last: boolean }) {
+  const { lang } = useLang()
+  const c = pick(lang, f)
   const ref = useRef<HTMLDivElement>(null)
   const reduce = useReducedMotion()
 
@@ -183,8 +229,8 @@ function FeatureChapter({ f, last }: { f: Feature; last: boolean }) {
     show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.5, ease } },
   }
 
-  const leadWords = f.lead.split(" ")
-  const accentWords = f.accent.split(" ")
+  const leadWords = c.lead.split(" ")
+  const accentWords = c.accent.split(" ")
 
   return (
     <div ref={ref} className="relative mx-auto w-full max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
@@ -201,7 +247,7 @@ function FeatureChapter({ f, last }: { f: Feature; last: boolean }) {
         <Reveal>
           <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-semibold text-emerald-300">
             <f.icon className="h-3.5 w-3.5" />
-            {f.eyebrow}
+            {c.eyebrow}
           </span>
         </Reveal>
 
@@ -230,12 +276,12 @@ function FeatureChapter({ f, last }: { f: Feature; last: boolean }) {
         </motion.h3>
 
         <Reveal delay={0.1}>
-          <p className="mx-auto mt-5 max-w-2xl text-pretty text-lg leading-relaxed text-muted-foreground">{f.body}</p>
+          <p className="mx-auto mt-5 max-w-2xl text-pretty text-lg leading-relaxed text-muted-foreground">{c.body}</p>
         </Reveal>
 
         <Reveal delay={0.16}>
           <ul className="mt-7 flex flex-wrap items-center justify-center gap-2.5">
-            {f.bullets.map((b) => (
+            {c.bullets.map((b) => (
               <li
                 key={b}
                 className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 text-sm font-medium text-foreground"

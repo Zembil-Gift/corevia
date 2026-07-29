@@ -23,6 +23,50 @@ import {
   MinusCircle,
   ArrowRight,
 } from "lucide-react"
+import { useLang, pick } from "@/lib/i18n"
+
+const tr = {
+  dashboard: { en: "Dashboard", am: "ዳሽቦርድ" },
+  employees: { en: "Employees", am: "ሰራተኞች" },
+  active: { en: "active", am: "ንቁ" },
+  openJobs: { en: "Open jobs", am: "ክፍት ስራዎች" },
+  totalPostings: { en: "total postings", am: "ጠቅላላ ማስታወቂያዎች" },
+  upcomingPayroll: { en: "Upcoming payroll", am: "መጪ ደመወዝ" },
+  duePayments: { en: "due payments", am: "የሚከፈሉ ክፍያዎች" },
+  newApplicants: { en: "New applicants", am: "አዲስ አመልካቾች" },
+  totalOnOpen: { en: "total on open jobs", am: "በክፍት ስራዎች ጠቅላላ" },
+  attendanceToday: { en: "Attendance today", am: "የዛሬ መገኘት" },
+  activeEmployees: { en: "active employees", am: "ንቁ ሰራተኞች" },
+  present: { en: "present", am: "የተገኙ" },
+  presentC: { en: "Present", am: "የተገኙ" },
+  clockedOut: { en: "Clocked out", am: "የወጡ" },
+  absent: { en: "Absent", am: "ያልተገኙ" },
+  viewPayroll: { en: "View payroll", am: "ደመወዝ ይመልከቱ" },
+  noDue: { en: "No due payments right now.", am: "አሁን የሚከፈል ክፍያ የለም።" },
+  due: { en: "Due", am: "የሚከፈልበት" },
+  totalDue: { en: "Total due", am: "ጠቅላላ የሚከፈል" },
+  applicantsOpen: { en: "Applicants · open jobs", am: "አመልካቾች · ክፍት ስራዎች" },
+  applicants: { en: "Applicants", am: "አመልካቾች" },
+  viewJobs: { en: "View jobs", am: "ስራዎች ይመልከቱ" },
+  noOpenApplicants: { en: "No open jobs with applicants.", am: "አመልካቾች ያሉት ክፍት ስራ የለም።" },
+  total: { en: "total", am: "ጠቅላላ" },
+  totalC: { en: "Total", am: "ጠቅላላ" },
+  newLabel: { en: "new", am: "አዲስ" },
+  newC: { en: "New", am: "አዲስ" },
+  contentOverview: { en: "Content overview", am: "የይዘት አጠቃላይ እይታ" },
+  totalVsLive: { en: "total vs. live", am: "ጠቅላላ ከቀጥታ" },
+  publishedOpen: { en: "Published / Open", am: "የታተመ / ክፍት" },
+  currentlyIn: { en: "Currently clocked in", am: "አሁን የገቡ" },
+  clockedOutToday: { en: "Clocked out today", am: "ዛሬ የወጡ" },
+  notClockedIn: { en: "Not clocked in", am: "ያልገቡ" },
+  quickLinks: { en: "Quick links", am: "ፈጣን አገናኞች" },
+  viewPublicBlog: { en: "View public blog →", am: "የህዝብ ብሎግ ይመልከቱ →" },
+  viewPublicJobs: { en: "View public jobs →", am: "የህዝብ ስራዎች ይመልከቱ →" },
+  viewPublicEvents: { en: "View public events →", am: "የህዝብ ዝግጅቶች ይመልከቱ →" },
+  blog: { en: "Blog", am: "ብሎግ" },
+  jobs: { en: "Jobs", am: "ስራዎች" },
+  events: { en: "Events", am: "ዝግጅቶች" },
+}
 
 export type DashboardData = {
   counts: {
@@ -126,18 +170,19 @@ function ChartTooltip({
 }
 
 export function DashboardView({ data }: { data: DashboardData }) {
+  const { lang } = useLang()
   const { counts, employees, attendance, upcomingPayroll, openJobApplicants, orgSlug } = data
 
   const contentData = [
-    { name: "Blog", total: counts.blogs, live: counts.publishedBlogs },
-    { name: "Jobs", total: counts.jobs, live: counts.openJobs },
-    { name: "Events", total: counts.events, live: counts.publishedEvents },
+    { name: pick(lang, tr.blog), total: counts.blogs, live: counts.publishedBlogs },
+    { name: pick(lang, tr.jobs), total: counts.jobs, live: counts.openJobs },
+    { name: pick(lang, tr.events), total: counts.events, live: counts.publishedEvents },
   ]
 
   const attendanceData = [
-    { name: "Present", value: attendance.present, color: "#34d399" },
-    { name: "Clocked out", value: attendance.clockedOut, color: "#38bdf8" },
-    { name: "Absent", value: attendance.absent, color: "#71717a" },
+    { name: pick(lang, tr.presentC), value: attendance.present, color: "#34d399" },
+    { name: pick(lang, tr.clockedOut), value: attendance.clockedOut, color: "#38bdf8" },
+    { name: pick(lang, tr.absent), value: attendance.absent, color: "#71717a" },
   ]
   const attendanceTotal = attendance.present + attendance.clockedOut + attendance.absent
 
@@ -150,40 +195,40 @@ export function DashboardView({ data }: { data: DashboardData }) {
   return (
     <div className="mx-auto max-w-7xl">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+        <h1 className="text-2xl font-bold text-white">{pick(lang, tr.dashboard)}</h1>
       </div>
 
       {/* KPI row */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           icon={Users}
-          label="Employees"
+          label={pick(lang, tr.employees)}
           value={String(employees.total)}
-          sub={`${employees.active} active`}
+          sub={`${employees.active} ${pick(lang, tr.active)}`}
           href="/manager/employees"
           tint="#a78bfa"
         />
         <StatCard
           icon={Briefcase}
-          label="Open jobs"
+          label={pick(lang, tr.openJobs)}
           value={String(counts.openJobs)}
-          sub={`${counts.jobs} total postings`}
+          sub={`${counts.jobs} ${pick(lang, tr.totalPostings)}`}
           href="/manager/jobs"
           tint={ACCENT}
         />
         <StatCard
           icon={Wallet}
-          label="Upcoming payroll"
+          label={pick(lang, tr.upcomingPayroll)}
           value={formatMoney(upcomingPayroll.totalMinor)}
-          sub={`${upcomingPayroll.count} due payments`}
+          sub={`${upcomingPayroll.count} ${pick(lang, tr.duePayments)}`}
           href="/manager/payments"
           tint="#34d399"
         />
         <StatCard
           icon={UserPlus}
-          label="New applicants"
+          label={pick(lang, tr.newApplicants)}
           value={String(openJobApplicants.newApplicants)}
-          sub={`${openJobApplicants.totalApplicants} total on open jobs`}
+          sub={`${openJobApplicants.totalApplicants} ${pick(lang, tr.totalOnOpen)}`}
           href="/manager/jobs"
           tint="#38bdf8"
         />
@@ -193,8 +238,8 @@ export function DashboardView({ data }: { data: DashboardData }) {
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         {/* Attendance donut */}
         <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5">
-          <h2 className="mb-1 text-sm font-semibold text-white">Attendance today</h2>
-          <p className="mb-2 text-xs text-zinc-500">{attendanceTotal} active employees</p>
+          <h2 className="mb-1 text-sm font-semibold text-white">{pick(lang, tr.attendanceToday)}</h2>
+          <p className="mb-2 text-xs text-zinc-500">{attendanceTotal} {pick(lang, tr.activeEmployees)}</p>
           <div className="relative h-44 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -218,7 +263,7 @@ export function DashboardView({ data }: { data: DashboardData }) {
             </ResponsiveContainer>
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-2xl font-bold text-white">{attendance.present}</span>
-              <span className="text-xs text-zinc-500">present</span>
+              <span className="text-xs text-zinc-500">{pick(lang, tr.present)}</span>
             </div>
           </div>
           <div className="mt-3 space-y-1.5">
@@ -239,21 +284,21 @@ export function DashboardView({ data }: { data: DashboardData }) {
         <div className="mb-4 flex items-center justify-between">
           <h2 className="flex items-center gap-2 text-sm font-semibold text-white">
             <CalendarClock className="h-4 w-4 text-emerald-400" />
-            Upcoming payroll
+            {pick(lang, tr.upcomingPayroll)}
           </h2>
           <Link href="/manager/payments" className="text-xs text-[#e78a53] hover:underline">
-            View payroll
+            {pick(lang, tr.viewPayroll)}
           </Link>
         </div>
         {upcomingPayroll.items.length === 0 ? (
-          <p className="py-8 text-center text-sm text-zinc-500">No due payments right now.</p>
+          <p className="py-8 text-center text-sm text-zinc-500">{pick(lang, tr.noDue)}</p>
         ) : (
           <ul className="divide-y divide-zinc-800">
             {upcomingPayroll.items.map((p) => (
               <li key={p.id} className="flex items-center justify-between py-2.5">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-zinc-200">{p.employeeName}</p>
-                  <p className="text-xs text-zinc-500">Due {formatDate(p.dueDate)}</p>
+                  <p className="text-xs text-zinc-500">{pick(lang, tr.due)} {formatDate(p.dueDate)}</p>
                 </div>
                 <span className="ml-3 shrink-0 text-sm font-semibold text-white">
                   {formatMoney(p.amountMinor)}
@@ -264,7 +309,7 @@ export function DashboardView({ data }: { data: DashboardData }) {
         )}
         {upcomingPayroll.count > 0 && (
           <div className="mt-3 flex items-center justify-between border-t border-zinc-800 pt-3 text-sm">
-            <span className="text-zinc-400">Total due</span>
+            <span className="text-zinc-400">{pick(lang, tr.totalDue)}</span>
             <span className="font-semibold text-white">{formatMoney(upcomingPayroll.totalMinor)}</span>
           </div>
         )}
@@ -276,13 +321,13 @@ export function DashboardView({ data }: { data: DashboardData }) {
         {/* Applicants for open jobs */}
         <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-white">Applicants · open jobs</h2>
+            <h2 className="text-sm font-semibold text-white">{pick(lang, tr.applicantsOpen)}</h2>
             <Link href="/manager/jobs" className="text-xs text-[#e78a53] hover:underline">
-              View jobs
+              {pick(lang, tr.viewJobs)}
             </Link>
           </div>
           {applicantData.length === 0 ? (
-            <p className="py-8 text-center text-sm text-zinc-500">No open jobs with applicants.</p>
+            <p className="py-8 text-center text-sm text-zinc-500">{pick(lang, tr.noOpenApplicants)}</p>
           ) : (
             <>
               <div style={{ height: Math.max(140, applicantData.length * 44) }} className="w-full">
@@ -298,8 +343,8 @@ export function DashboardView({ data }: { data: DashboardData }) {
                       tick={{ fill: "#a1a1aa", fontSize: 12 }}
                     />
                     <Tooltip cursor={{ fill: "#ffffff08" }} content={<ChartTooltip />} />
-                    <Bar dataKey="Applicants" fill="#38bdf8" radius={[0, 4, 4, 0]} />
-                    <Bar dataKey="New" fill={ACCENT} radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="Applicants" name={pick(lang, tr.applicants)} fill="#38bdf8" radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="New" name={pick(lang, tr.newC)} fill={ACCENT} radius={[0, 4, 4, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -312,10 +357,10 @@ export function DashboardView({ data }: { data: DashboardData }) {
                   >
                     <span className="truncate text-zinc-300">{j.title}</span>
                     <span className="ml-3 shrink-0 text-xs text-zinc-500">
-                      {j.total} total
+                      {j.total} {pick(lang, tr.total)}
                       {j.newCount > 0 && (
                         <span className="ml-2 rounded-full bg-[#e78a53]/15 px-2 py-0.5 text-[#e78a53]">
-                          {j.newCount} new
+                          {j.newCount} {pick(lang, tr.newLabel)}
                         </span>
                       )}
                     </span>
@@ -329,8 +374,8 @@ export function DashboardView({ data }: { data: DashboardData }) {
         {/* Content overview */}
         <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-white">Content overview</h2>
-            <span className="text-xs text-zinc-500">total vs. live</span>
+            <h2 className="text-sm font-semibold text-white">{pick(lang, tr.contentOverview)}</h2>
+            <span className="text-xs text-zinc-500">{pick(lang, tr.totalVsLive)}</span>
           </div>
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -349,18 +394,18 @@ export function DashboardView({ data }: { data: DashboardData }) {
                   tick={{ fill: "#71717a", fontSize: 12 }}
                 />
                 <Tooltip cursor={{ fill: "#ffffff08" }} content={<ChartTooltip />} />
-                <Bar dataKey="total" name="Total" fill="#3f3f46" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="live" name="Published / Open" fill={ACCENT} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="total" name={pick(lang, tr.totalC)} fill="#3f3f46" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="live" name={pick(lang, tr.publishedOpen)} fill={ACCENT} radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
           <div className="mt-3 flex items-center gap-5 text-xs text-zinc-400">
             <span className="flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-sm bg-zinc-600" /> Total
+              <span className="h-2.5 w-2.5 rounded-sm bg-zinc-600" /> {pick(lang, tr.totalC)}
             </span>
             <span className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: ACCENT }} />{" "}
-              Published / Open
+              {pick(lang, tr.publishedOpen)}
             </span>
           </div>
         </div>
@@ -374,46 +419,46 @@ export function DashboardView({ data }: { data: DashboardData }) {
           <CheckCircle2 className="h-8 w-8 text-emerald-400" />
           <div>
             <p className="text-xl font-bold text-white">{attendance.present}</p>
-            <p className="text-xs text-zinc-500">Currently clocked in</p>
+            <p className="text-xs text-zinc-500">{pick(lang, tr.currentlyIn)}</p>
           </div>
         </div>
         <div className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <Clock className="h-8 w-8 text-sky-400" />
           <div>
             <p className="text-xl font-bold text-white">{attendance.clockedOut}</p>
-            <p className="text-xs text-zinc-500">Clocked out today</p>
+            <p className="text-xs text-zinc-500">{pick(lang, tr.clockedOutToday)}</p>
           </div>
         </div>
         <div className="flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <MinusCircle className="h-8 w-8 text-zinc-500" />
           <div>
             <p className="text-xl font-bold text-white">{attendance.absent}</p>
-            <p className="text-xs text-zinc-500">Not clocked in</p>
+            <p className="text-xs text-zinc-500">{pick(lang, tr.notClockedIn)}</p>
           </div>
         </div>
       </div>
 
       {/* Quick links */}
       <div className="mt-6 rounded-xl border border-zinc-800 bg-zinc-900/30 p-5">
-        <h2 className="mb-3 text-sm font-semibold text-white">Quick links</h2>
+        <h2 className="mb-3 text-sm font-semibold text-white">{pick(lang, tr.quickLinks)}</h2>
         <div className="flex flex-wrap gap-3 text-sm">
           <Link
             href={orgSlug ? `/o/${orgSlug}/blog` : "/blog"}
             className="rounded-lg border border-zinc-800 px-3 py-1.5 text-[#e78a53] transition-colors hover:bg-zinc-800/60"
           >
-            View public blog →
+            {pick(lang, tr.viewPublicBlog)}
           </Link>
           <Link
             href={orgSlug ? `/o/${orgSlug}/jobs` : "/jobs"}
             className="rounded-lg border border-zinc-800 px-3 py-1.5 text-[#e78a53] transition-colors hover:bg-zinc-800/60"
           >
-            View public jobs →
+            {pick(lang, tr.viewPublicJobs)}
           </Link>
           <Link
             href={orgSlug ? `/o/${orgSlug}/events` : "/events"}
             className="rounded-lg border border-zinc-800 px-3 py-1.5 text-[#e78a53] transition-colors hover:bg-zinc-800/60"
           >
-            View public events →
+            {pick(lang, tr.viewPublicEvents)}
           </Link>
         </div>
       </div>

@@ -6,6 +6,19 @@ import { X, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useLang, pick } from "@/lib/i18n"
+import { a } from "@/lib/i18n-admin"
+
+const c = {
+  createPost: { en: "Create new blog post", am: "አዲስ የብሎግ ጽሁፍ ፍጠር" },
+  createPostBtn: { en: "Create post", am: "ጽሁፍ ፍጠር" },
+  titlePlaceholder: { en: "Post title", am: "የጽሁፍ ርዕስ" },
+  excerptPlaceholder: { en: "Short summary...", am: "አጭር ማጠቃለያ..." },
+  contentLabel: { en: "Content", am: "ይዘት" },
+  contentPlaceholder: { en: "Post content (HTML or plain text)", am: "የጽሁፍ ይዘት (HTML ወይም ተራ ጽሁፍ)" },
+  coverLabel: { en: "Cover image URL", am: "የሽፋን ምስል URL" },
+  failed: { en: "Failed to create blog", am: "ብሎግ መፍጠር አልተሳካም" },
+}
 
 interface CreateBlogModalProps {
   open: boolean
@@ -18,6 +31,7 @@ export function CreateBlogModal({
   onOpenChange,
   onSuccess,
 }: CreateBlogModalProps) {
+  const { lang } = useLang()
   const [title, setTitle] = useState("")
   const [slug, setSlug] = useState("")
   const [excerpt, setExcerpt] = useState("")
@@ -46,7 +60,7 @@ export function CreateBlogModal({
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        setError((data as { error?: string }).error ?? "Failed to create blog")
+        setError((data as { error?: string }).error ?? pick(lang, c.failed))
         setSubmitting(false)
         return
       }
@@ -59,7 +73,7 @@ export function CreateBlogModal({
       onOpenChange(false)
       onSuccess?.()
     } catch {
-      setError("Something went wrong")
+      setError(pick(lang, a.somethingWrong))
     }
     setSubmitting(false)
   }
@@ -81,13 +95,13 @@ export function CreateBlogModal({
         >
           <div className="flex items-center justify-between mb-6">
             <Dialog.Title className="text-xl font-semibold text-white">
-              Create new blog post
+              {pick(lang, c.createPost)}
             </Dialog.Title>
             <Dialog.Close asChild>
               <button
                 type="button"
                 className="rounded-full p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
-                aria-label="Close"
+                aria-label={pick(lang, a.close)}
               >
                 <X className="size-5" />
               </button>
@@ -97,12 +111,12 @@ export function CreateBlogModal({
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="blog-title" className="text-zinc-200">
-                Title
+                {pick(lang, a.title)}
               </Label>
               <Input
                 id="blog-title"
                 type="text"
-                placeholder="Post title"
+                placeholder={pick(lang, c.titlePlaceholder)}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
@@ -111,7 +125,7 @@ export function CreateBlogModal({
             </div>
             <div className="space-y-2">
               <Label htmlFor="blog-slug" className="text-zinc-200">
-                Slug
+                {pick(lang, a.slug)}
               </Label>
               <Input
                 id="blog-slug"
@@ -125,12 +139,12 @@ export function CreateBlogModal({
             </div>
             <div className="space-y-2">
               <Label htmlFor="blog-excerpt" className="text-zinc-200">
-                Excerpt
+                {pick(lang, a.excerpt)}
               </Label>
               <Input
                 id="blog-excerpt"
                 type="text"
-                placeholder="Short summary..."
+                placeholder={pick(lang, c.excerptPlaceholder)}
                 value={excerpt}
                 onChange={(e) => setExcerpt(e.target.value)}
                 className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
@@ -138,12 +152,12 @@ export function CreateBlogModal({
             </div>
             <div className="space-y-2">
               <Label htmlFor="blog-content" className="text-zinc-200">
-                Content
+                {pick(lang, c.contentLabel)}
               </Label>
               <textarea
                 id="blog-content"
                 rows={4}
-                placeholder="Post content (HTML or plain text)"
+                placeholder={pick(lang, c.contentPlaceholder)}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white placeholder:text-zinc-500 focus:border-[#e78a53] focus:outline-none focus:ring-1 focus:ring-[#e78a53]/20 resize-y min-h-[100px]"
@@ -151,7 +165,7 @@ export function CreateBlogModal({
             </div>
             <div className="space-y-2">
               <Label htmlFor="blog-cover" className="text-zinc-200">
-                Cover image URL
+                {pick(lang, c.coverLabel)}
               </Label>
               <Input
                 id="blog-cover"
@@ -164,7 +178,7 @@ export function CreateBlogModal({
             </div>
             <div className="space-y-2">
               <Label htmlFor="blog-status" className="text-zinc-200">
-                Status
+                {pick(lang, a.status)}
               </Label>
               <select
                 id="blog-status"
@@ -172,8 +186,8 @@ export function CreateBlogModal({
                 onChange={(e) => setStatus(e.target.value as "PUBLISHED" | "DRAFT")}
                 className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white focus:border-[#e78a53] focus:outline-none focus:ring-1 focus:ring-[#e78a53]/20"
               >
-                <option value="PUBLISHED">Published</option>
-                <option value="DRAFT">Draft</option>
+                <option value="PUBLISHED">{pick(lang, a.published)}</option>
+                <option value="DRAFT">{pick(lang, a.draft)}</option>
               </select>
             </div>
 
@@ -192,10 +206,10 @@ export function CreateBlogModal({
                 {submitting ? (
                   <>
                     <Loader2 className="size-4 animate-spin mr-2" />
-                    Creating…
+                    {pick(lang, a.creating)}
                   </>
                 ) : (
-                  "Create post"
+                  pick(lang, c.createPostBtn)
                 )}
               </Button>
               <Dialog.Close asChild>
@@ -204,7 +218,7 @@ export function CreateBlogModal({
                   variant="outline"
                   className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
                 >
-                  Cancel
+                  {pick(lang, a.cancel)}
                 </Button>
               </Dialog.Close>
             </div>

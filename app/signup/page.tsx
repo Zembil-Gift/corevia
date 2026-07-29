@@ -10,8 +10,41 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Logo } from "@/components/corevia/logo"
+import { LangToggle } from "@/components/corevia/lang-toggle"
+import { useLang, pick } from "@/lib/i18n"
+
+const copy = {
+  back: { en: "Back to home", am: "ወደ መነሻ ተመለስ" },
+  title: { en: "Start for free", am: "በነጻ ይጀምሩ" },
+  received: { en: "Request received", am: "ጥያቄው ደርሷል" },
+  thanks: { en: "Thanks", am: "አመሰግናለሁ" },
+  there: { en: "there", am: "እናንተ" },
+  receivedBody1: { en: "We've received your request to create the", am: "የሚከተለውን የስራ ቦታ ለመፍጠር ጥያቄዎን ተቀብለናል፦" },
+  yourCompany: { en: "your company", am: "የእርስዎ ኩባንያ" },
+  workspaceWord: { en: "workspace.", am: "።" },
+  receivedBody2: { en: "Our team will review it and email", am: "ቡድናችን ይገመግመዋል እና ከጸደቀ በኋላ የመግቢያ መረጃዎን ወደ" },
+  receivedBody3: { en: "with your login credentials once it's approved.", am: "ኢሜይል ያደርጋል።" },
+  goSignIn: { en: "Go to sign in", am: "ወደ መግቢያ ይሂዱ" },
+  companyName: { en: "Company name", am: "የኩባንያ ስም" },
+  yourName: { en: "Your name", am: "የእርስዎ ስም" },
+  workEmail: { en: "Work email", am: "የስራ ኢሜይል" },
+  phone: { en: "Phone", am: "ስልክ" },
+  industry: { en: "Industry", am: "ዘርፍ" },
+  industryPlaceholder: { en: "e.g. Retail, Healthcare, Fintech", am: "ለምሳሌ ችርቻሮ፣ ጤና፣ ፊንቴክ" },
+  website: { en: "Website", am: "ድህረ ገጽ" },
+  agree: { en: "I agree to the", am: "እስማማለሁ ከ" },
+  terms: { en: "Terms of Service", am: "የአገልግሎት ውል" },
+  and: { en: "and", am: "እና" },
+  privacy: { en: "Privacy Policy", am: "የግላዊነት ፖሊሲ" },
+  sending: { en: "Sending request...", am: "ጥያቄ በመላክ ላይ..." },
+  requestWorkspace: { en: "Request your workspace", am: "የስራ ቦታዎን ይጠይቁ" },
+  haveAccount: { en: "Already have an account?", am: "አስቀድሞ መለያ አለዎት?" },
+  signIn: { en: "Sign in", am: "ግባ" },
+  wrong: { en: "Something went wrong. Please try again.", am: "የሆነ ስህተት ተፈጥሯል። እባክዎ እንደገና ይሞክሩ።" },
+}
 
 export default function SignupPage() {
+  const { lang } = useLang()
   const [formData, setFormData] = useState({
     company: "",
     name: "",
@@ -51,7 +84,7 @@ export default function SignupPage() {
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        throw new Error((data as { error?: string }).error || "Something went wrong. Please try again.")
+        throw new Error((data as { error?: string }).error || pick(lang, copy.wrong))
       }
       setSubmitted(true)
     } catch (err) {
@@ -77,8 +110,12 @@ export default function SignupPage() {
         className="absolute left-6 top-6 z-20 flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
-        <span>Back to home</span>
+        <span>{pick(lang, copy.back)}</span>
       </Link>
+
+      <div className="absolute right-6 top-6 z-20">
+        <LangToggle />
+      </div>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -90,7 +127,7 @@ export default function SignupPage() {
           <Link href="/" className="mb-6 inline-block">
             <Logo className="[&_span:last-child]:text-xl" />
           </Link>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Start for free</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">{pick(lang, copy.title)}</h1>
          
         </div>
 
@@ -105,26 +142,25 @@ export default function SignupPage() {
               <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-500/15 text-emerald-400">
                 <CheckCircle2 className="h-7 w-7" />
               </span>
-              <h2 className="mt-4 text-xl font-bold text-foreground">Request received</h2>
+              <h2 className="mt-4 text-xl font-bold text-foreground">{pick(lang, copy.received)}</h2>
               <p className="mt-2 text-sm text-muted-foreground">
-                Thanks, {formData.name.split(" ")[0] || "there"}. We&apos;ve received your request to create the{" "}
-                <span className="font-semibold text-foreground">{formData.company || "your company"}</span> workspace.
-                Our team will review it and email{" "}
-                <span className="font-semibold text-foreground">{formData.email}</span> with your login credentials
-                once it&apos;s approved.
+                {pick(lang, copy.thanks)}, {formData.name.split(" ")[0] || pick(lang, copy.there)}. {pick(lang, copy.receivedBody1)}{" "}
+                <span className="font-semibold text-foreground">{formData.company || pick(lang, copy.yourCompany)}</span>{" "}
+                {pick(lang, copy.workspaceWord)} {pick(lang, copy.receivedBody2)}{" "}
+                <span className="font-semibold text-foreground">{formData.email}</span> {pick(lang, copy.receivedBody3)}
               </p>
               <Link
                 href="/login"
                 className="mt-6 inline-flex items-center justify-center rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-emerald-950 transition-colors hover:bg-emerald-400"
               >
-                Go to sign in
+                {pick(lang, copy.goSignIn)}
               </Link>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
                 <Label htmlFor="company">
-                  Company name <span className="text-destructive">*</span>
+                  {pick(lang, copy.companyName)} <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="company"
@@ -139,7 +175,7 @@ export default function SignupPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="name">
-                  Your name <span className="text-destructive">*</span>
+                  {pick(lang, copy.yourName)} <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="name"
@@ -155,7 +191,7 @@ export default function SignupPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="email">
-                  Work email <span className="text-destructive">*</span>
+                  {pick(lang, copy.workEmail)} <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="email"
@@ -171,7 +207,7 @@ export default function SignupPage() {
 
               
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone</Label>
+                  <Label htmlFor="phone">{pick(lang, copy.phone)}</Label>
                   <Input
                     id="phone"
                     name="phone"
@@ -183,12 +219,12 @@ export default function SignupPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="industry">Industry</Label>
+                  <Label htmlFor="industry">{pick(lang, copy.industry)}</Label>
                   <Input
                     id="industry"
                     name="industry"
                     type="text"
-                    placeholder="e.g. Retail, Healthcare, Fintech"
+                    placeholder={pick(lang, copy.industryPlaceholder)}
                     value={formData.industry}
                     onChange={handleChange}
                   />
@@ -196,7 +232,7 @@ export default function SignupPage() {
               
 
               <div className="space-y-2">
-                <Label htmlFor="website">Website</Label>
+                <Label htmlFor="website">{pick(lang, copy.website)}</Label>
                 <Input
                   id="website"
                   name="website"
@@ -217,13 +253,13 @@ export default function SignupPage() {
                   required
                 />
                 <label htmlFor="terms" className="text-sm text-muted-foreground">
-                  I agree to the{" "}
+                  {pick(lang, copy.agree)}{" "}
                   <Link href="#" className="font-medium text-emerald-400 hover:text-emerald-300">
-                    Terms of Service
+                    {pick(lang, copy.terms)}
                   </Link>{" "}
-                  and{" "}
+                  {pick(lang, copy.and)}{" "}
                   <Link href="#" className="font-medium text-emerald-400 hover:text-emerald-300">
-                    Privacy Policy
+                    {pick(lang, copy.privacy)}
                   </Link>
                 </label>
               </div>
@@ -242,7 +278,7 @@ export default function SignupPage() {
                 disabled={isLoading}
                 className="w-full rounded-xl bg-emerald-500 py-3 font-semibold text-emerald-950 transition-colors hover:bg-emerald-400"
               >
-                {isLoading ? "Sending request..." : "Request your workspace"}
+                {isLoading ? pick(lang, copy.sending) : pick(lang, copy.requestWorkspace)}
               </Button>
             </form>
           )}
@@ -250,9 +286,9 @@ export default function SignupPage() {
           {!submitted && (
             <div className="mt-6 text-center">
               <p className="text-sm text-muted-foreground">
-                Already have an account?{" "}
+                {pick(lang, copy.haveAccount)}{" "}
                 <Link href="/login" className="font-semibold text-emerald-400 hover:text-emerald-300">
-                  Sign in
+                  {pick(lang, copy.signIn)}
                 </Link>
               </p>
             </div>

@@ -4,25 +4,44 @@ import Link from "next/link"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { useEffect, useState } from "react"
 import { ArrowRight, CheckCircle2 } from "lucide-react"
-import { brand } from "@/lib/brand"
+import { useLang, pick } from "@/lib/i18n"
 import { HeroPreview } from "./hero-preview"
 
-const bullets = ["31-day free trial", "No credit card"]
+const copy = {
+  badge: { en: "All-in-one company operations", am: "የተቋም ስራዎች በአንድ ቦታ" },
+  headlinePrefix: { en: "One platform to run your ", am: "አንድ መድረክ ለ" },
+  subtitle: {
+    en: "Hiring, employees, attendance, performance, payments and content. Corevia gives every company one operations platform, without stitching six tools together.",
+    am: "ቅጥር፣ ሰራተኞች፣ መገኘት፣ አፈጻጸም፣ ክፍያዎች እና ይዘት። Corevia ለእያንዳንዱ ኩባንያ ስድስት መሳሪያዎችን ሳያገናኙ አንድ የስራ መድረክ ይሰጣል።",
+  },
+  startTrial: { en: "Start free trial", am: "ነጻ ሙከራ ጀምር" },
+  seeHow: { en: "See how it works", am: "እንዴት እንደሚሰራ ይመልከቱ" },
+}
 
 // The word that morphs inside the headline — each maps to a product module.
-const morphWords = ["hiring", "payroll", "attendance", "business", "whole team"]
+const morphWords = {
+  en: ["hiring", "payroll", "attendance", "business", "whole team"],
+  am: ["ቅጥር", "ክፍያ", "መገኘት", "ንግድ", "ሙሉ ቡድን"],
+}
+
+const bullets = {
+  en: ["31-day free trial", "No credit card"],
+  am: ["ለ31 ቀናት ነጻ ሙከራ", "ክሬዲት ካርድ አያስፈልግም"],
+}
 
 const ease = [0.22, 1, 0.36, 1] as const
 
 export function Hero() {
+  const { lang } = useLang()
+  const words = pick(lang, morphWords)
   const reduce = useReducedMotion()
   const [i, setI] = useState(0)
 
   useEffect(() => {
     if (reduce) return
-    const id = setInterval(() => setI((v) => (v + 1) % morphWords.length), 2200)
+    const id = setInterval(() => setI((v) => (v + 1) % words.length), 2200)
     return () => clearInterval(id)
-  }, [reduce])
+  }, [reduce, words.length])
 
   return (
     <section className="relative overflow-hidden">
@@ -59,7 +78,7 @@ export function Hero() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-70" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
             </span>
-            All-in-one company operations
+            {pick(lang, copy.badge)}
           </motion.span>
 
           <motion.h1
@@ -68,18 +87,18 @@ export function Hero() {
             transition={{ duration: 0.7, delay: 0.08, ease }}
             className="mt-6 text-balance text-4xl font-extrabold leading-[1.05] tracking-tight text-foreground sm:text-6xl"
           >
-            One platform to run your{" "}
+            {pick(lang, copy.headlinePrefix)}
             <span className="relative inline-grid overflow-hidden text-left align-bottom">
               <AnimatePresence mode="popLayout" initial={false}>
                 <motion.span
-                  key={morphWords[i]}
+                  key={words[i]}
                   initial={reduce ? false : { y: "100%", opacity: 0, filter: "blur(8px)" }}
                   animate={{ y: "0%", opacity: 1, filter: "blur(0px)" }}
                   exit={reduce ? { opacity: 0 } : { y: "-100%", opacity: 0, filter: "blur(8px)" }}
                   transition={{ duration: 0.5, ease }}
                   className="col-start-1 row-start-1 pr-1 text-emerald-400"
                 >
-                  {morphWords[i]}
+                  {words[i]}
                 </motion.span>
               </AnimatePresence>
             </span>
@@ -91,7 +110,7 @@ export function Hero() {
             transition={{ duration: 0.7, delay: 0.16, ease }}
             className="mx-auto mt-5 max-w-2xl text-pretty text-lg leading-relaxed text-muted-foreground"
           >
-            {brand.subtitle}
+            {pick(lang, copy.subtitle)}
           </motion.p>
 
           <motion.div
@@ -104,14 +123,14 @@ export function Hero() {
               href="/signup"
               className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-emerald-500 px-6 py-3 text-base font-semibold text-emerald-950 shadow-lg shadow-emerald-500/20 transition-all hover:-translate-y-0.5 hover:bg-emerald-400 sm:w-auto"
             >
-              Start free trial
+              {pick(lang, copy.startTrial)}
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
             <a
               href="#showcase"
               className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-border bg-background px-6 py-3 text-base font-semibold text-foreground transition-colors hover:bg-muted sm:w-auto"
             >
-              See how it works
+              {pick(lang, copy.seeHow)}
             </a>
           </motion.div>
 
@@ -121,7 +140,7 @@ export function Hero() {
             transition={{ duration: 0.7, delay: 0.34 }}
             className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground"
           >
-            {bullets.map((b) => (
+            {pick(lang, bullets).map((b) => (
               <li key={b} className="inline-flex items-center gap-1.5">
                 <CheckCircle2 className="h-4 w-4 text-emerald-400" />
                 {b}

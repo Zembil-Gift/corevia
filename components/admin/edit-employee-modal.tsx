@@ -6,9 +6,27 @@ import { Loader2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useLang, pick } from "@/lib/i18n"
+import { a } from "@/lib/i18n-admin"
 import type { EmployeeApi } from "@/lib/employees-api"
 import { EmployeePhotoUpload } from "@/components/admin/employee-photo-upload"
 import { DAY_OF_WEEK_VALUES, type DayOfWeekApi } from "@/lib/employees-api"
+
+const c = {
+  editEmployee: { en: "Edit employee", am: "ሰራተኛ አርትዕ" },
+  linkedin: { en: "LinkedIn URL", am: "የLinkedIn URL" },
+  salaryDate: { en: "Salary date", am: "የደመወዝ ቀን" },
+  grossSalary: { en: "Gross salary amount", am: "የጠቅላላ ደመወዝ መጠን" },
+  grossHint: {
+    en: "Enter the gross salary. Income tax and pension are deducted automatically.",
+    am: "ጠቅላላ ደመወዝ ያስገቡ። የገቢ ግብር እና ጡረታ በራስ-ሰር ይቀነሳሉ።",
+  },
+  scheduleDays: { en: "Office schedule days", am: "የቢሮ የስራ ቀናት" },
+  activeEmployee: { en: "Active employee", am: "ንቁ ሰራተኛ" },
+  invalidSalary: { en: "Salary amount must be a valid non-negative number", am: "የደመወዝ መጠን ትክክለኛ አሉታዊ ያልሆነ ቁጥር መሆን አለበት" },
+  failed: { en: "Failed to update employee", am: "ሰራተኛ ማዘመን አልተሳካም" },
+  photoFailed: { en: "Failed to upload employee photo", am: "የሰራተኛ ፎቶ መስቀል አልተሳካም" },
+}
 
 interface EditEmployeeModalProps {
   open: boolean
@@ -23,6 +41,7 @@ export function EditEmployeeModal({
   employee,
   onSuccess,
 }: EditEmployeeModalProps) {
+  const { lang } = useLang()
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
@@ -71,7 +90,7 @@ export function EditEmployeeModal({
           : (() => {
               const parsedMajor = Number(salaryAmountMajor.trim())
               if (!Number.isFinite(parsedMajor) || parsedMajor < 0) {
-                throw new Error("Salary amount must be a valid non-negative number")
+                throw new Error(pick(lang, c.invalidSalary))
               }
               return Math.round(parsedMajor * 100)
             })()
@@ -93,7 +112,7 @@ export function EditEmployeeModal({
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        setError((data as { error?: string }).error ?? "Failed to update employee")
+        setError((data as { error?: string }).error ?? pick(lang, c.failed))
         setSubmitting(false)
         return
       }
@@ -107,7 +126,7 @@ export function EditEmployeeModal({
         })
         if (!photoRes.ok) {
           const photoData = await photoRes.json().catch(() => ({}))
-          setError((photoData as { error?: string }).error ?? "Failed to upload employee photo")
+          setError((photoData as { error?: string }).error ?? pick(lang, c.photoFailed))
           setSubmitting(false)
           return
         }
@@ -116,7 +135,7 @@ export function EditEmployeeModal({
       onOpenChange(false)
       onSuccess?.()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong")
+      setError(err instanceof Error ? err.message : pick(lang, a.somethingWrong))
     }
     setSubmitting(false)
   }
@@ -135,12 +154,12 @@ export function EditEmployeeModal({
           aria-describedby={undefined}
         >
           <div className="mb-6 flex items-center justify-between">
-            <Dialog.Title className="text-xl font-semibold text-white">Edit employee</Dialog.Title>
+            <Dialog.Title className="text-xl font-semibold text-white">{pick(lang, c.editEmployee)}</Dialog.Title>
             <Dialog.Close asChild>
               <button
                 type="button"
                 className="rounded-full p-2 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
-                aria-label="Close"
+                aria-label={pick(lang, a.close)}
               >
                 <X className="size-5" />
               </button>
@@ -150,7 +169,7 @@ export function EditEmployeeModal({
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="edit-employee-name" className="text-zinc-200">
-                Name
+                {pick(lang, a.name)}
               </Label>
               <Input
                 id="edit-employee-name"
@@ -162,7 +181,7 @@ export function EditEmployeeModal({
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-employee-email" className="text-zinc-200">
-                Email
+                {pick(lang, a.email)}
               </Label>
               <Input
                 id="edit-employee-email"
@@ -175,7 +194,7 @@ export function EditEmployeeModal({
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-employee-phone" className="text-zinc-200">
-                Phone
+                {pick(lang, a.phone)}
               </Label>
               <Input
                 id="edit-employee-phone"
@@ -187,7 +206,7 @@ export function EditEmployeeModal({
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-employee-position" className="text-zinc-200">
-                Position
+                {pick(lang, a.position)}
               </Label>
               <Input
                 id="edit-employee-position"
@@ -199,7 +218,7 @@ export function EditEmployeeModal({
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-employee-linkedin" className="text-zinc-200">
-                LinkedIn URL
+                {pick(lang, c.linkedin)}
               </Label>
               <Input
                 id="edit-employee-linkedin"
@@ -212,7 +231,7 @@ export function EditEmployeeModal({
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="edit-employee-salary-date" className="text-zinc-200">
-                  Salary date
+                  {pick(lang, c.salaryDate)}
                 </Label>
                 <Input
                   id="edit-employee-salary-date"
@@ -224,7 +243,7 @@ export function EditEmployeeModal({
               </div>
               <div className="space-y-2">
                 <Label htmlFor="edit-employee-salary-amount" className="text-zinc-200">
-                  Gross salary amount
+                  {pick(lang, c.grossSalary)}
                 </Label>
                 <Input
                   id="edit-employee-salary-amount"
@@ -236,12 +255,12 @@ export function EditEmployeeModal({
                   className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
                 />
                 <p className="text-xs text-zinc-500">
-                  Enter the gross salary. Income tax and pension are deducted automatically.
+                  {pick(lang, c.grossHint)}
                 </p>
               </div>
             </div>
             <div className="space-y-2">
-              <Label className="text-zinc-200">Office schedule days</Label>
+              <Label className="text-zinc-200">{pick(lang, c.scheduleDays)}</Label>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {DAY_OF_WEEK_VALUES.map((day) => (
                   <label key={day} className="flex items-center gap-2 rounded-md border border-zinc-700 px-2 py-1.5 text-sm">
@@ -269,7 +288,7 @@ export function EditEmployeeModal({
                 onChange={(e) => setActive(e.target.checked)}
                 className="rounded border-zinc-700 bg-zinc-800 text-[#e78a53] focus:ring-[#e78a53]/20"
               />
-              Active employee
+              {pick(lang, c.activeEmployee)}
             </label>
 
             {error && (
@@ -287,15 +306,15 @@ export function EditEmployeeModal({
                 {submitting ? (
                   <>
                     <Loader2 className="mr-2 size-4 animate-spin" />
-                    Saving…
+                    {pick(lang, a.saving)}
                   </>
                 ) : (
-                  "Save changes"
+                  pick(lang, a.saveChanges)
                 )}
               </Button>
               <Dialog.Close asChild>
                 <Button type="button" variant="outline" className="border-zinc-700 text-zinc-300 hover:bg-zinc-800">
-                  Cancel
+                  {pick(lang, a.cancel)}
                 </Button>
               </Dialog.Close>
             </div>

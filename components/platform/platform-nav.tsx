@@ -4,15 +4,18 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { LayoutDashboard, Building2, PlusCircle, Inbox, LogOut } from "lucide-react"
 import { Logo } from "@/components/corevia/logo"
+import { LangToggle } from "@/components/corevia/lang-toggle"
+import { useLang, pick } from "@/lib/i18n"
 
 const links = [
-  { href: "/platform", label: "Overview", icon: LayoutDashboard, exact: true },
-  { href: "/platform/organizations", label: "Organizations", icon: Building2 },
-  { href: "/platform/requests", label: "Signup requests", icon: Inbox },
-  { href: "/platform/register", label: "Register organization", icon: PlusCircle },
+  { href: "/platform", label: { en: "Overview", am: "አጠቃላይ እይታ" }, icon: LayoutDashboard, exact: true },
+  { href: "/platform/organizations", label: { en: "Organizations", am: "ድርጅቶች" }, icon: Building2 },
+  { href: "/platform/requests", label: { en: "Signup requests", am: "የምዝገባ ጥያቄዎች" }, icon: Inbox },
+  { href: "/platform/register", label: { en: "Register organization", am: "ድርጅት ይመዝግቡ" }, icon: PlusCircle },
 ]
 
 export function PlatformNav() {
+  const { lang } = useLang()
   const pathname = usePathname()
   const router = useRouter()
 
@@ -31,7 +34,7 @@ export function PlatformNav() {
 
       <div className="px-3 pt-3">
         <span className="ml-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-emerald-300">
-          Platform admin
+          {pick(lang, { en: "Platform admin", am: "የመድረክ አስተዳዳሪ" })}
         </span>
       </div>
 
@@ -49,20 +52,21 @@ export function PlatformNav() {
               }`}
             >
               <l.icon className="h-4 w-4 shrink-0" />
-              {l.label}
+              {pick(lang, l.label)}
             </Link>
           )
         })}
       </nav>
 
-      <div className="border-t border-border p-3">
+      <div className="space-y-2 border-t border-border p-3">
+        <LangToggle className="w-full justify-start" />
         <button
           type="button"
           onClick={signOut}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
           <LogOut className="h-4 w-4 shrink-0" />
-          Sign out
+          {pick(lang, { en: "Sign out", am: "ውጣ" })}
         </button>
       </div>
     </aside>
