@@ -47,6 +47,8 @@ export interface PeerReviewPeriodStatusResponse {
   periodStart: string
   periodEnd: string
   submitted: boolean
+  reviewed?: boolean
+  reviewsReceived?: number
 }
 
 export interface PeerReviewAvailableEmployeeResponse {
@@ -71,6 +73,7 @@ export interface PeerReviewSelfResultsResponse {
   periodEnd: string
   leadershipScore?: number | null
   principleAverages?: PeerReviewPrincipleAverage[]
+  comments?: string[]
 }
 
 export interface PeerReviewPeriodEmployeeResult {
@@ -81,6 +84,7 @@ export interface PeerReviewPeriodEmployeeResult {
   employmentType: string
   leadershipScore?: number | null
   principleAverages?: PeerReviewPrincipleAverage[]
+  comments?: string[]
 }
 
 export interface PeerReviewPeriodResultsResponse {
@@ -104,6 +108,7 @@ export interface PeerReviewSubmitRequest {
   periodStart: string
   periodEnd: string
   ratings: PeerReviewRatingInput[]
+  overallComment?: string
 }
 
 export interface PeerReviewResponse {

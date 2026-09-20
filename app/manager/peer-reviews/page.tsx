@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { BarChart3, Loader2, Sparkles, X } from "lucide-react";
+import { BarChart3, Loader2, MessageSquare, Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -87,6 +87,7 @@ export default function AdminPeerReviewsPage() {
   const [adminReviewSaveError, setAdminReviewSaveError] = useState<string | null>(
     null,
   );
+  const [commentsModalOpen, setCommentsModalOpen] = useState(false);
 
   const employeesInPeriod = useMemo(
     () => (Array.isArray(periodResults?.employees) ? periodResults!.employees : []),
@@ -628,18 +629,30 @@ export default function AdminPeerReviewsPage() {
               </div>
 
               {selectedEmployee ? (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="border-zinc-700 text-zinc-200 hover:bg-zinc-800"
-                  onClick={() => {
-                    setAdminReviewSaveError(null);
-                    setAdminReviewEditing((prev) => !prev);
-                  }}
-                >
-                  {adminReview?.feedback ? "Edit feedback" : "Give feedback"}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="border-zinc-700 text-zinc-200 hover:bg-zinc-800"
+                    onClick={() => setCommentsModalOpen(true)}
+                  >
+                    <MessageSquare className="mr-1.5 size-3.5 text-[#e78a53]" />
+                    Comments ({(selectedEmployee.comments ?? []).length})
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="border-zinc-700 text-zinc-200 hover:bg-zinc-800"
+                    onClick={() => {
+                      setAdminReviewSaveError(null);
+                      setAdminReviewEditing((prev) => !prev);
+                    }}
+                  >
+                    {adminReview?.feedback ? "Edit feedback" : "Give feedback"}
+                  </Button>
+                </div>
               ) : null}
             </div>
 
@@ -789,6 +802,66 @@ export default function AdminPeerReviewsPage() {
                     No aggregated principle results found for this employee.
                   </p>
                 )}
+              </div>
+            )}
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+
+      <Dialog.Root open={commentsModalOpen} onOpenChange={setCommentsModalOpen}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 z-[10002] bg-black/70 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+          <Dialog.Content
+            className="fixed left-1/2 top-1/2 z-[10003] w-[92vw] max-w-2xl -translate-x-1/2 -translate-y-1/2 max-h-[85vh] overflow-y-auto rounded-xl border border-zinc-800 bg-zinc-900 p-6 shadow-2xl focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
+            aria-describedby={undefined}
+          >
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Dialog.Title className="text-lg font-semibold text-white">
+                    Peer review comments
+                  </Dialog.Title>
+                  <span className="rounded-full border border-zinc-700 bg-zinc-800 px-2 py-0.5 text-xs text-zinc-300">
+                    Anonymous
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-zinc-400">
+                  {selectedEmployee?.employeeName ?? "Employee"} · Anonymous feedback from peers
+                </p>
+              </div>
+              <Dialog.Close asChild>
+                <button
+                  type="button"
+                  className="rounded-full p-2 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
+                  aria-label="Close"
+                >
+                  <X className="size-5" />
+                </button>
+              </Dialog.Close>
+            </div>
+
+            {selectedEmployee?.comments && selectedEmployee.comments.length > 0 ? (
+              <div className="space-y-3">
+                {selectedEmployee.comments.map((comment, index) => (
+                  <div
+                    key={index}
+                    className="rounded-lg border border-zinc-800 bg-zinc-950/60 p-4"
+                  >
+                    <div className="mb-2 flex items-center gap-2 text-xs text-zinc-400">
+                      <div className="flex size-5 items-center justify-center rounded-full bg-[#e78a53]/20 text-[10px] font-semibold text-[#e78a53]">
+                        #
+                      </div>
+                      <span className="font-medium text-zinc-300">Anonymous Peer Reviewer</span>
+                    </div>
+                    <p className="whitespace-pre-wrap text-sm text-zinc-200">
+                      "{comment}"
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-6 text-center text-sm text-zinc-400">
+                No peer comments were submitted for this employee in this period.
               </div>
             )}
           </Dialog.Content>

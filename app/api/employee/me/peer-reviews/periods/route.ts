@@ -9,8 +9,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
+  const { searchParams } = new URL(request.url)
+  const reviewedOnly = searchParams.get("reviewedOnly")
+  const targetUrl = reviewedOnly
+    ? `${CMS_BASE_URL}/employee/me/peer-reviews/periods?reviewedOnly=${encodeURIComponent(reviewedOnly)}`
+    : `${CMS_BASE_URL}/employee/me/peer-reviews/periods`
+
   try {
-    const res = await fetch(`${CMS_BASE_URL}/employee/me/peer-reviews/periods`, {
+    const res = await fetch(targetUrl, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

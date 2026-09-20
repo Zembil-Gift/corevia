@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { BarChart3, Loader2, MessageSquare, X } from "lucide-react"
 import * as Dialog from "@radix-ui/react-dialog"
 import {
@@ -67,6 +67,7 @@ type PeerReviewSelfResultsApiV2 = {
     employeeName: string
     leadershipScore?: number | null
     principleAverages?: PeerReviewSelfResultsResponse["principleAverages"]
+    comments?: string[]
   }
 }
 
@@ -78,6 +79,7 @@ type NormalizedPeerReviewSelfResults = {
   employeeName?: string | null
   leadershipScore?: number | null
   principleAverages: NonNullable<PeerReviewSelfResultsResponse["principleAverages"]>
+  comments: string[]
 }
 
 const normalizePeerReviewSelfResults = (
@@ -111,6 +113,17 @@ const normalizePeerReviewSelfResults = (
         ? (data as PeerReviewSelfResultsResponse).principleAverages
         : []
 
+  const rawComments: unknown[] =
+    v2Employee && Array.isArray(v2Employee.comments)
+      ? v2Employee.comments
+      : Array.isArray((data as PeerReviewSelfResultsResponse).comments)
+        ? ((data as PeerReviewSelfResultsResponse).comments as unknown[])
+        : []
+
+  const comments = rawComments.filter(
+    (c): c is string => typeof c === "string" && c.trim().length > 0
+  )
+
   return {
     periodId,
     periodName: (data as PeerReviewSelfResultsResponse).periodName ?? null,
@@ -118,7 +131,8 @@ const normalizePeerReviewSelfResults = (
     periodEnd,
     employeeName,
     leadershipScore,
-    principleAverages: principleAveragesRaw,
+    principleAverages: principleAveragesRaw ?? [],
+    comments,
   }
 }
 
@@ -130,7 +144,8 @@ type EmployeePeerReviewsProps = {
 
 export function EmployeePeerReviews({ view = "new" }: EmployeePeerReviewsProps) {
   const [principles, setPrinciples] = useState<LeadershipPrincipleResponse[]>([])
-  const [ratings, setRatings] = useState<Record<number, { rating: PeerReviewRatingValue; comment: string }>>({})
+  const [ratings, setRatings] = useState<Record<number, { rating: PeerReviewRatingValue }>>({})
+  const [overallComment, setOverallComment] = useState("")
   const [submitLoading, setSubmitLoading] = useState(false)
   const [submitError, setSubmitError] = useState("")
   const [submitSuccess, setSubmitSuccess] = useState("")
@@ -143,11 +158,13 @@ export function EmployeePeerReviews({ view = "new" }: EmployeePeerReviewsProps) 
   // For "My scores" modal
   const [selectedSubmittedPeriodId, setSelectedSubmittedPeriodId] = useState<number | null>(null)
   const [resultsModalOpen, setResultsModalOpen] = useState(false)
+  const [commentsModalOpen, setCommentsModalOpen] = useState(false)
 
   const [availableEmployees, setAvailableEmployees] = useState<PeerReviewAvailableEmployeeResponse[]>([])
   const [availableEmployeesLoading, setAvailableEmployeesLoading] = useState(false)
   const [availableEmployeesError, setAvailableEmployeesError] = useState("")
   const [selectedRevieweeId, setSelectedRevieweeId] = useState<number | null>(null)
+  const availableEmployeesCache = useRef<Record<number, PeerReviewAvailableEmployeeResponse[]>>({})
   const [submittedResults, setSubmittedResults] = useState<PeerReviewSelfResultsResponse | null>(
     null
   )
@@ -168,7 +185,12 @@ export function EmployeePeerReviews({ view = "new" }: EmployeePeerReviewsProps) 
   )
 
   const scorePeriods = useMemo(
-    () => peerReviewPeriods.filter((period) => period.id),
+    () =>
+      peerReviewPeriods.filter(
+        (period) =>
+          period.id &&
+          (Boolean(period.reviewed) || (typeof period.reviewsReceived === "number" && period.reviewsReceived > 0))
+      ),
     [peerReviewPeriods]
   )
 
@@ -202,15 +224,21 @@ export function EmployeePeerReviews({ view = "new" }: EmployeePeerReviewsProps) 
     setPeriodsLoading(true)
     setPeriodsError("")
     try {
-      const res = await fetch("/api/employee/me/peer-reviews/periods", { cache: "no-store" })
+      const endpoint =
+        view === "scores"
+          ? "/api/employee/me/peer-reviews/periods?reviewedOnly=true"
+          : "/api/employee/me/peer-reviews/periods"
+      const res = await fetch(endpoint, { cache: "no-store" })
       const data = await res.json().catch(() => [])
       if (!res.ok) {
         throw new Error((data as { error?: string }).error ?? "Failed to load peer review periods")
       }
       const normalized = Array.isArray(data)
         ? (data as Array<Record<string, unknown>>).map((period) => ({
-            ...(period as Omit<PeerReviewPeriodStatusResponse, "submitted">),
+            ...(period as Omit<PeerReviewPeriodStatusResponse, "submitted" | "reviewed">),
             submitted: coerceBoolean(period.submitted ?? (period as { isSubmitted?: unknown }).isSubmitted),
+            reviewed: coerceBoolean(period.reviewed ?? (period as { isReviewed?: unknown }).isReviewed),
+            reviewsReceived: typeof period.reviewsReceived === "number" ? period.reviewsReceived : 0,
           }))
         : []
       setPeerReviewPeriods(normalized as PeerReviewPeriodStatusResponse[])
@@ -220,18 +248,31 @@ export function EmployeePeerReviews({ view = "new" }: EmployeePeerReviewsProps) 
     } finally {
       setPeriodsLoading(false)
     }
-  }, [])
+  }, [view])
 
-  const loadAvailableEmployees = useCallback(async () => {
+  const loadAvailableEmployees = useCallback(async (periodId?: number | null) => {
+    if (periodId && availableEmployeesCache.current[periodId]) {
+      setAvailableEmployees(availableEmployeesCache.current[periodId]!)
+      setAvailableEmployeesError("")
+      return
+    }
+
     setAvailableEmployeesLoading(true)
     setAvailableEmployeesError("")
     try {
-      const res = await fetch("/api/employee/me/peer-reviews/available-employees")
+      const endpoint = periodId
+        ? `/api/employee/me/peer-reviews/available-employees?periodId=${periodId}`
+        : "/api/employee/me/peer-reviews/available-employees"
+      const res = await fetch(endpoint)
       const data = await res.json().catch(() => [])
       if (!res.ok) {
         throw new Error((data as { error?: string }).error ?? "Failed to load employees")
       }
-      setAvailableEmployees(Array.isArray(data) ? data : [])
+      const list = Array.isArray(data) ? data : []
+      if (periodId) {
+        availableEmployeesCache.current[periodId] = list
+      }
+      setAvailableEmployees(list)
     } catch (err) {
       setAvailableEmployeesError(err instanceof Error ? err.message : "Failed to load employees")
       setAvailableEmployees([])
@@ -298,9 +339,14 @@ export function EmployeePeerReviews({ view = "new" }: EmployeePeerReviewsProps) 
     loadPeerReviewPeriods()
     if (view === "new") {
       loadPrinciples()
-      loadAvailableEmployees()
     }
-  }, [loadAvailableEmployees, loadPeerReviewPeriods, loadPrinciples, view])
+  }, [loadPeerReviewPeriods, loadPrinciples, view])
+
+  useEffect(() => {
+    if (view === "new") {
+      loadAvailableEmployees(selectedNewPeriodId)
+    }
+  }, [loadAvailableEmployees, selectedNewPeriodId, view])
 
   useEffect(() => {
     if (view !== "new" || activePrinciples.length === 0) return
@@ -308,12 +354,12 @@ export function EmployeePeerReviews({ view = "new" }: EmployeePeerReviewsProps) 
       const next = { ...prev }
       activePrinciples.forEach((principle) => {
         if (!next[principle.id]) {
-          next[principle.id] = { rating: "MEETS_THE_BAR", comment: "" }
+          next[principle.id] = { rating: "MEETS_THE_BAR" }
         }
       })
       return next
     })
-  }, [activePrinciples])
+  }, [activePrinciples, view])
 
   useEffect(() => {
     if (view !== "new") return
@@ -329,6 +375,8 @@ export function EmployeePeerReviews({ view = "new" }: EmployeePeerReviewsProps) 
       !availableEmployees.some((employee) => employee.id === selectedRevieweeId)
     ) {
       setSelectedRevieweeId(availableEmployees[0]!.id)
+    } else if (availableEmployees.length === 0) {
+      setSelectedRevieweeId(null)
     }
   }, [availableEmployees, selectedRevieweeId, view])
 
@@ -428,14 +476,12 @@ export function EmployeePeerReviews({ view = "new" }: EmployeePeerReviewsProps) 
       .map((principle) => {
         const entry = ratings[principle.id]
         if (!entry) return null
-        const comment = entry.comment.trim()
         return {
           principleId: principle.id,
           rating: entry.rating,
-          comment: comment ? comment : undefined,
         }
       })
-      .filter((entry): entry is { principleId: number; rating: PeerReviewRatingValue; comment?: string } =>
+      .filter((entry): entry is { principleId: number; rating: PeerReviewRatingValue } =>
         Boolean(entry)
       )
 
@@ -454,21 +500,24 @@ export function EmployeePeerReviews({ view = "new" }: EmployeePeerReviewsProps) 
           periodStart: selectedNewPeriod.periodStart,
           periodEnd: selectedNewPeriod.periodEnd,
           ratings: payloadRatings,
+          overallComment: overallComment.trim() ? overallComment.trim() : undefined,
         }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
         throw new Error((data as { error?: string }).error ?? "Failed to submit peer review")
       }
+      const reviewedId = selectedRevieweeId
       setSubmitSuccess("Peer review submitted successfully.")
-      setRatings((prev) => {
-        const next = { ...prev }
-        Object.keys(next).forEach((key) => {
-          next[Number(key)] = { ...next[Number(key)], comment: "" }
-        })
-        return next
-      })
+      setOverallComment("")
       loadPeerReviewPeriods()
+
+      if (selectedNewPeriodId && reviewedId) {
+        const remaining = availableEmployees.filter((emp) => emp.id !== reviewedId)
+        availableEmployeesCache.current[selectedNewPeriodId] = remaining
+        setAvailableEmployees(remaining)
+        setSelectedRevieweeId(remaining.length > 0 ? remaining[0]!.id : null)
+      }
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Failed to submit peer review")
     } finally {
@@ -525,7 +574,9 @@ export function EmployeePeerReviews({ view = "new" }: EmployeePeerReviewsProps) 
                   {availableEmployeesLoading ? (
                     <div className="text-sm text-zinc-500">Loading employees...</div>
                   ) : availableEmployees.length === 0 ? (
-                    <div className="text-sm text-zinc-500">No employees available for review.</div>
+                    <div className="text-sm text-zinc-500">
+                      All colleagues have been reviewed for this period.
+                    </div>
                   ) : (
                     <select
                       className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-200"
@@ -581,7 +632,6 @@ export function EmployeePeerReviews({ view = "new" }: EmployeePeerReviewsProps) 
                                 ...prev,
                                 [principle.id]: {
                                   rating: e.target.value as PeerReviewRatingValue,
-                                  comment: prev[principle.id]?.comment ?? "",
                                 },
                               }))
                             }
@@ -592,25 +642,26 @@ export function EmployeePeerReviews({ view = "new" }: EmployeePeerReviewsProps) 
                               </option>
                             ))}
                           </select>
-                          <textarea
-                            rows={2}
-                            className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-200"
-                            placeholder="Optional comment"
-                            value={entry?.comment ?? ""}
-                            onChange={(e) =>
-                              setRatings((prev) => ({
-                                ...prev,
-                                [principle.id]: {
-                                  rating: prev[principle.id]?.rating ?? "MEETS_THE_BAR",
-                                  comment: e.target.value,
-                                },
-                              }))
-                            }
-                          />
                         </div>
                       </div>
                     )
                   })}
+
+                  <div className="space-y-2 rounded-lg border border-zinc-800 bg-zinc-900/70 p-4">
+                    <Label className="text-sm font-semibold text-white">
+                      Overall Comment (Optional)
+                    </Label>
+                    <p className="text-xs text-zinc-400">
+                      Share overall feedback or comments for this employee. Your submission is completely anonymous.
+                    </p>
+                    <textarea
+                      rows={3}
+                      className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-[#e78a53] focus:outline-none"
+                      placeholder="Write your overall review comment here (optional)..."
+                      value={overallComment}
+                      onChange={(e) => setOverallComment(e.target.value)}
+                    />
+                  </div>
                 </div>
               )}
 
@@ -631,7 +682,8 @@ export function EmployeePeerReviews({ view = "new" }: EmployeePeerReviewsProps) 
                   submitLoading ||
                   activePrinciples.length === 0 ||
                   !selectedNewPeriod ||
-                  !selectedRevieweeId
+                  !selectedRevieweeId ||
+                  availableEmployees.length === 0
                 }
                 className="w-full bg-[#e78a53] text-white hover:bg-[#e78a53]/90"
               >
@@ -641,7 +693,7 @@ export function EmployeePeerReviews({ view = "new" }: EmployeePeerReviewsProps) 
           )
         ) : scorePeriods.length === 0 ? (
           <p className="mt-4 text-sm text-zinc-500">
-            No peer review periods available yet.
+            No peer review scores available yet. You have not been reviewed by colleagues in any period yet.
           </p>
         ) : (
           <div className="mt-4 space-y-3">
@@ -662,15 +714,11 @@ export function EmployeePeerReviews({ view = "new" }: EmployeePeerReviewsProps) 
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
-                    {period.submitted ? (
-                      <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-xs text-emerald-300">
-                        Submitted
-                      </span>
-                    ) : (
-                      <span className="rounded-full border border-zinc-700 bg-zinc-900 px-2 py-1 text-xs text-zinc-400">
-                        Not submitted
-                      </span>
-                    )}
+                    <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-xs text-emerald-300">
+                      {(period.reviewsReceived ?? 0) > 0
+                        ? `${period.reviewsReceived} review${period.reviewsReceived === 1 ? "" : "s"} received`
+                        : "Reviewed"}
+                    </span>
                     <Button
                       type="button"
                       className="bg-[#e78a53] text-white hover:bg-[#e78a53]/90"
@@ -706,15 +754,28 @@ export function EmployeePeerReviews({ view = "new" }: EmployeePeerReviewsProps) 
                   ) : null}
                 </p>
               </div>
-              <Dialog.Close asChild>
-                <button
-                  type="button"
-                  className="rounded-full p-2 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
-                  aria-label="Close"
-                >
-                  <X className="size-5" />
-                </button>
-              </Dialog.Close>
+              <div className="flex items-center gap-2">
+                {normalizedResults && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="border-zinc-700 bg-zinc-800 text-zinc-200 hover:bg-zinc-700 hover:text-white"
+                    onClick={() => setCommentsModalOpen(true)}
+                  >
+                    <MessageSquare className="mr-2 size-4 text-[#e78a53]" />
+                    Comments ({normalizedResults.comments.length})
+                  </Button>
+                )}
+                <Dialog.Close asChild>
+                  <button
+                    type="button"
+                    className="rounded-full p-2 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
+                    aria-label="Close"
+                  >
+                    <X className="size-5" />
+                  </button>
+                </Dialog.Close>
+              </div>
             </div>
 
             {submittedResultsLoading ? (
@@ -729,6 +790,10 @@ export function EmployeePeerReviews({ view = "new" }: EmployeePeerReviewsProps) 
             ) : !normalizedResults ? (
               <div className="rounded-lg border border-zinc-800 bg-zinc-950/30 p-6 text-sm text-zinc-400">
                 No results yet for this period.
+              </div>
+            ) : totalRatings === 0 && leadershipScoreSafe === null ? (
+              <div className="rounded-lg border border-zinc-800 bg-zinc-950/30 p-6 text-center text-sm text-zinc-400">
+                No ratings have been submitted for you in this period yet.
               </div>
             ) : (
               <div className="space-y-4">
@@ -888,6 +953,95 @@ export function EmployeePeerReviews({ view = "new" }: EmployeePeerReviewsProps) 
                     <p className="mt-2 text-sm text-zinc-500">No admin feedback yet.</p>
                   )}
                 </div>
+
+                <div className="rounded-lg border border-zinc-800 bg-zinc-900/70 p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold text-white">Peer comments</p>
+                      <span className="rounded-full border border-zinc-700 bg-zinc-800 px-2 py-0.5 text-[11px] text-zinc-300">
+                        Anonymous
+                      </span>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="border-zinc-700 bg-zinc-800 text-xs text-zinc-200 hover:bg-zinc-700 hover:text-white"
+                      onClick={() => setCommentsModalOpen(true)}
+                    >
+                      <MessageSquare className="mr-1.5 size-3.5 text-[#e78a53]" />
+                      Comments ({normalizedResults.comments.length})
+                    </Button>
+                  </div>
+
+                  {normalizedResults.comments.length > 0 ? (
+                    <p className="mt-2 text-xs text-zinc-400">
+                      {normalizedResults.comments.length} anonymous comment{normalizedResults.comments.length === 1 ? "" : "s"} received for this period. Click "Comments" to read them.
+                    </p>
+                  ) : (
+                    <p className="mt-2 text-sm text-zinc-500">No peer comments received yet for this period.</p>
+                  )}
+                </div>
+              </div>
+            )}
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+
+      <Dialog.Root open={commentsModalOpen} onOpenChange={setCommentsModalOpen}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 z-[10002] bg-black/70 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+          <Dialog.Content
+            className="fixed left-1/2 top-1/2 z-[10003] w-[92vw] max-w-2xl -translate-x-1/2 -translate-y-1/2 max-h-[85vh] overflow-y-auto rounded-xl border border-zinc-800 bg-zinc-900 p-6 shadow-2xl focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
+            aria-describedby={undefined}
+          >
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Dialog.Title className="text-lg font-semibold text-white">
+                    Peer review comments
+                  </Dialog.Title>
+                  <span className="rounded-full border border-zinc-700 bg-zinc-800 px-2 py-0.5 text-xs text-zinc-300">
+                    Anonymous
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-zinc-400">
+                  {(selectedScorePeriod?.name || normalizedResults?.periodName || "Selected period")} · Anonymous feedback from peers
+                </p>
+              </div>
+              <Dialog.Close asChild>
+                <button
+                  type="button"
+                  className="rounded-full p-2 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
+                  aria-label="Close"
+                >
+                  <X className="size-5" />
+                </button>
+              </Dialog.Close>
+            </div>
+
+            {normalizedResults?.comments && normalizedResults.comments.length > 0 ? (
+              <div className="space-y-3">
+                {normalizedResults.comments.map((comment, index) => (
+                  <div
+                    key={index}
+                    className="rounded-lg border border-zinc-800 bg-zinc-950/60 p-4"
+                  >
+                    <div className="mb-2 flex items-center gap-2 text-xs text-zinc-400">
+                      <div className="flex size-5 items-center justify-center rounded-full bg-[#e78a53]/20 text-[10px] font-semibold text-[#e78a53]">
+                        #
+                      </div>
+                      <span className="font-medium text-zinc-300">Anonymous Peer Reviewer</span>
+                    </div>
+                    <p className="whitespace-pre-wrap text-sm text-zinc-200">
+                      "{comment}"
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-6 text-center text-sm text-zinc-400">
+                No peer comments were submitted for this period.
               </div>
             )}
           </Dialog.Content>
