@@ -133,13 +133,6 @@ export function AttendanceClock() {
                 Clock In
               </Button>
               <Button
-                onClick={() => handleClockAction("clockOut")}
-                className="bg-orange-600 text-white hover:bg-orange-600/90"
-              >
-                <Clock className="mr-2 size-4" />
-                Clock Out
-              </Button>
-              <Button
                 onClick={() => handleClockAction("lunchBreakIn")}
                 className="bg-sky-700 text-white hover:bg-sky-700/90"
               >
@@ -152,6 +145,13 @@ export function AttendanceClock() {
               >
                 <Clock className="mr-2 size-4" />
                 Lunch Break Out
+              </Button>
+              <Button
+                onClick={() => handleClockAction("clockOut")}
+                className="bg-orange-600 text-white hover:bg-orange-600/90"
+              >
+                <Clock className="mr-2 size-4" />
+                Clock Out
               </Button>
             </div>
             <p className="mt-3 text-sm text-zinc-500">

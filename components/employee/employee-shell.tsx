@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import {
   BarChart3,
+  Camera,
+  Clock,
   CreditCard,
   Key,
   Link2,
@@ -16,6 +18,7 @@ import {
   QrCode,
   Star,
   User,
+  X,
 } from "lucide-react"
 import QRCode from "react-qr-code"
 import { Button } from "@/components/ui/button"
@@ -24,6 +27,7 @@ import { Label } from "@/components/ui/label"
 import { LangToggle } from "@/components/corevia/lang-toggle"
 import { useLang, pick } from "@/lib/i18n"
 import { clearAdminClientToken } from "@/lib/admin-client-auth"
+import { QRScanner } from "@/components/employee/qr-scanner"
 
 const t = {
   portal: { en: "Employee Portal", am: "የሰራተኛ ፖርታል" },
@@ -60,6 +64,13 @@ const t = {
   uploadPhoto: { en: "Upload photo", am: "ፎቶ ስቀል" },
   photoHint: { en: "PNG, JPG, GIF, or WEBP (max 5 MB)", am: "PNG, JPG, GIF ወይም WEBP (ቢበዛ 5 ሜባ)" },
   uploading: { en: "Uploading...", am: "በመስቀል ላይ..." },
+  scanAttendance: { en: "Attendance", am: "መገኘት ቃኝ" },
+  clockIn: { en: "Clock In", am: "ግቤት" },
+  clockOut: { en: "Clock Out", am: "ውጤት" },
+  lunchBreakIn: { en: "Lunch Break In", am: "ምሳ ዕረፍት ግቤት" },
+  lunchBreakOut: { en: "Lunch Break Out", am: "ምሳ ዕረፍት ውጤት" },
+  selectAction: { en: "Select an action, then scan the QR code.", am: "ድርጊት ይምረጡ፣ ከዚያ QR ኮድ ያንበቡ።" },
+  recordingAttendance: { en: "Recording attendance...", am: "መገኘት በመመዝገብ ላይ..." },
 }
 
 interface EmployeeInfo {
@@ -108,6 +119,12 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
   const [photoSubmitting, setPhotoSubmitting] = useState(false)
   const [photoError, setPhotoError] = useState("")
   const [photoSuccess, setPhotoSuccess] = useState("")
+
+  const [showAttendancePanel, setShowAttendancePanel] = useState(false)
+  const [attendanceAction, setAttendanceAction] = useState<"clockIn" | "clockOut" | "lunchBreakIn" | "lunchBreakOut" | null>(null)
+  const [showAttendanceScanner, setShowAttendanceScanner] = useState(false)
+  const [attendanceLoading, setAttendanceLoading] = useState(false)
+  const [attendanceMessage, setAttendanceMessage] = useState("")
 
   const tabs = useMemo(
     () => [
@@ -296,6 +313,90 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
     }
   }
 
+  const getCurrentPosition = () =>
+    new Promise<GeolocationPosition>((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error("Geolocation is not supported"))
+        return
+      }
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      })
+    })
+
+  const handleAttendanceAction = (action: "clockIn" | "clockOut" | "lunchBreakIn" | "lunchBreakOut") => {
+    setAttendanceAction(action)
+    setShowAttendanceScanner(true)
+    setAttendanceMessage("")
+  }
+
+  const handleAttendanceQRScan = async (qrData: string) => {
+    setShowAttendanceScanner(false)
+    setAttendanceLoading(true)
+    setAttendanceMessage("")
+
+    const email = qrData.trim()
+    if (!email) {
+      setAttendanceMessage("Invalid QR code. Please scan an employee QR code.")
+      setAttendanceLoading(false)
+      setAttendanceAction(null)
+      return
+    }
+
+    if (!attendanceAction) {
+      setAttendanceMessage("Select an attendance action first.")
+      setAttendanceLoading(false)
+      setAttendanceAction(null)
+      return
+    }
+
+    let position: GeolocationPosition
+    try {
+      position = await getCurrentPosition()
+    } catch {
+      setAttendanceMessage("Location access is required to record attendance.")
+      setAttendanceLoading(false)
+      setAttendanceAction(null)
+      return
+    }
+
+    try {
+      const res = await fetch("/api/employee/attendance/clock", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: attendanceAction,
+          email,
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        }),
+      })
+
+      const data = await res.json().catch(() => ({}))
+
+      if (!res.ok) {
+        setAttendanceMessage((data as { error?: string }).error ?? "Failed to record attendance")
+      } else {
+        const actionMessage =
+          attendanceAction === "clockIn"
+            ? "Clock in recorded successfully!"
+            : attendanceAction === "clockOut"
+              ? "Clock out recorded successfully!"
+              : attendanceAction === "lunchBreakIn"
+                ? "Lunch break start recorded successfully!"
+                : "Lunch break end recorded successfully!"
+        setAttendanceMessage(actionMessage)
+      }
+    } catch {
+      setAttendanceMessage("Failed to record attendance. Please try again.")
+    }
+
+    setAttendanceLoading(false)
+    setAttendanceAction(null)
+  }
+
   const formatMoney = (amountMinor: number | null) =>
     amountMinor === null
       ? "-"
@@ -314,16 +415,32 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
-      <main className="mx-auto max-w-5xl p-6 md:p-10">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
+      <main className="mx-auto max-w-7xl px-4 py-6 md:px-6 md:py-10">
+        <div className="mb-8 flex items-center justify-between gap-4">
+          <div className="min-w-0 shrink-0">
             <h1 className="text-2xl font-bold text-white">{pick(lang, t.portal)}</h1>
-            <p className="mt-1 text-zinc-400">
+            <p className="mt-1 text-sm text-zinc-400">
               {pick(lang, t.portalSub)}
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-1.5">
             <LangToggle />
+            <Button
+              variant="outline"
+              size="sm"
+              className={showAttendancePanel
+                ? "border-[#e78a53] bg-[#e78a53]/10 text-[#e78a53] hover:bg-[#e78a53]/20"
+                : "border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+              }
+              onClick={() => {
+                setShowAttendancePanel(!showAttendancePanel)
+                setAttendanceMessage("")
+                setAttendanceAction(null)
+              }}
+            >
+              <Camera className="mr-2 size-4" />
+              {pick(lang, t.scanAttendance)}
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -359,6 +476,7 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
             </Button>
           </div>
         </div>
+
 
         {employee && (
           <section className="mb-6 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
@@ -692,6 +810,105 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
             </form>
           </div>
         </div>
+      )}
+
+      {showAttendancePanel && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+          onClick={() => {
+            setShowAttendancePanel(false)
+            setAttendanceMessage("")
+            setAttendanceAction(null)
+          }}
+        >
+          <div
+            className="w-full max-w-md rounded-xl border border-zinc-800 bg-zinc-900 p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Clock className="size-5 text-[#e78a53]" />
+                <h3 className="text-lg font-semibold text-white">{pick(lang, t.scanAttendance)}</h3>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setShowAttendancePanel(false)
+                  setAttendanceMessage("")
+                  setAttendanceAction(null)
+                }}
+              >
+                <X className="size-5 text-zinc-400 hover:text-white" />
+              </Button>
+            </div>
+
+            {attendanceMessage && (
+              <p
+                className={`mb-4 rounded-lg border px-3 py-2 text-sm ${
+                  attendanceMessage.includes("success")
+                    ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                    : "border-red-500/20 bg-red-500/10 text-red-400"
+                }`}
+              >
+                {attendanceMessage}
+              </p>
+            )}
+
+            {attendanceLoading ? (
+              <div className="flex items-center gap-2">
+                <Loader2 className="size-5 animate-spin text-[#e78a53]" />
+                <span className="text-zinc-400">{pick(lang, t.recordingAttendance)}</span>
+              </div>
+            ) : (
+              <>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Button
+                    onClick={() => handleAttendanceAction("clockIn")}
+                    className="bg-emerald-600 text-white hover:bg-emerald-600/90"
+                  >
+                    <Clock className="mr-2 size-4" />
+                    {pick(lang, t.clockIn)}
+                  </Button>
+                  <Button
+                    onClick={() => handleAttendanceAction("lunchBreakIn")}
+                    className="bg-sky-700 text-white hover:bg-sky-700/90"
+                  >
+                    <Clock className="mr-2 size-4" />
+                    {pick(lang, t.lunchBreakIn)}
+                  </Button>
+                  <Button
+                    onClick={() => handleAttendanceAction("lunchBreakOut")}
+                    className="bg-indigo-700 text-white hover:bg-indigo-700/90"
+                  >
+                    <Clock className="mr-2 size-4" />
+                    {pick(lang, t.lunchBreakOut)}
+                  </Button>
+                  <Button
+                    onClick={() => handleAttendanceAction("clockOut")}
+                    className="bg-orange-600 text-white hover:bg-orange-600/90"
+                  >
+                    <Clock className="mr-2 size-4" />
+                    {pick(lang, t.clockOut)}
+                  </Button>
+                </div>
+                <p className="mt-3 text-sm text-zinc-500">
+                  {pick(lang, t.selectAction)}
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {showAttendanceScanner && (
+        <QRScanner
+          onScan={handleAttendanceQRScan}
+          onClose={() => {
+            setShowAttendanceScanner(false)
+            setAttendanceAction(null)
+          }}
+        />
       )}
     </div>
   )
