@@ -7,8 +7,9 @@ export default function IntegrationsPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-zinc-100">Integrations</h1>
         <p className="mt-1 text-sm text-zinc-400">
-          Connect your Trello and GitHub accounts and choose which boards / organizations to
-          track. Employee activity is matched to employees by their Trello / GitHub username.
+          Connect your Trello and GitHub accounts, choose which boards / organizations to track,
+          and tick the sub-organizations each one covers. Activity is matched to employees of
+          those sub-organizations by their Trello / GitHub username.
         </p>
       </div>
 

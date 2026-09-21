@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { Loader2, CheckCircle2, Link2, Unlink, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { BranchTicks, LockedBranchNote, useBranches } from "@/components/admin/connection-branch-picker"
 import {
   fetchTrelloConnection,
   connectTrello,
@@ -11,6 +12,7 @@ import {
   saveTrelloBoards,
   trelloAuthorizeUrl,
   type TrelloBoard,
+  type TrelloConnection,
 } from "@/lib/trello-connect-api"
 
 export function TrelloIntegration() {
@@ -21,12 +23,20 @@ export function TrelloIntegration() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
+  const [branchLocked, setBranchLocked] = useState(false)
+  const [branchName, setBranchName] = useState<string | null>(null)
+
+  const applyConnection = (conn: TrelloConnection) => {
+    setConnected(conn.connected)
+    setSelected(conn.selectedBoards)
+    setBranchName(conn.subOrganizationName ?? null)
+    setBranchLocked(Boolean(conn.subOrganizationLocked))
+  }
 
   const load = useCallback(async () => {
     try {
       const conn = await fetchTrelloConnection()
-      setConnected(conn.connected)
-      setSelected(conn.selectedBoards)
+      applyConnection(conn)
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load")
     } finally {
@@ -43,8 +53,7 @@ export function TrelloIntegration() {
     setBusy(true)
     try {
       const conn = await connectTrello(decodeURIComponent(match[1]))
-      setConnected(conn.connected)
-      setSelected(conn.selectedBoards)
+      applyConnection(conn)
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to connect Trello")
     } finally {
@@ -92,12 +101,20 @@ export function TrelloIntegration() {
     }
   }
 
+  const branches = useBranches(connected && !branchLocked)
   const isSelected = (id: string) => selected.some((b) => b.id === id)
+  const branchesOf = (id: string) => selected.find((b) => b.id === id)?.subOrganizationIds ?? []
   const toggle = (board: TrelloBoard) => {
     setSaved(false)
     setSelected((prev) =>
-      prev.some((b) => b.id === board.id) ? prev.filter((b) => b.id !== board.id) : [...prev, board]
+      prev.some((b) => b.id === board.id)
+        ? prev.filter((b) => b.id !== board.id)
+        : [...prev, { ...board, subOrganizationIds: [] }]
     )
+  }
+  const setBranchesOf = (id: string, subOrganizationIds: number[]) => {
+    setSaved(false)
+    setSelected((prev) => prev.map((b) => (b.id === id ? { ...b, subOrganizationIds } : b)))
   }
 
   const handleSave = async () => {
@@ -106,7 +123,7 @@ export function TrelloIntegration() {
     setSaved(false)
     try {
       const conn = await saveTrelloBoards(selected)
-      setSelected(conn.selectedBoards)
+      applyConnection(conn)
       setSaved(true)
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to save")
@@ -134,6 +151,12 @@ export function TrelloIntegration() {
           <p className="mt-1 text-sm text-zinc-400">
             {loading ? "Loading…" : connected ? "Your Trello account is connected." : "Not connected."}
           </p>
+          {!loading && !connected && (
+            <p className="mt-1 text-xs text-zinc-500">
+              After connecting, pick the boards to track
+              {branchLocked ? "." : " and tick which sub-organizations each one covers."}
+            </p>
+          )}
         </div>
         {!loading &&
           (connected ? (
@@ -183,10 +206,20 @@ export function TrelloIntegration() {
                     />
                     <span className="truncate">{board.name || board.id}</span>
                   </label>
+                  {!branchLocked && isSelected(board.id) && (
+                    <BranchTicks
+                      label={board.name || board.id}
+                      branches={branches}
+                      value={branchesOf(board.id)}
+                      onChange={(ids) => setBranchesOf(board.id, ids)}
+                    />
+                  )}
                 </li>
               ))}
             </ul>
           )}
+
+          {branchLocked && <LockedBranchNote name={branchName} />}
 
           <div className="mt-5 flex items-center gap-3">
             <Button onClick={handleSave} disabled={busy} className="bg-[#e78a53] text-white hover:bg-[#d67a43]">

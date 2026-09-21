@@ -6,11 +6,18 @@
 export interface TrelloBoard {
   id: string
   name: string
+  /** Sub-organizations this board credits; empty = all. Absent in the available list. */
+  subOrganizationIds?: number[] | null
 }
 
 export interface TrelloConnection {
   connected: boolean
   selectedBoards: TrelloBoard[]
+  /** Vice managers only: their branch, which everything they track credits. */
+  subOrganizationId?: number | null
+  subOrganizationName?: string | null
+  /** True for vice managers: always their own branch. */
+  subOrganizationLocked?: boolean
 }
 
 async function readError(res: Response, fallback: string): Promise<string> {
