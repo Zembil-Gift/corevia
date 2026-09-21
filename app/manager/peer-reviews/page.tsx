@@ -2,12 +2,23 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { BarChart3, Loader2, MessageSquare, Sparkles, X } from "lucide-react";
+import {
+  BarChart3,
+  Loader2,
+  MessageSquare,
+  Sparkles,
+  X,
+  Building2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { SubOrganization } from "@/lib/sub-orgs-api";
+import { PrinciplesManager } from "@/components/admin/principles-manager";
+import { isViceManagerClient } from "@/lib/admin-client-auth";
 import type {
   AdminPeerReviewResponse,
+  LeadershipPrincipleResponse,
   PeerReviewPeriodEmployeeResult,
   PeerReviewPeriodResponse,
   PeerReviewPeriodResultsResponse,
@@ -56,6 +67,15 @@ export default function AdminPeerReviewsPage() {
   const [error, setError] = useState<string | null>(null);
   const [createdPeriod, setCreatedPeriod] =
     useState<PeerReviewPeriodResponse | null>(null);
+  const [isVice, setIsVice] = useState(false);
+  const [principles, setPrinciples] = useState<LeadershipPrincipleResponse[]>(
+    [],
+  );
+  const [principlesLoading, setPrinciplesLoading] = useState(false);
+  const [defaultPrinciples, setDefaultPrinciples] = useState<
+    LeadershipPrincipleResponse[]
+  >([]);
+  const activePrincipleCount = principles.filter((p) => p.isActive).length;
 
   const [periods, setPeriods] = useState<PeerReviewPeriodResponse[]>([]);
   const [periodsLoading, setPeriodsLoading] = useState(false);
@@ -74,9 +94,8 @@ export default function AdminPeerReviewsPage() {
     null,
   );
 
-  const [adminReview, setAdminReview] = useState<AdminPeerReviewResponse | null>(
-    null,
-  );
+  const [adminReview, setAdminReview] =
+    useState<AdminPeerReviewResponse | null>(null);
   const [adminReviewLoading, setAdminReviewLoading] = useState(false);
   const [adminReviewError, setAdminReviewError] = useState<string | null>(null);
   const [adminReviewEditing, setAdminReviewEditing] = useState(false);
@@ -84,15 +103,44 @@ export default function AdminPeerReviewsPage() {
     useState<PeerReviewRatingValue>("MEETS_THE_BAR");
   const [adminReviewFeedback, setAdminReviewFeedback] = useState("");
   const [adminReviewSaving, setAdminReviewSaving] = useState(false);
-  const [adminReviewSaveError, setAdminReviewSaveError] = useState<string | null>(
-    null,
-  );
+  const [adminReviewSaveError, setAdminReviewSaveError] = useState<
+    string | null
+  >(null);
+  const [subOrgs, setSubOrgs] = useState<SubOrganization[]>([]);
+  const [selectedSubOrgId, setSelectedSubOrgId] = useState<string>("");
   const [commentsModalOpen, setCommentsModalOpen] = useState(false);
 
-  const employeesInPeriod = useMemo(
-    () => (Array.isArray(periodResults?.employees) ? periodResults!.employees : []),
-    [periodResults],
-  );
+  useEffect(() => {
+    fetch("/api/admin/sub-organizations")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setSubOrgs(data);
+      })
+      .catch(() => {});
+  }, []);
+
+  const employeesPerBranch = useMemo(() => {
+    const counts = new Map<number, number>();
+    (periodResults?.employees ?? []).forEach((emp) => {
+      if (emp.subOrganizationId != null) {
+        counts.set(
+          emp.subOrganizationId,
+          (counts.get(emp.subOrganizationId) ?? 0) + 1,
+        );
+      }
+    });
+    return counts;
+  }, [periodResults]);
+
+  const employeesInPeriod = useMemo(() => {
+    const list = Array.isArray(periodResults?.employees)
+      ? periodResults!.employees
+      : [];
+    if (!selectedSubOrgId) return list;
+    return list.filter(
+      (emp) => String(emp.subOrganizationId) === selectedSubOrgId,
+    );
+  }, [periodResults, selectedSubOrgId]);
 
   const selectedEmployee = useMemo(() => {
     if (!selectedEmployeeId) return null;
@@ -146,7 +194,9 @@ export default function AdminPeerReviewsPage() {
       setPeriods(Array.isArray(data) ? data : []);
     } catch (err) {
       setPeriodsError(
-        err instanceof Error ? err.message : "Failed to load peer review periods",
+        err instanceof Error
+          ? err.message
+          : "Failed to load peer review periods",
       );
       setPeriods([]);
     } finally {
@@ -172,7 +222,9 @@ export default function AdminPeerReviewsPage() {
       setPeriodResults(data as PeerReviewPeriodResultsResponse);
     } catch (err) {
       setPeriodResultsError(
-        err instanceof Error ? err.message : "Failed to load peer review results",
+        err instanceof Error
+          ? err.message
+          : "Failed to load peer review results",
       );
       setPeriodResults(null);
     } finally {
@@ -180,13 +232,38 @@ export default function AdminPeerReviewsPage() {
     }
   }, []);
 
+  const loadPrinciples = useCallback(async () => {
+    setPrinciplesLoading(true);
+    try {
+      const res = await fetch("/api/admin/metrics/peer-reviews/principles", {
+        cache: "no-store",
+      });
+      const data = await res.json().catch(() => []);
+      if (res.ok && Array.isArray(data)) setPrinciples(data);
+    } finally {
+      setPrinciplesLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const vice = isViceManagerClient();
+    setIsVice(vice);
+    if (vice) return;
+    loadPrinciples();
+    fetch("/api/admin/metrics/peer-reviews/principles/defaults")
+      .then((res) => res.json())
+      .then((data) => Array.isArray(data) && setDefaultPrinciples(data))
+      .catch(() => {});
+  }, [loadPrinciples]);
+
   useEffect(() => {
     loadPeriods();
   }, [loadPeriods]);
 
   useEffect(() => {
     if (periods.length === 0) return;
-    if (selectedPeriodId && periods.some((p) => p.id === selectedPeriodId)) return;
+    if (selectedPeriodId && periods.some((p) => p.id === selectedPeriodId))
+      return;
     setSelectedPeriodId(periods[0]!.id);
   }, [periods, selectedPeriodId]);
 
@@ -239,7 +316,12 @@ export default function AdminPeerReviewsPage() {
     if (!selectedPeriodId || !selectedEmployeeId) return;
     setAdminReviewSaveError(null);
     loadAdminReview(selectedPeriodId, selectedEmployeeId);
-  }, [employeeDetailsOpen, loadAdminReview, selectedEmployeeId, selectedPeriodId]);
+  }, [
+    employeeDetailsOpen,
+    loadAdminReview,
+    selectedEmployeeId,
+    selectedPeriodId,
+  ]);
 
   const handleCreatePeriod = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -257,7 +339,11 @@ export default function AdminPeerReviewsPage() {
       const res = await fetch("/api/admin/metrics/peer-reviews/periods", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: trimmedName, periodStart, periodEnd }),
+        body: JSON.stringify({
+          name: trimmedName,
+          periodStart,
+          periodEnd,
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -269,7 +355,7 @@ export default function AdminPeerReviewsPage() {
       setCreatedPeriod(data as PeerReviewPeriodResponse);
       setShowCreateModal(false);
       setPeriodName("");
-      await loadPeriods();
+      await Promise.all([loadPeriods(), loadPrinciples()]);
     } catch (err) {
       setError(
         err instanceof Error
@@ -312,8 +398,7 @@ export default function AdminPeerReviewsPage() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         throw new Error(
-          (data as { error?: string }).error ??
-            "Failed to save admin feedback",
+          (data as { error?: string }).error ?? "Failed to save admin feedback",
         );
       }
       const saved = data as AdminPeerReviewResponse;
@@ -346,53 +431,85 @@ export default function AdminPeerReviewsPage() {
         </div>
       </div>
 
-      <section className="mb-6 rounded-xl border border-zinc-800 bg-zinc-900/60 p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold text-white">Create review period</h2>
-            <p className="text-sm text-zinc-400">
-              Open a named period so employees can submit peer reviews.
-            </p>
-          </div>
-          <Button
-            type="button"
-            className="bg-[#e78a53] text-white hover:bg-[#e78a53]/90"
-            onClick={() => {
-              setError(null);
-              setShowCreateModal(true);
-            }}
-          >
-            Create review period
-          </Button>
-        </div>
+      {!isVice && (
+        <PrinciplesManager
+          principles={principles}
+          defaultPrinciples={defaultPrinciples}
+          loading={principlesLoading}
+          onChanged={loadPrinciples}
+        />
+      )}
 
-        {error && !showCreateModal && (
-          <p className="mt-4 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-400">
-            {error}
-          </p>
-        )}
-
-        {createdPeriod && (
-          <div className="mt-4 rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-200">
-            <div className="flex items-center gap-2 font-semibold">
-              <Sparkles className="size-4" />
-              Period created
+      {!isVice && (
+        <section className="mb-6 rounded-xl border border-zinc-800 bg-zinc-900/60 p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold text-white">
+                Create review period
+              </h2>
+              <p className="text-sm text-zinc-400">
+                Open a named period so employees can submit peer reviews against
+                your {activePrincipleCount} active rating principle
+                {activePrincipleCount === 1 ? "" : "s"}.
+              </p>
             </div>
-            <p className="mt-2">
-              {createdPeriod.name ?? `#${createdPeriod.id}`} ·{" "}
-              {createdPeriod.periodStart} → {createdPeriod.periodEnd}
-            </p>
-            <p className="mt-1 text-xs text-emerald-200/80">
-              Created at {new Date(createdPeriod.createdAt).toLocaleString()}
-            </p>
+            <Button
+              type="button"
+              className="bg-[#e78a53] text-white hover:bg-[#e78a53]/90"
+              disabled={principlesLoading || activePrincipleCount === 0}
+              aria-describedby={
+                activePrincipleCount === 0 ? "no-principles-hint" : undefined
+              }
+              onClick={() => {
+                setError(null);
+                setShowCreateModal(true);
+              }}
+            >
+              Create review period
+            </Button>
           </div>
-        )}
-      </section>
+
+          {!principlesLoading && activePrincipleCount === 0 && (
+            <p
+              id="no-principles-hint"
+              className="mt-4 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-sm text-amber-200"
+            >
+              You have no active rating principles yet. Add your own or the 7
+              defaults under Rating principles above, then create a review
+              period.
+            </p>
+          )}
+
+          {error && !showCreateModal && (
+            <p className="mt-4 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-400">
+              {error}
+            </p>
+          )}
+
+          {createdPeriod && (
+            <div className="mt-4 rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-200">
+              <div className="flex items-center gap-2 font-semibold">
+                <Sparkles className="size-4" />
+                Period created
+              </div>
+              <p className="mt-2">
+                {createdPeriod.name ?? `#${createdPeriod.id}`} ·{" "}
+                {createdPeriod.periodStart} → {createdPeriod.periodEnd}
+              </p>
+              <p className="mt-1 text-xs text-emerald-200/80">
+                Created at {new Date(createdPeriod.createdAt).toLocaleString()}
+              </p>
+            </div>
+          )}
+        </section>
+      )}
 
       <section className="mb-6 rounded-xl border border-zinc-800 bg-zinc-900/60 p-6">
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-white">Initiated periods</h2>
+            <h2 className="text-lg font-semibold text-white">
+              Initiated periods
+            </h2>
             <p className="text-sm text-zinc-400">
               Click a period to load aggregated results.
             </p>
@@ -408,7 +525,9 @@ export default function AdminPeerReviewsPage() {
           </Button>
         </div>
 
-        {periodsError && <p className="mb-4 text-sm text-red-400">{periodsError}</p>}
+        {periodsError && (
+          <p className="mb-4 text-sm text-red-400">{periodsError}</p>
+        )}
 
         {periodsLoading ? (
           <div className="flex items-center gap-2 text-sm text-zinc-400">
@@ -416,7 +535,9 @@ export default function AdminPeerReviewsPage() {
             Loading periods...
           </div>
         ) : periods.length === 0 ? (
-          <p className="text-sm text-zinc-500">No periods have been initiated yet.</p>
+          <p className="text-sm text-zinc-500">
+            No periods have been initiated yet.
+          </p>
         ) : (
           <div className="overflow-hidden rounded-lg border border-zinc-800">
             <table className="w-full text-left text-sm">
@@ -470,17 +591,64 @@ export default function AdminPeerReviewsPage() {
             Loading results...
           </div>
         ) : !periodResults ? (
-          <p className="text-sm text-zinc-500">Select a period to load results.</p>
+          <p className="text-sm text-zinc-500">
+            Select a period to load results.
+          </p>
         ) : (
           <div className="space-y-6">
             <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
               <p className="text-sm font-semibold text-white">
-                {periodResults.periodName ?? `Period #${periodResults.periodId}`}
+                {periodResults.periodName ??
+                  `Period #${periodResults.periodId}`}
               </p>
               <p className="mt-1 text-xs text-zinc-400">
                 {periodResults.periodStart} → {periodResults.periodEnd}
               </p>
             </div>
+
+            {subOrgs.length > 1 && (
+              <div
+                role="group"
+                aria-label="Filter results by sub-organization"
+                className="flex flex-wrap gap-2"
+              >
+                {[
+                  {
+                    id: "",
+                    name: "All sub-organizations",
+                    count: periodResults.employees?.length ?? 0,
+                  },
+                  ...subOrgs.map((s) => ({
+                    id: String(s.id),
+                    name: s.isDefault ? `${s.name} (Main)` : s.name,
+                    count: employeesPerBranch.get(s.id) ?? 0,
+                  })),
+                ].map((tab) => {
+                  const active = selectedSubOrgId === tab.id;
+                  return (
+                    <button
+                      key={tab.id || "all"}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => setSelectedSubOrgId(tab.id)}
+                      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors ${
+                        active
+                          ? "border-[#e78a53] bg-[#e78a53]/15 text-white"
+                          : "border-zinc-700 text-zinc-300 hover:border-zinc-500 hover:text-white"
+                      }`}
+                    >
+                      {tab.id && (
+                        <Building2 className="size-3.5 text-[#e78a53]" />
+                      )}
+                      {tab.name}
+                      <span className="rounded-full bg-zinc-800 px-1.5 text-xs text-zinc-400">
+                        {tab.count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
@@ -522,15 +690,19 @@ export default function AdminPeerReviewsPage() {
             </div>
 
             <div>
-              <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-base font-semibold text-white">
-                  Employees ({employeesInPeriod.length})
-                </h3>
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <h3 className="text-base font-semibold text-white">
+                    Employees ({employeesInPeriod.length})
+                  </h3>
+                </div>
                 <Button
                   type="button"
                   variant="outline"
                   className="border-zinc-700 text-zinc-200 hover:bg-zinc-800"
-                  onClick={() => selectedPeriodId && loadPeriodResults(selectedPeriodId)}
+                  onClick={() =>
+                    selectedPeriodId && loadPeriodResults(selectedPeriodId)
+                  }
                   disabled={periodResultsLoading || !selectedPeriodId}
                 >
                   Refresh
@@ -547,6 +719,7 @@ export default function AdminPeerReviewsPage() {
                     <thead className="bg-zinc-900">
                       <tr className="border-b border-zinc-800 text-xs uppercase tracking-wide text-zinc-500">
                         <th className="px-4 py-3">Employee</th>
+                        <th className="px-4 py-3">Branch</th>
                         <th className="px-4 py-3">Department</th>
                         <th className="px-4 py-3">Role</th>
                         <th className="px-4 py-3">Leadership</th>
@@ -562,11 +735,27 @@ export default function AdminPeerReviewsPage() {
                           <td className="px-4 py-3 text-zinc-200">
                             {employee.employeeName}
                           </td>
+                          <td className="px-4 py-3">
+                            {employee.subOrganizationName ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-zinc-800 text-zinc-300 border border-zinc-700">
+                                <Building2 className="size-3 text-[#e78a53]" />
+                                {employee.subOrganizationName}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-zinc-500">
+                                All Branches
+                              </span>
+                            )}
+                          </td>
                           <td className="px-4 py-3 text-zinc-400">
                             {employee.department}
                           </td>
-                          <td className="px-4 py-3 text-zinc-400">{employee.role}</td>
-                          <td className={`px-4 py-3 ${scoreTone(employee.leadershipScore)}`}>
+                          <td className="px-4 py-3 text-zinc-400">
+                            {employee.role}
+                          </td>
+                          <td
+                            className={`px-4 py-3 ${scoreTone(employee.leadershipScore)}`}
+                          >
                             {formatScore(employee.leadershipScore)}
                           </td>
                           <td className="px-4 py-3 text-right">
@@ -670,7 +859,8 @@ export default function AdminPeerReviewsPage() {
                         selectedEmployee.leadershipScore,
                       )}`}
                     >
-                      Leadership: {formatScore(selectedEmployee.leadershipScore)}
+                      Leadership:{" "}
+                      {formatScore(selectedEmployee.leadershipScore)}
                     </p>
                   </div>
                   <p className="mt-1 text-xs text-zinc-400">
@@ -681,7 +871,9 @@ export default function AdminPeerReviewsPage() {
 
                 <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="text-sm font-semibold text-white">Admin feedback</p>
+                    <p className="text-sm font-semibold text-white">
+                      Admin feedback
+                    </p>
                     {adminReview ? (
                       <span className="text-xs text-zinc-400">
                         {new Date(adminReview.updatedAt).toLocaleString()}
@@ -690,7 +882,9 @@ export default function AdminPeerReviewsPage() {
                   </div>
 
                   {adminReviewError && (
-                    <p className="mt-2 text-sm text-red-400">{adminReviewError}</p>
+                    <p className="mt-2 text-sm text-red-400">
+                      {adminReviewError}
+                    </p>
                   )}
 
                   {adminReviewLoading ? (
@@ -706,10 +900,14 @@ export default function AdminPeerReviewsPage() {
                           {formatPeerReviewRating(adminReview.rating)}
                         </span>
                       </p>
-                      <p className="text-sm text-zinc-200">{adminReview.feedback}</p>
+                      <p className="text-sm text-zinc-200">
+                        {adminReview.feedback}
+                      </p>
                     </div>
                   ) : (
-                    <p className="mt-2 text-sm text-zinc-500">No admin feedback yet.</p>
+                    <p className="mt-2 text-sm text-zinc-500">
+                      No admin feedback yet.
+                    </p>
                   )}
 
                   {adminReviewEditing ? (
@@ -746,7 +944,9 @@ export default function AdminPeerReviewsPage() {
                           rows={4}
                           className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-200"
                           value={adminReviewFeedback}
-                          onChange={(e) => setAdminReviewFeedback(e.target.value)}
+                          onChange={(e) =>
+                            setAdminReviewFeedback(e.target.value)
+                          }
                           placeholder="Write feedback..."
                         />
                       </div>
@@ -792,7 +992,8 @@ export default function AdminPeerReviewsPage() {
                           </span>
                         </div>
                         <p className="mt-2 text-sm text-zinc-300">
-                          Average rating: {formatAverageRating(principle.averageRating)}
+                          Average rating:{" "}
+                          {formatAverageRating(principle.averageRating)}
                         </p>
                       </div>
                     ))}
@@ -826,7 +1027,8 @@ export default function AdminPeerReviewsPage() {
                   </span>
                 </div>
                 <p className="mt-1 text-xs text-zinc-400">
-                  {selectedEmployee?.employeeName ?? "Employee"} · Anonymous feedback from peers
+                  {selectedEmployee?.employeeName ?? "Employee"} · Anonymous
+                  feedback from peers
                 </p>
               </div>
               <Dialog.Close asChild>
@@ -840,7 +1042,8 @@ export default function AdminPeerReviewsPage() {
               </Dialog.Close>
             </div>
 
-            {selectedEmployee?.comments && selectedEmployee.comments.length > 0 ? (
+            {selectedEmployee?.comments &&
+            selectedEmployee.comments.length > 0 ? (
               <div className="space-y-3">
                 {selectedEmployee.comments.map((comment, index) => (
                   <div
@@ -851,7 +1054,9 @@ export default function AdminPeerReviewsPage() {
                       <div className="flex size-5 items-center justify-center rounded-full bg-[#e78a53]/20 text-[10px] font-semibold text-[#e78a53]">
                         #
                       </div>
-                      <span className="font-medium text-zinc-300">Anonymous Peer Reviewer</span>
+                      <span className="font-medium text-zinc-300">
+                        Anonymous Peer Reviewer
+                      </span>
                     </div>
                     <p className="whitespace-pre-wrap text-sm text-zinc-200">
                       "{comment}"
@@ -861,7 +1066,8 @@ export default function AdminPeerReviewsPage() {
               </div>
             ) : (
               <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-6 text-center text-sm text-zinc-400">
-                No peer comments were submitted for this employee in this period.
+                No peer comments were submitted for this employee in this
+                period.
               </div>
             )}
           </Dialog.Content>
@@ -872,7 +1078,9 @@ export default function AdminPeerReviewsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
           <div className="w-full max-w-lg rounded-xl border border-zinc-800 bg-zinc-900 p-6">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-white">Create review period</h3>
+              <h3 className="text-lg font-semibold text-white">
+                Create review period
+              </h3>
               <Button
                 variant="ghost"
                 size="sm"
@@ -924,7 +1132,7 @@ export default function AdminPeerReviewsPage() {
                 <Button
                   type="submit"
                   className="flex-1 bg-[#e78a53] text-white hover:bg-[#e78a53]/90"
-                  disabled={creating}
+                  disabled={creating || activePrincipleCount === 0}
                 >
                   {creating ? "Creating..." : "Create period"}
                 </Button>
