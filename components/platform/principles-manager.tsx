@@ -1,12 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
-  ChevronDown,
   Loader2,
   Pencil,
   Plus,
-  Sparkles,
   Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,8 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { LeadershipPrincipleResponse } from "@/lib/metrics-api";
 
-const API = "/api/admin/metrics/peer-reviews/principles";
-const OPEN_KEY = "principles-panel-open";
+const API = "/api/platform/principles";
 
 async function send(url: string, method: string, body?: unknown) {
   const res = await fetch(url, {
@@ -31,16 +28,13 @@ async function send(url: string, method: string, body?: unknown) {
 
 interface PrinciplesManagerProps {
   principles: LeadershipPrincipleResponse[];
-  /** The platform's 7 defaults; the "add defaults" button hides once the org has them all. */
-  defaultPrinciples: LeadershipPrincipleResponse[];
   loading: boolean;
   onChanged: () => Promise<void> | void;
 }
 
-/** Per-organization CRUD for the principles employees rate each other against. */
+/** Platform-admin CRUD for the principles every organization's employees rate each other against. */
 export function PrinciplesManager({
   principles,
-  defaultPrinciples,
   loading,
   onChanged,
 }: PrinciplesManagerProps) {
@@ -51,29 +45,6 @@ export function PrinciplesManager({
   const [editDescription, setEditDescription] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  // null = no saved preference: open only while the org has no principles yet.
-  const [open, setOpen] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem(OPEN_KEY);
-      if (saved !== null) setOpen(saved === "true");
-    } catch {
-      // storage unavailable: fall back to the default
-    }
-  }, []);
-
-  const expanded = open ?? (!loading && principles.length === 0);
-  const toggleOpen = () => {
-    const next = !expanded;
-    setOpen(next);
-    try {
-      window.localStorage.setItem(OPEN_KEY, String(next));
-    } catch {
-      // best-effort preference only
-    }
-  };
-
   const run = async (key: string, action: () => Promise<unknown>) => {
     setBusy(key);
     setError(null);
@@ -143,67 +114,18 @@ export function PrinciplesManager({
   };
 
   const activeCount = principles.filter((p) => p.isActive).length;
-  const existingNames = new Set(
-    principles.map((p) => p.name.trim().toLowerCase()),
-  );
-  const missingDefaults = defaultPrinciples.filter(
-    (d) => !existingNames.has(d.name.trim().toLowerCase()),
-  ).length;
 
   return (
     <section className="mb-6 rounded-xl border border-zinc-800 bg-zinc-900/60 p-6">
-      <div
-        className={`flex flex-wrap items-start justify-between gap-3 ${expanded ? "mb-4" : ""}`}
-      >
-        <div>
-          <h2 className="text-lg font-semibold text-white">
-            Rating principles
-          </h2>
-          <p className="text-sm text-zinc-400">
-            Employees rate each other against your active principles (
-            {activeCount} active).
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {!loading && missingDefaults > 0 && (
-            <Button
-              type="button"
-              variant="outline"
-              className="border-zinc-700 text-zinc-200 hover:bg-zinc-800"
-              disabled={busy !== null}
-              onClick={() =>
-                run("defaults", () => send(`${API}/defaults`, "POST"))
-              }
-            >
-              {busy === "defaults" ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Sparkles className="size-4" />
-              )}
-              {missingDefaults === defaultPrinciples.length
-                ? `Add the ${missingDefaults} default principles`
-                : `Add the ${missingDefaults} missing default principle${missingDefaults === 1 ? "" : "s"}`}
-            </Button>
-          )}
-          <Button
-            type="button"
-            variant="ghost"
-            className="text-zinc-300 hover:text-white"
-            aria-expanded={expanded}
-            aria-controls="principles-panel"
-            onClick={toggleOpen}
-          >
-            {expanded
-              ? "Hide"
-              : `Show ${principles.length > 0 ? `(${principles.length})` : ""}`}
-            <ChevronDown
-              className={`size-4 transition-transform ${expanded ? "rotate-180" : ""}`}
-            />
-          </Button>
-        </div>
+      <div className="mb-4">
+        <h2 className="text-lg font-semibold text-white">Rating principles</h2>
+        <p className="text-sm text-zinc-400">
+          Shared by every organization; employees rate each other against the
+          active ones ({activeCount} active).
+        </p>
       </div>
 
-      <div id="principles-panel" hidden={!expanded}>
+      <div>
         {error && (
           <p className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-400">
             {error}
@@ -216,7 +138,7 @@ export function PrinciplesManager({
           </p>
         ) : principles.length === 0 ? (
           <p className="mb-4 text-sm text-zinc-500">
-            No principles yet. Add your own below or use the 7 defaults.
+            No principles yet. Add the first one below.
           </p>
         ) : (
           <ul className="mb-4 divide-y divide-zinc-800 rounded-lg border border-zinc-800">
@@ -238,7 +160,7 @@ export function PrinciplesManager({
                     <Button
                       type="button"
                       size="sm"
-                      className="bg-[#e78a53] text-white hover:bg-[#e78a53]/90"
+                      className="bg-emerald-500 text-emerald-950 hover:bg-emerald-400"
                       disabled={busy !== null}
                       onClick={() => saveEdit(p)}
                     >
@@ -335,7 +257,7 @@ export function PrinciplesManager({
           </div>
           <Button
             type="submit"
-            className="bg-[#e78a53] text-white hover:bg-[#e78a53]/90"
+            className="bg-emerald-500 text-emerald-950 hover:bg-emerald-400"
             disabled={busy !== null || !name.trim()}
           >
             {busy === "add" ? (
