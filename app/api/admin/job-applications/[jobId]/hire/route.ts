@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAdminToken } from "@/lib/auth"
+import { cmsFetch } from "@/lib/cms-fetch"
 import type { JobApi } from "@/lib/jobs-api"
 
 const CMS_BASE_URL = process.env.NEXT_PUBLIC_CMS_BASE_URL!
@@ -20,7 +21,7 @@ export async function POST(
 
   let job: JobApi | null = null
   try {
-    const jobRes = await fetch(`${CMS_BASE_URL}/manager/jobs/${encodeURIComponent(jobId)}`, {
+    const jobRes = await cmsFetch(token, `${CMS_BASE_URL}/manager/jobs/${encodeURIComponent(jobId)}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
     if (jobRes.ok) {
@@ -42,6 +43,7 @@ export async function POST(
       salaryAmountMinor: Math.trunc(salaryAmountMinor),
       department: job?.department ?? null,
       employmentStatus: job?.employmentType ?? null,
+      subOrganizationId: typeof body.subOrganizationId === "number" ? body.subOrganizationId : (job?.subOrganizationId ?? null),
     }
 
     if (!Number.isFinite(payload.applicationId) || payload.applicationId <= 0) {
@@ -60,7 +62,7 @@ export async function POST(
       return NextResponse.json({ error: "Salary amount must be greater than zero" }, { status: 400 })
     }
 
-    const res = await fetch(`${CMS_BASE_URL}/manager/job-applications/${encodeURIComponent(jobId)}/hire`, {
+    const res = await cmsFetch(token, `${CMS_BASE_URL}/manager/job-applications/${encodeURIComponent(jobId)}/hire`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

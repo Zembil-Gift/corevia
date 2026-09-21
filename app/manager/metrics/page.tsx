@@ -2,13 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { BarChart3, Loader2, RefreshCw, Sparkles, X } from "lucide-react";
+import { BarChart3, Loader2, RefreshCw, Sparkles, X, Building2, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { GithubEmployeeReportResponse } from "@/lib/github-stats-api";
 import type { TelegramSupportReportResponse } from "@/lib/telegram-support-api";
 import type { TrelloEmployeeReportResponse } from "@/lib/trello-stats-api";
+import type { SubOrganization } from "@/lib/sub-orgs-api";
 import type {
   EmployeeMetricSummaryPage,
   EmployeeMetricSummaryResponse,
@@ -75,6 +76,8 @@ export default function AdminMetricsPage() {
 
   const [department, setDepartment] = useState("");
   const [role, setRole] = useState("");
+  const [subOrgs, setSubOrgs] = useState<SubOrganization[]>([]);
+  const [selectedSubOrgId, setSelectedSubOrgId] = useState<string>("");
   const [persistSnapshot, setPersistSnapshot] = useState(false);
   const [size, setSize] = useState(10);
   const [page, setPage] = useState(0);
@@ -128,6 +131,15 @@ export default function AdminMetricsPage() {
   const [githubSyncMessage, setGithubSyncMessage] = useState("");
   const [trelloSyncLoading, setTrelloSyncLoading] = useState(false);
   const [trelloSyncMessage, setTrelloSyncMessage] = useState("");
+
+  useEffect(() => {
+    fetch("/api/admin/sub-organizations")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setSubOrgs(data);
+      })
+      .catch(() => {});
+  }, []);
 
   const averageOverall = useMemo(() => {
     const scored = metrics
@@ -199,10 +211,11 @@ export default function AdminMetricsPage() {
       params.set("direction", "desc");
       if (department.trim()) params.set("department", department.trim());
       if (role.trim()) params.set("role", role.trim());
+      if (selectedSubOrgId) params.set("subOrganizationId", selectedSubOrgId);
       if (persistSnapshot) params.set("persistSnapshot", "true");
       return params;
     },
-    [department, periodEnd, periodStart, persistSnapshot, role, size],
+    [department, periodEnd, periodStart, persistSnapshot, role, selectedSubOrgId, size],
   );
 
   const loadMetrics = useCallback(
@@ -725,7 +738,7 @@ export default function AdminMetricsPage() {
       )}
 
       <section className="mb-6 rounded-xl border border-zinc-800 bg-zinc-900/60 p-6">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1fr_auto]">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           <div className="space-y-2">
             <Label className="text-zinc-300">Month</Label>
             <Input
@@ -733,10 +746,24 @@ export default function AdminMetricsPage() {
               value={reportMonth}
               onChange={(e) => setReportMonth(e.target.value)}
             />
-            {/*<p className="text-xs text-zinc-500">
-              Period: {periodStart} → {periodEnd}
-            </p>*/}
           </div>
+          {subOrgs.length > 0 && (
+            <div className="space-y-2">
+              <Label className="text-zinc-300">Sub-Organization</Label>
+              <select
+                value={selectedSubOrgId}
+                onChange={(e) => setSelectedSubOrgId(e.target.value)}
+                className="w-full h-9 rounded-md border border-zinc-700 bg-zinc-800 px-3 text-sm text-white focus:border-[#e78a53] focus:outline-none"
+              >
+                <option value="">All Sub-Organizations</option>
+                {subOrgs.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} {s.isDefault ? "(Main)" : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="space-y-2">
             <Label className="text-zinc-300">Department</Label>
             <Input
@@ -753,34 +780,7 @@ export default function AdminMetricsPage() {
               onChange={(e) => setRole(e.target.value)}
             />
           </div>
-          <div className="space-y-2">
-            <Label className="text-zinc-300">Page size</Label>
-            <Input
-              type="number"
-              min={1}
-              max={100}
-              value={size}
-              onChange={(e) => {
-                const next = Number(e.target.value);
-                setSize(
-                  Number.isFinite(next) && next > 0
-                    ? Math.min(Math.floor(next), 100)
-                    : 10,
-                );
-              }}
-            />
-          </div>
           <div className="flex flex-col justify-end gap-2">
-            {/*<div className="flex items-center gap-2 text-sm text-zinc-400">
-              <input
-                id="persist-snapshot"
-                type="checkbox"
-                checked={persistSnapshot}
-                onChange={(e) => setPersistSnapshot(e.target.checked)}
-                className="accent-[#e78a53]"
-              />
-              <label htmlFor="persist-snapshot">Persist snapshot</label>
-            </div>*/}
             <Button
               className="bg-[#e78a53] text-white hover:bg-[#e78a53]/90"
               onClick={handleSearch}
@@ -840,6 +840,7 @@ export default function AdminMetricsPage() {
             <thead className="bg-zinc-900">
               <tr className="border-b border-zinc-800 text-xs uppercase tracking-wide text-zinc-500">
                 <th className="px-4 py-3">Employee</th>
+                <th className="px-4 py-3">Branch</th>
                 <th className="px-4 py-3">Role</th>
                 <th className="px-4 py-3">Department</th>
                 <th className="px-4 py-3">Overall</th>
@@ -870,6 +871,16 @@ export default function AdminMetricsPage() {
                       <p className="text-xs text-zinc-500">
                         {summary.periodStart} → {summary.periodEnd}
                       </p>
+                    </td>
+                    <td className="px-4 py-3">
+                      {summary.subOrganizationName ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-zinc-800 text-zinc-300 border border-zinc-700">
+                          <Building2 className="size-3 text-[#e78a53]" />
+                          {summary.subOrganizationName}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-zinc-500">All Branches</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-zinc-400">{summary.role}</td>
                     <td className="px-4 py-3 text-zinc-400">

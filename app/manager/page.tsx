@@ -1,5 +1,6 @@
 import { headers } from "next/headers"
 import { getAdminToken } from "@/lib/auth"
+import { cmsFetch } from "@/lib/cms-fetch"
 import { DashboardView, type DashboardData } from "@/components/admin/dashboard-view"
 import type { EmployeeApi, EmployeeAttendanceApi, EmployeePaymentApi } from "@/lib/employees-api"
 import type { JobApi } from "@/lib/jobs-api"
@@ -9,7 +10,7 @@ const CMS_BASE_URL = process.env.NEXT_PUBLIC_CMS_BASE_URL
 
 async function managerGet<T>(path: string, token: string): Promise<T | null> {
   try {
-    const res = await fetch(`${CMS_BASE_URL}${path}`, {
+    const res = await cmsFetch(token, `${CMS_BASE_URL}${path}`, {
       headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",
     })

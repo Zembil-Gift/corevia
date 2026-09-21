@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { Loader2, CheckCircle2, Link2, Unlink, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { BranchTicks, LockedBranchNote, useBranches } from "@/components/admin/connection-branch-picker"
 import {
   fetchGitHubConnection,
   connectGitHub,
@@ -11,6 +12,7 @@ import {
   saveGitHubOrgs,
   githubAuthorizeUrl,
   type GitHubOrg,
+  type GitHubConnection,
 } from "@/lib/github-connect-api"
 
 const STATE_KEY = "github_oauth_state"
@@ -23,12 +25,20 @@ export function GitHubIntegration() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
+  const [branchLocked, setBranchLocked] = useState(false)
+  const [branchName, setBranchName] = useState<string | null>(null)
+
+  const applyConnection = (conn: GitHubConnection) => {
+    setConnected(conn.connected)
+    setSelected(conn.selectedOrgs)
+    setBranchName(conn.subOrganizationName ?? null)
+    setBranchLocked(Boolean(conn.subOrganizationLocked))
+  }
 
   const load = useCallback(async () => {
     try {
       const conn = await fetchGitHubConnection()
-      setConnected(conn.connected)
-      setSelected(conn.selectedOrgs)
+      applyConnection(conn)
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load")
     } finally {
@@ -55,8 +65,7 @@ export function GitHubIntegration() {
     setBusy(true)
     try {
       const conn = await connectGitHub(code)
-      setConnected(conn.connected)
-      setSelected(conn.selectedOrgs)
+      applyConnection(conn)
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to connect GitHub")
     } finally {
@@ -106,12 +115,20 @@ export function GitHubIntegration() {
     }
   }
 
+  const branches = useBranches(connected && !branchLocked)
   const isSelected = (login: string) => selected.some((o) => o.login === login)
+  const branchesOf = (login: string) => selected.find((o) => o.login === login)?.subOrganizationIds ?? []
   const toggle = (org: GitHubOrg) => {
     setSaved(false)
     setSelected((prev) =>
-      prev.some((o) => o.login === org.login) ? prev.filter((o) => o.login !== org.login) : [...prev, org]
+      prev.some((o) => o.login === org.login)
+        ? prev.filter((o) => o.login !== org.login)
+        : [...prev, { ...org, subOrganizationIds: [] }]
     )
+  }
+  const setBranchesOf = (login: string, subOrganizationIds: number[]) => {
+    setSaved(false)
+    setSelected((prev) => prev.map((o) => (o.login === login ? { ...o, subOrganizationIds } : o)))
   }
 
   const handleSave = async () => {
@@ -120,7 +137,7 @@ export function GitHubIntegration() {
     setSaved(false)
     try {
       const conn = await saveGitHubOrgs(selected)
-      setSelected(conn.selectedOrgs)
+      applyConnection(conn)
       setSaved(true)
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to save")
@@ -148,6 +165,12 @@ export function GitHubIntegration() {
           <p className="mt-1 text-sm text-zinc-400">
             {loading ? "Loading…" : connected ? "Your GitHub account is connected." : "Not connected."}
           </p>
+          {!loading && !connected && (
+            <p className="mt-1 text-xs text-zinc-500">
+              After connecting, pick the organizations to track
+              {branchLocked ? "." : " and tick which sub-organizations each one covers."}
+            </p>
+          )}
         </div>
         {!loading &&
           (connected ? (
@@ -197,10 +220,20 @@ export function GitHubIntegration() {
                     />
                     <span className="truncate">{org.name || org.login}</span>
                   </label>
+                  {!branchLocked && isSelected(org.login) && (
+                    <BranchTicks
+                      label={org.name || org.login}
+                      branches={branches}
+                      value={branchesOf(org.login)}
+                      onChange={(ids) => setBranchesOf(org.login, ids)}
+                    />
+                  )}
                 </li>
               ))}
             </ul>
           )}
+
+          {branchLocked && <LockedBranchNote name={branchName} />}
 
           <div className="mt-5 flex items-center gap-3">
             <Button onClick={handleSave} disabled={busy} className="bg-[#e78a53] text-white hover:bg-[#d67a43]">

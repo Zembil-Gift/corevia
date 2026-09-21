@@ -8,8 +8,8 @@ const ADMIN_COOKIE_NAME = "admin_session"
 const EMPLOYEE_COOKIE_NAME = "employee_session"
 const PLATFORM_COOKIE_NAME = "platform_session"
 const SESSION_MAX_AGE_SEC = 60 * 60 * 24 * 7 // 7 days (fallback when JWT has no exp)
-// "platform" = global platform admin (org CRUD + stats); "admin" = per-org manager; "employee".
-export type UserRole = "admin" | "employee" | "platform"
+// "platform" = global platform admin (org CRUD + stats); "admin" = per-org manager; "vice_manager" = branch manager; "employee".
+export type UserRole = "admin" | "employee" | "platform" | "vice_manager"
 
 function base64UrlDecode(str: string): string {
   if (typeof Buffer !== "undefined") {
@@ -24,12 +24,15 @@ export interface SessionPayload {
   email: string
   exp: number
   role: UserRole
+  subOrgId?: number
 }
 
 interface JwtPayload {
   sub?: string
   exp?: number
   iat?: number
+  role?: string
+  subOrgId?: number
 }
 
 /**
@@ -44,6 +47,11 @@ function decodeJwtPayload(token: string): JwtPayload | null {
   } catch {
     return null
   }
+}
+
+/** Role claim from a CMS JWT ("MANAGER", "VICE_MANAGER", …); signature is verified by the API. */
+export function getTokenRole(token: string): string | null {
+  return decodeJwtPayload(token)?.role ?? null
 }
 
 function parseCookies(cookieHeader: string | null): Record<string, string> {
@@ -68,10 +76,12 @@ export function getSessionFromCookie(cookieHeader: string | null): SessionPayloa
   }
   const adminPayload = decodeJwtPayload(cookies[ADMIN_COOKIE_NAME] ?? "")
   if (adminPayload && typeof adminPayload.exp === "number" && adminPayload.exp >= Date.now() / 1000) {
+    const isVice = adminPayload.role === "VICE_MANAGER"
     return {
       email: typeof adminPayload.sub === "string" ? adminPayload.sub : "",
       exp: adminPayload.exp,
-      role: "admin",
+      role: isVice ? "vice_manager" : "admin",
+      subOrgId: adminPayload.subOrgId,
     }
   }
   const employeePayload = decodeJwtPayload(cookies[EMPLOYEE_COOKIE_NAME] ?? "")

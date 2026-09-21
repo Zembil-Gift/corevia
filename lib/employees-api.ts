@@ -25,6 +25,8 @@ export interface EmployeeApi {
   salaryDate?: string | null
   salaryAmountMinor?: number | null
   salaryScheduleDays?: DayOfWeekApi[]
+  subOrganizationId?: number | null
+  subOrganizationName?: string | null
   createdAt: string
   updatedAt: string
 }
@@ -58,6 +60,8 @@ export interface EmployeePaymentApi {
   id: number
   employeeId: number
   employeeName: string
+  subOrganizationId?: number | null
+  subOrganizationName?: string | null
   cycleStartDate: string
   dueDate: string
   amountMinor: number

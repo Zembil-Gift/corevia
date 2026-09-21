@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import * as Dialog from "@radix-ui/react-dialog"
 import { X, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -10,11 +10,14 @@ import { useLang, pick } from "@/lib/i18n"
 import { a } from "@/lib/i18n-admin"
 import type { JobEmploymentTypeApi, JobStatusApi } from "@/lib/jobs-api"
 import { JOB_EMPLOYMENT_TYPES, formatJobEmploymentType } from "@/lib/jobs-api"
+import type { SubOrganization } from "@/lib/sub-orgs-api"
 
 const STATUS_OPTIONS: JobStatusApi[] = ["DRAFT", "OPEN", "CLOSED"]
 
 const c = {
   createJob: { en: "Create job", am: "ስራ ፍጠር" },
+  subOrg: { en: "Sub-Organization / Branch", am: "ቅርንጫፍ" },
+  allBranches: { en: "All / Organization-wide", am: "ሁሉም / አጠቃላይ" },
   titlePlaceholder: { en: "Job title", am: "የስራ ርዕስ" },
   deptPlaceholder: { en: "e.g. Engineering", am: "ለምሳሌ ኢንጂነሪንግ" },
   locationPlaceholder: { en: "e.g. Remote", am: "ለምሳሌ ከርቀት" },
@@ -34,6 +37,8 @@ export function CreateJobModal({
   onSuccess,
 }: CreateJobModalProps) {
   const { lang } = useLang()
+  const [subOrgs, setSubOrgs] = useState<SubOrganization[]>([])
+  const [subOrganizationId, setSubOrganizationId] = useState<number | "">("")
   const [title, setTitle] = useState("")
   const [slug, setSlug] = useState("")
   const [department, setDepartment] = useState("")
@@ -43,6 +48,17 @@ export function CreateJobModal({
   const [status, setStatus] = useState<JobStatusApi>("DRAFT")
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
+
+  useEffect(() => {
+    if (open) {
+      fetch("/api/admin/sub-organizations")
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data)) setSubOrgs(data)
+        })
+        .catch(() => {})
+    }
+  }, [open])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -60,6 +76,7 @@ export function CreateJobModal({
           location: location.trim(),
           description: description.trim(),
           status,
+          subOrganizationId: subOrganizationId ? Number(subOrganizationId) : null,
         }),
       })
       const data = await res.json().catch(() => ({}))
@@ -183,6 +200,22 @@ export function CreateJobModal({
                 onChange={(e) => setDescription(e.target.value)}
                 className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white placeholder:text-zinc-500 focus:border-[#e78a53] focus:outline-none focus:ring-1 focus:ring-[#e78a53]/20 resize-y min-h-[100px]"
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="job-sub-org" className="text-zinc-200">{pick(lang, c.subOrg)}</Label>
+              <select
+                id="job-sub-org"
+                value={subOrganizationId}
+                onChange={(e) => setSubOrganizationId(e.target.value ? Number(e.target.value) : "")}
+                className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white focus:border-[#e78a53] focus:outline-none focus:ring-1 focus:ring-[#e78a53]/20"
+              >
+                <option value="">{pick(lang, c.allBranches)}</option>
+                {subOrgs.map((org) => (
+                  <option key={org.id} value={org.id}>
+                    {org.name} {org.isDefault ? "(Main)" : ""}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="job-status" className="text-zinc-200">{pick(lang, a.status)}</Label>

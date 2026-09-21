@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { useLang, pick } from "@/lib/i18n"
 import { a } from "@/lib/i18n-admin"
 import type { EventApi, EventTypeApi, EventStatusApi } from "@/lib/events-api"
+import type { SubOrganization } from "@/lib/sub-orgs-api"
 import { ImageUpload } from "@/components/admin/image-upload"
 
 const EVENT_TYPES: EventTypeApi[] = ["ONLINE", "IN_PERSON"]
@@ -16,6 +17,8 @@ const STATUS_OPTIONS: EventStatusApi[] = ["DRAFT", "PUBLISHED"]
 
 const c = {
   editEvent: { en: "Edit event", am: "ዝግጅት አርትዕ" },
+  subOrg: { en: "Sub-Organization / Branch", am: "ቅርንጫፍ" },
+  allBranches: { en: "All / Organization-wide", am: "ሁሉም / አጠቃላይ" },
   titlePlaceholder: { en: "Event title", am: "የዝግጅት ርዕስ" },
   descPlaceholder: { en: "Event description...", am: "የዝግጅት መግለጫ..." },
   eventType: { en: "Event type", am: "የዝግጅት አይነት" },
@@ -60,6 +63,8 @@ export function EditEventModal({
   event,
 }: EditEventModalProps) {
   const { lang } = useLang()
+  const [subOrgs, setSubOrgs] = useState<SubOrganization[]>([])
+  const [subOrganizationId, setSubOrganizationId] = useState<number | "">("")
   const [title, setTitle] = useState("")
   const [slug, setSlug] = useState("")
   const [description, setDescription] = useState("")
@@ -74,6 +79,17 @@ export function EditEventModal({
   const [error, setError] = useState("")
 
   useEffect(() => {
+    if (open) {
+      fetch("/api/admin/sub-organizations")
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data)) setSubOrgs(data)
+        })
+        .catch(() => {})
+    }
+  }, [open])
+
+  useEffect(() => {
     if (event && open) {
       setTitle(event.title ?? "")
       setSlug(event.slug ?? "")
@@ -85,6 +101,7 @@ export function EditEventModal({
       setRegistrationUrl(event.registrationUrl ?? "")
       setCoverImageUrl(event.coverImageUrl ?? "")
       setStatus(event.status ?? "DRAFT")
+      setSubOrganizationId(event.subOrganizationId ?? "")
       setError("")
     }
   }, [event, open])
@@ -109,6 +126,7 @@ export function EditEventModal({
           registrationUrl: registrationUrl.trim(),
           coverImageUrl: coverImageUrl.trim(),
           status,
+          subOrganizationId: subOrganizationId ? Number(subOrganizationId) : null,
         }),
       })
       const data = await res.json().catch(() => ({}))
@@ -249,6 +267,23 @@ export function EditEventModal({
               />
             </div>
             <ImageUpload value={coverImageUrl} onChange={setCoverImageUrl} />
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-event-sub-org" className="text-zinc-200">{pick(lang, c.subOrg)}</Label>
+              <select
+                id="edit-event-sub-org"
+                value={subOrganizationId}
+                onChange={(e) => setSubOrganizationId(e.target.value ? Number(e.target.value) : "")}
+                className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white focus:border-[#e78a53] focus:outline-none focus:ring-1 focus:ring-[#e78a53]/20"
+              >
+                <option value="">{pick(lang, c.allBranches)}</option>
+                {subOrgs.map((org) => (
+                  <option key={org.id} value={org.id}>
+                    {org.name} {org.isDefault ? "(Main)" : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             <div className="space-y-2">
               <Label htmlFor="edit-event-status" className="text-zinc-200">{pick(lang, a.status)}</Label>

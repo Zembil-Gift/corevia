@@ -9,6 +9,8 @@ export interface BlogPostApi {
   content: string
   coverImageUrl: string
   publishedAt: string
+  subOrganizationId?: number | null
+  subOrganizationName?: string | null
 }
 
 export interface BlogListResponse {

@@ -5,8 +5,9 @@ const CMS_BASE_URL = process.env.NEXT_PUBLIC_CMS_BASE_URL!
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { periodId: string } }
+  { params: paramsPromise }: { params: Promise<{ periodId: string }> }
 ) {
+  const params = await paramsPromise
   const token = getEmployeeToken(request.headers.get("cookie"))
   if (!token) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })

@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { LayoutDashboard, Building2, PlusCircle, Inbox, LogOut } from "lucide-react"
+import { LayoutDashboard, Building2, PlusCircle, Inbox, Scale, LogOut } from "lucide-react"
 import { Logo } from "@/components/corevia/logo"
 import { LangToggle } from "@/components/corevia/lang-toggle"
 import { useLang, pick } from "@/lib/i18n"
@@ -11,6 +11,7 @@ const links = [
   { href: "/platform", label: { en: "Overview", am: "አጠቃላይ እይታ" }, icon: LayoutDashboard, exact: true },
   { href: "/platform/organizations", label: { en: "Organizations", am: "ድርጅቶች" }, icon: Building2 },
   { href: "/platform/requests", label: { en: "Signup requests", am: "የምዝገባ ጥያቄዎች" }, icon: Inbox },
+  { href: "/platform/principles", label: { en: "Leadership principles", am: "የአመራር መርሆዎች" }, icon: Scale },
   { href: "/platform/register", label: { en: "Register organization", am: "ድርጅት ይመዝግቡ" }, icon: PlusCircle },
 ]
 

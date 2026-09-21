@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
-import { ChevronLeft, ChevronRight, Loader2, Plus, Pencil, Trash2 } from "lucide-react"
+import { ChevronLeft, ChevronRight, Loader2, Plus, Pencil, Trash2, Building2, Filter } from "lucide-react"
 import type { BlogListResponse, BlogPostApi } from "@/lib/blog-api"
+import type { SubOrganization } from "@/lib/sub-orgs-api"
 import { CreateBlogModal } from "@/components/admin/create-blog-modal"
 import { EditBlogModal } from "@/components/admin/edit-blog-modal"
 import { Button } from "@/components/ui/button"
@@ -22,6 +23,8 @@ const t = {
   cannotUndo: { en: "This cannot be undone.", am: "ይህ መቀልበስ አይችልም።" },
   failedLoad: { en: "Failed to load posts", am: "ጽሁፎችን መጫን አልተሳካም" },
   failedDelete: { en: "Failed to delete", am: "መሰረዝ አልተሳካም" },
+  allBranches: { en: "All Sub-Organizations", am: "ሁሉም ቅርንጫፎች" },
+  branch: { en: "Branch", am: "ቅርንጫፍ" },
 }
 
 const PAGE_SIZE = 10
@@ -44,6 +47,8 @@ export default function AdminBlogPage() {
   const { lang } = useLang()
   const [currentPage, setCurrentPage] = useState(1)
   const [posts, setPosts] = useState<BlogListResponse["content"]>([])
+  const [subOrgs, setSubOrgs] = useState<SubOrganization[]>([])
+  const [selectedSubOrgId, setSelectedSubOrgId] = useState<string>("")
   const [totalPages, setTotalPages] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -51,6 +56,15 @@ export default function AdminBlogPage() {
   const [editPost, setEditPost] = useState<BlogPostApi | null>(null)
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [deletingId, setDeletingId] = useState<number | null>(null)
+
+  useEffect(() => {
+    fetch("/api/admin/sub-organizations")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setSubOrgs(data)
+      })
+      .catch(() => {})
+  }, [])
 
   const fetchPosts = useCallback(() => {
     setLoading(true)
@@ -62,6 +76,9 @@ export default function AdminBlogPage() {
       sortBy: SORT_BY,
       direction: DIRECTION,
     })
+    if (selectedSubOrgId) {
+      query.set("subOrganizationId", selectedSubOrgId)
+    }
     fetch(`/api/admin/blogs?${query.toString()}`)
       .then(async (res) => {
         if (!res.ok) {
@@ -80,7 +97,7 @@ export default function AdminBlogPage() {
         setTotalPages(0)
       })
       .finally(() => setLoading(false))
-  }, [currentPage])
+  }, [currentPage, selectedSubOrgId])
 
   useEffect(() => {
     fetchPosts()
@@ -121,7 +138,29 @@ export default function AdminBlogPage() {
           <h1 className="text-2xl font-bold text-white">{pick(lang, t.blog)}</h1>
           <p className="text-zinc-400 mt-1">{pick(lang, t.subtitle)}</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {subOrgs.length > 0 && (
+            <div className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5">
+              <Filter className="size-4 text-zinc-400" />
+              <select
+                value={selectedSubOrgId}
+                onChange={(e) => {
+                  setSelectedSubOrgId(e.target.value)
+                  setCurrentPage(1)
+                }}
+                className="bg-transparent text-sm text-zinc-200 focus:outline-none cursor-pointer"
+              >
+                <option value="" className="bg-zinc-900 text-zinc-200">
+                  {pick(lang, t.allBranches)}
+                </option>
+                {subOrgs.map((s) => (
+                  <option key={s.id} value={s.id} className="bg-zinc-900 text-zinc-200">
+                    {s.name} {s.isDefault ? "(Main)" : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <Button
             type="button"
             onClick={() => setModalOpen(true)}
@@ -154,6 +193,7 @@ export default function AdminBlogPage() {
               <thead>
                 <tr className="border-b border-zinc-800 bg-zinc-900">
                   <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">{pick(lang, a.title)}</th>
+                  <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">{pick(lang, t.branch)}</th>
                   <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">{pick(lang, a.date)}</th>
                   <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500 w-24">{pick(lang, a.actions)}</th>
                 </tr>
@@ -163,6 +203,16 @@ export default function AdminBlogPage() {
                   <tr key={post.id} className="border-b border-zinc-800/80 hover:bg-zinc-800/30 transition-colors">
                     <td className="px-4 py-3">
                       <span className="font-medium text-white">{post.title}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {post.subOrganizationName ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-zinc-800 text-zinc-300 border border-zinc-700">
+                          <Building2 className="size-3 text-[#e78a53]" />
+                          {post.subOrganizationName}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-zinc-500">All Branches</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-zinc-500 text-sm">
                       {formatDate(post.publishedAt)}

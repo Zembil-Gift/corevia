@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAdminToken } from "@/lib/auth"
+import { cmsFetch } from "@/lib/cms-fetch"
 
 const CMS_BASE_URL = process.env.NEXT_PUBLIC_CMS_BASE_URL!
 
@@ -47,9 +48,10 @@ export async function PUT(
       registrationUrl: typeof body.registrationUrl === "string" ? body.registrationUrl : "",
       coverImageUrl: typeof body.coverImageUrl === "string" ? body.coverImageUrl : "",
       status: normalizeStatus(body.status),
+      subOrganizationId: typeof body.subOrganizationId === "number" ? body.subOrganizationId : null,
     }
 
-    const res = await fetch(`${CMS_BASE_URL}/manager/events/${encodeURIComponent(id)}`, {
+    const res = await cmsFetch(token, `${CMS_BASE_URL}/manager/events/${encodeURIComponent(id)}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

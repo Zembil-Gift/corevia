@@ -6,9 +6,13 @@ import { postRaw } from "@/lib/raw-http"
 const CMS_BASE_URL = process.env.NEXT_PUBLIC_CMS_BASE_URL!
 const ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp", "image/svg+xml"]
 const MAX_BYTES = 5 * 1024 * 1024
-const TARGETS = new Set(["logo", "cover"])
+const TARGETS: Record<string, string> = {
+  logo: "/manager/org/logo",
+  cover: "/manager/org/cover",
+  "email-logo": "/manager/email-templates/logo",
+}
 
-// POST a company logo or cover image (multipart). Forwards to /manager/org/{logo|cover}.
+// POST a company logo, cover image or email logo (multipart). Forwards to the matching TARGETS path.
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ target: string }> }
@@ -19,7 +23,7 @@ export async function POST(
   }
 
   const { target } = await params
-  if (!TARGETS.has(target)) {
+  if (!Object.hasOwn(TARGETS, target)) {
     return NextResponse.json({ error: "Unknown upload target" }, { status: 404 })
   }
 
@@ -44,7 +48,7 @@ export async function POST(
     const { body, contentType } = await buildMultipartBody({ file })
 
     const res = await postRaw({
-      url: `${CMS_BASE_URL}/manager/org/${target}`,
+      url: `${CMS_BASE_URL}${TARGETS[target]}`,
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": contentType,

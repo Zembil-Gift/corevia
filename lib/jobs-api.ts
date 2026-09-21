@@ -19,6 +19,8 @@ export interface JobApi {
   description: string
   status: JobStatusApi
   createdAt?: string
+  subOrganizationId?: number | null
+  subOrganizationName?: string | null
 }
 
 export interface JobListResponse {

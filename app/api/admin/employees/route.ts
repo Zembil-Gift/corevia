@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAdminToken } from "@/lib/auth"
+import { cmsFetch } from "@/lib/cms-fetch"
 import { buildMultipartBody } from "@/lib/multipart"
 import { postRaw } from "@/lib/raw-http"
 import { DAY_OF_WEEK_VALUES, type DayOfWeekApi } from "@/lib/employees-api"
@@ -26,8 +27,12 @@ export async function GET(request: NextRequest) {
     params.set("size", size)
     params.set("sortBy", sortBy)
     params.set("direction", direction)
+    const subOrgId = searchParams.get("subOrganizationId")
+    if (subOrgId) {
+      params.set("subOrganizationId", subOrgId)
+    }
 
-    const res = await fetch(`${CMS_BASE_URL}/manager/employees?${params.toString()}`, {
+    const res = await cmsFetch(token, `${CMS_BASE_URL}/manager/employees?${params.toString()}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -83,6 +88,7 @@ export async function POST(request: NextRequest) {
     const photoUrl = formData.get("photoUrl")
     const salaryDate = formData.get("salaryDate")
     const salaryAmountMinor = formData.get("salaryAmountMinor")
+    const subOrganizationId = formData.get("subOrganizationId")
     const rawScheduleDays = formData
       .getAll("salaryScheduleDays")
       .filter((value): value is string => typeof value === "string")
@@ -103,6 +109,9 @@ export async function POST(request: NextRequest) {
     }
     if (typeof salaryDate === "string" && salaryDate.trim()) {
       fields.salaryDate = salaryDate.trim()
+    }
+    if (typeof subOrganizationId === "string" && subOrganizationId.trim()) {
+      fields.subOrganizationId = subOrganizationId.trim()
     }
     if (typeof salaryAmountMinor === "string" && salaryAmountMinor.trim()) {
       const salaryAmount = Number(salaryAmountMinor)

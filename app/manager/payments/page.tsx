@@ -1,11 +1,12 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { Loader2 } from "lucide-react"
+import { Loader2, Building2, Filter } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useLang, pick } from "@/lib/i18n"
 import type { EmployeePaymentApi } from "@/lib/employees-api"
+import type { SubOrganization } from "@/lib/sub-orgs-api"
 
 const t = {
   payroll: { en: "Payroll", am: "ደመወዝ" },
@@ -13,6 +14,8 @@ const t = {
   paid: { en: "Paid", am: "የተከፈለ" },
   month: { en: "Month", am: "ወር" },
   clear: { en: "Clear", am: "አጽዳ" },
+  allBranches: { en: "All Sub-Organizations", am: "ሁሉም ቅርንጫፎች" },
+  branch: { en: "Branch", am: "ቅርንጫፍ" },
   noDue: { en: "No due payments found.", am: "የሚከፈል ክፍያ አልተገኘም።" },
   noPaid: { en: "No paid payrolls found.", am: "የተከፈለ ደመወዝ አልተገኘም።" },
   employee: { en: "Employee", am: "ሰራተኛ" },
@@ -53,6 +56,8 @@ export default function AdminPaymentsPage() {
   const [activeTab, setActiveTab] = useState<PayrollTab>("due")
   const [duePayments, setDuePayments] = useState<EmployeePaymentApi[]>([])
   const [paidPayments, setPaidPayments] = useState<EmployeePaymentApi[]>([])
+  const [subOrgs, setSubOrgs] = useState<SubOrganization[]>([])
+  const [selectedSubOrgId, setSelectedSubOrgId] = useState<string>("")
   const [paidFilterMonth, setPaidFilterMonth] = useState(getCurrentMonthValue())
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -60,11 +65,23 @@ export default function AdminPaymentsPage() {
   const [transactionRefs, setTransactionRefs] = useState<Record<number, string>>({})
   const [paidAmounts, setPaidAmounts] = useState<Record<number, string>>({})
 
+  useEffect(() => {
+    fetch("/api/admin/sub-organizations")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setSubOrgs(data)
+      })
+      .catch(() => {})
+  }, [])
+
   const fetchDuePayments = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch("/api/admin/payments/due", { cache: "no-store" })
+      const url = selectedSubOrgId
+        ? `/api/admin/payments/due?subOrganizationId=${selectedSubOrgId}`
+        : `/api/admin/payments/due`
+      const res = await fetch(url, { cache: "no-store" })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
         throw new Error((data as { error?: string }).error ?? pick(lang, t.failedDue))
@@ -77,20 +94,28 @@ export default function AdminPaymentsPage() {
     } finally {
       setLoading(false)
     }
-  }, [lang])
+  }, [lang, selectedSubOrgId])
 
   const fetchPaidPayments = useCallback(async (monthValue?: string) => {
     setLoading(true)
     setError(null)
     try {
-      let url = "/api/admin/payments/paid"
+      const params = new URLSearchParams()
       if (monthValue) {
         const [year, month] = monthValue.split("-")
         if (year && month) {
-          const params = new URLSearchParams({ year, month: String(Number(month)) })
-          url = `/api/admin/payments/paid/filter?${params.toString()}`
+          params.set("year", year)
+          params.set("month", String(Number(month)))
         }
       }
+      if (selectedSubOrgId) {
+        params.set("subOrganizationId", selectedSubOrgId)
+      }
+
+      const queryStr = params.toString()
+      const url = monthValue
+        ? `/api/admin/payments/paid/filter?${queryStr}`
+        : `/api/admin/payments/paid${queryStr ? `?${queryStr}` : ""}`
 
       const res = await fetch(url, { cache: "no-store" })
       if (!res.ok) {
@@ -105,17 +130,15 @@ export default function AdminPaymentsPage() {
     } finally {
       setLoading(false)
     }
-  }, [lang])
+  }, [lang, selectedSubOrgId])
 
   useEffect(() => {
-    fetchDuePayments()
-  }, [fetchDuePayments])
-
-  useEffect(() => {
-    if (activeTab === "paid") {
+    if (activeTab === "due") {
+      fetchDuePayments()
+    } else {
       fetchPaidPayments(paidFilterMonth)
     }
-  }, [activeTab, fetchPaidPayments, paidFilterMonth])
+  }, [activeTab, fetchDuePayments, fetchPaidPayments, paidFilterMonth, selectedSubOrgId])
 
   const formatMoney = (amountMinor: number | null) =>
     amountMinor === null
@@ -167,29 +190,47 @@ export default function AdminPaymentsPage() {
 
       </div>
 
-      <div className="mb-4 flex gap-2">
-        <Button
-          type="button"
-          onClick={() => setActiveTab("due")}
-          className={
-            activeTab === "due"
-              ? "bg-[#e78a53] text-white hover:bg-[#e78a53]/90"
-              : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
-          }
-        >
-          {pick(lang, t.due)}
-        </Button>
-        <Button
-          type="button"
-          onClick={() => setActiveTab("paid")}
-          className={
-            activeTab === "paid"
-              ? "bg-[#e78a53] text-white hover:bg-[#e78a53]/90"
-              : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
-          }
-        >
-          {pick(lang, t.paid)}
-        </Button>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            onClick={() => setActiveTab("due")}
+            className={
+              activeTab === "due"
+                ? "bg-[#e78a53] text-white hover:bg-[#e78a53]/90"
+                : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
+            }
+          >
+            {pick(lang, t.due)}
+          </Button>
+          <Button
+            type="button"
+            onClick={() => setActiveTab("paid")}
+            className={
+              activeTab === "paid"
+                ? "bg-[#e78a53] text-white hover:bg-[#e78a53]/90"
+                : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
+            }
+          >
+            {pick(lang, t.paid)}
+          </Button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Building2 className="size-4 text-zinc-400" />
+          <select
+            value={selectedSubOrgId}
+            onChange={(e) => setSelectedSubOrgId(e.target.value)}
+            className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white focus:border-[#e78a53] focus:outline-none"
+          >
+            <option value="">{pick(lang, t.allBranches)}</option>
+            {subOrgs.map((org) => (
+              <option key={org.id} value={org.id}>
+                {org.name}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {error && <p className="mb-4 text-sm text-red-400">{error}</p>}
@@ -208,13 +249,6 @@ export default function AdminPaymentsPage() {
               className="w-48 border-zinc-700 bg-zinc-800 text-white"
             />
           </div>
-          {/* <Button
-            type="button"
-            onClick={() => fetchPaidPayments(paidFilterMonth)}
-            className="bg-[#e78a53] text-white hover:bg-[#e78a53]/90"
-          >
-            Apply Filter
-          </Button> */}
           <Button
             type="button"
             onClick={() => {
@@ -246,6 +280,7 @@ export default function AdminPaymentsPage() {
             <thead>
               <tr className="border-b border-zinc-800 bg-zinc-900">
                 <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">{pick(lang, t.employee)}</th>
+                <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">{pick(lang, t.branch)}</th>
                 <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">{pick(lang, t.cycle)}</th>
                 <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">{pick(lang, t.dueDate)}</th>
                 <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">{pick(lang, t.gross)}</th>
@@ -262,6 +297,7 @@ export default function AdminPaymentsPage() {
               {duePayments.map((payment) => (
                 <tr key={payment.id} className="border-b border-zinc-800/80 align-top last:border-0">
                   <td className="px-4 py-3 text-zinc-300">{payment.employeeName}</td>
+                  <td className="px-4 py-3 text-zinc-300">{payment.subOrganizationName ?? pick(lang, t.allBranches)}</td>
                   <td className="px-4 py-3 text-zinc-300">{payment.cycleStartDate}</td>
                   <td className="px-4 py-3 text-zinc-300">{payment.dueDate}</td>
                   <td className="px-4 py-3 text-zinc-300">{formatMoney(payment.grossAmountMinor)}</td>
@@ -322,6 +358,7 @@ export default function AdminPaymentsPage() {
             <thead>
               <tr className="border-b border-zinc-800 bg-zinc-900">
                 <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">{pick(lang, t.employee)}</th>
+                <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">{pick(lang, t.branch)}</th>
                 <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">{pick(lang, t.cycle)}</th>
                 <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">{pick(lang, t.dueDate)}</th>
                 <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">{pick(lang, t.gross)}</th>
@@ -342,6 +379,7 @@ export default function AdminPaymentsPage() {
               {paidPayments.map((payment) => (
                 <tr key={payment.id} className="border-b border-zinc-800/80 align-top last:border-0">
                   <td className="px-4 py-3 text-zinc-300">{payment.employeeName}</td>
+                  <td className="px-4 py-3 text-zinc-300">{payment.subOrganizationName ?? pick(lang, t.allBranches)}</td>
                   <td className="px-4 py-3 text-zinc-300">{payment.cycleStartDate}</td>
                   <td className="px-4 py-3 text-zinc-300">{payment.dueDate}</td>
                   <td className="px-4 py-3 text-zinc-300">{formatMoney(payment.grossAmountMinor)}</td>

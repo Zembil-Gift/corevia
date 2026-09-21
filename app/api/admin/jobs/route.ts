@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAdminToken } from "@/lib/auth"
+import { cmsFetch } from "@/lib/cms-fetch"
 
 const CMS_BASE_URL = process.env.NEXT_PUBLIC_CMS_BASE_URL!
 
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
   }
   try {
     const qs = request.nextUrl.searchParams.toString()
-    const res = await fetch(`${CMS_BASE_URL}/manager/jobs${qs ? `?${qs}` : ""}`, {
+    const res = await cmsFetch(token, `${CMS_BASE_URL}/manager/jobs${qs ? `?${qs}` : ""}`, {
       headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",
     })
@@ -62,9 +63,10 @@ export async function POST(request: NextRequest) {
       location: typeof body.location === "string" ? body.location : "",
       description: typeof body.description === "string" ? body.description : "",
       status: normalizeStatus(body.status),
+      subOrganizationId: typeof body.subOrganizationId === "number" ? body.subOrganizationId : null,
     }
 
-    const res = await fetch(`${CMS_BASE_URL}/manager/jobs`, {
+    const res = await cmsFetch(token, `${CMS_BASE_URL}/manager/jobs`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

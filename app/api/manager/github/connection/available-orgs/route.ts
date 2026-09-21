@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAdminToken } from "@/lib/auth"
+import { cmsFetch } from "@/lib/cms-fetch"
 
 const CMS_BASE_URL = process.env.NEXT_PUBLIC_CMS_BASE_URL!
 
@@ -9,7 +10,7 @@ export async function GET(request: NextRequest) {
   if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   try {
-    const res = await fetch(`${CMS_BASE_URL}/manager/github/connection/available-orgs`, {
+    const res = await cmsFetch(token, `${CMS_BASE_URL}/manager/github/connection/available-orgs`, {
       headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",
     })

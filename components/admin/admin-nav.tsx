@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useEffect, useState } from "react"
 import {
   LayoutDashboard,
   FileText,
@@ -13,6 +14,7 @@ import {
   Wallet,
   Mail,
   Building2,
+  ShieldCheck,
   Trello,
   LogOut,
   type LucideIcon,
@@ -20,31 +22,40 @@ import {
 import { Button } from "@/components/ui/button"
 import { LangToggle } from "@/components/corevia/lang-toggle"
 import { useLang, pick } from "@/lib/i18n"
-import { clearAdminClientToken } from "@/lib/admin-client-auth"
+import { clearAdminClientToken, isViceManagerClient } from "@/lib/admin-client-auth"
 
-const navItems: { href: string; label: { en: string; am: string }; icon: LucideIcon }[] = [
+const allNavItems: { href: string; label: { en: string; am: string }; icon: LucideIcon; managerOnly?: boolean }[] = [
   { href: "/manager", label: { en: "Dashboard", am: "ዳሽቦርድ" }, icon: LayoutDashboard },
-  { href: "/manager/profile", label: { en: "Company Profile", am: "የኩባንያ መገለጫ" }, icon: Building2 },
-  { href: "/manager/blog", label: { en: "Blog", am: "ብሎግ" }, icon: FileText },
-  { href: "/manager/jobs", label: { en: "Jobs", am: "ስራዎች" }, icon: Briefcase },
-  { href: "/manager/events", label: { en: "Events", am: "ዝግጅቶች" }, icon: CalendarDays },
+  { href: "/manager/profile", label: { en: "Company Profile", am: "የኩባንያ መገለጫ" }, icon: Building2, managerOnly: true },
+  { href: "/manager/sub-organizations", label: { en: "Branches & Sub-Orgs", am: "ቅርንጫፎች" }, icon: Building2, managerOnly: true },
+  { href: "/manager/vice-managers", label: { en: "Vice Managers", am: "ምክትል ስራ አስኪያጆች" }, icon: ShieldCheck, managerOnly: true },
+  { href: "/manager/blog", label: { en: "Blog", am: "ብሎግ" }, icon: FileText, managerOnly: true },
+  { href: "/manager/jobs", label: { en: "Jobs", am: "ስራዎች" }, icon: Briefcase, managerOnly: true },
+  { href: "/manager/events", label: { en: "Events", am: "ዝግጅቶች" }, icon: CalendarDays, managerOnly: true },
   { href: "/manager/employees", label: { en: "Employees", am: "ሰራተኞች" }, icon: Users },
   { href: "/manager/metrics", label: { en: "Reports", am: "ሪፖርቶች" }, icon: BarChart3 },
   { href: "/manager/peer-reviews", label: { en: "Peer Reviews", am: "የእኩዮች ግምገማ" }, icon: Star },
   { href: "/manager/payments", label: { en: "Payroll", am: "ደመወዝ" }, icon: Wallet },
-  { href: "/manager/email-notifications", label: { en: "Email Notifications", am: "የኢሜይል ማሳወቂያ" }, icon: Mail },
+  { href: "/manager/email-notifications", label: { en: "Email Notifications", am: "የኢሜይል ማሳወቂያ" }, icon: Mail, managerOnly: true },
   { href: "/manager/integrations", label: { en: "Integrations", am: "ውህደቶች" }, icon: Trello },
 ]
 
 export function AdminNav({ onNavigate }: { onNavigate?: () => void }) {
   const { lang } = useLang()
   const pathname = usePathname()
+  const [isVice, setIsVice] = useState(false)
+
+  useEffect(() => {
+    setIsVice(isViceManagerClient())
+  }, [])
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" })
     clearAdminClientToken()
     window.location.href = "/login"
   }
+
+  const navItems = isVice ? allNavItems.filter((i) => !i.managerOnly) : allNavItems
 
   return (
     <nav className="flex flex-1 flex-col gap-1 p-3">
