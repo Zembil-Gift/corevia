@@ -7,6 +7,8 @@ export interface EmployeeMetricSummaryResponse {
   department: string
   employmentType: string
   employeeStatus: string
+  subOrganizationId?: number | null
+  subOrganizationName?: string | null
   periodStart: string
   periodEnd: string
   leadershipScore: MetricScoreValue
@@ -82,6 +84,8 @@ export interface PeerReviewPeriodEmployeeResult {
   department: string
   role: string
   employmentType: string
+  subOrganizationId?: number | null
+  subOrganizationName?: string | null
   leadershipScore?: number | null
   principleAverages?: PeerReviewPrincipleAverage[]
   comments?: string[]

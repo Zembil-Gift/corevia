@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAdminToken } from "@/lib/auth"
+import { cmsFetch } from "@/lib/cms-fetch"
 
 const CMS_BASE_URL = process.env.NEXT_PUBLIC_CMS_BASE_URL!
 
@@ -37,7 +38,7 @@ export async function POST(
       return NextResponse.json({ error: "Transaction reference is required" }, { status: 400 })
     }
 
-    const res = await fetch(`${CMS_BASE_URL}/manager/payments/${encodeURIComponent(paymentId)}/mark-paid`, {
+    const res = await cmsFetch(token, `${CMS_BASE_URL}/manager/payments/${encodeURIComponent(paymentId)}/mark-paid`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

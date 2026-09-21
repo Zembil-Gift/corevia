@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAdminToken } from "@/lib/auth"
+import { cmsFetch } from "@/lib/cms-fetch"
 
 const CMS_BASE_URL = process.env.NEXT_PUBLIC_CMS_BASE_URL!
 
@@ -26,7 +27,7 @@ export async function GET(request: NextRequest) {
   if (revieweeId) params.set("revieweeId", revieweeId)
 
   try {
-    const res = await fetch(
+    const res = await cmsFetch(token,
       `${CMS_BASE_URL}/manager/metrics/peer-reviews/summary?${params.toString()}`,
       {
         headers: {

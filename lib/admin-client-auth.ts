@@ -22,3 +22,23 @@ export function clearAdminClientToken() {
   if (typeof window === "undefined") return
   window.sessionStorage.removeItem(ADMIN_TOKEN_STORAGE_KEY)
 }
+
+export function getClientRole(): "MANAGER" | "VICE_MANAGER" | "EMPLOYEE" | "ADMIN" | null {
+  const token = getAdminClientToken()
+  if (!token) return null
+  try {
+    const parts = token.split(".")
+    if (parts.length !== 3) return null
+    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/")
+    const json = decodeURIComponent(escape(atob(base64)))
+    const payload = JSON.parse(json)
+    return payload.role ?? "MANAGER"
+  } catch {
+    return null
+  }
+}
+
+export function isViceManagerClient(): boolean {
+  return getClientRole() === "VICE_MANAGER"
+}
+

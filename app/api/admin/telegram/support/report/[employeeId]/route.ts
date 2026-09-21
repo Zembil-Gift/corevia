@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAdminToken } from "@/lib/auth"
+import { cmsFetch } from "@/lib/cms-fetch"
 
 const CMS_BASE_URL = process.env.NEXT_PUBLIC_CMS_BASE_URL!
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { employeeId: string } }
+  { params: paramsPromise }: { params: Promise<{ employeeId: string }> }
 ) {
+  const params = await paramsPromise
   const token = getAdminToken(request.headers.get("cookie"))
   if (!token) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -26,7 +28,7 @@ export async function GET(
     if (from) params.set("from", from)
     if (to) params.set("to", to)
 
-    const res = await fetch(
+    const res = await cmsFetch(token,
       `${CMS_BASE_URL}/manager/telegram/support/report/${encodeURIComponent(employeeId)}?${params.toString()}`,
       {
         headers: {

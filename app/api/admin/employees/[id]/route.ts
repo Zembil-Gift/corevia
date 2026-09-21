@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAdminToken } from "@/lib/auth"
+import { cmsFetch } from "@/lib/cms-fetch"
 import { DAY_OF_WEEK_VALUES, type DayOfWeekApi } from "@/lib/employees-api"
 
 const CMS_BASE_URL = process.env.NEXT_PUBLIC_CMS_BASE_URL!
@@ -19,7 +20,7 @@ export async function GET(
   }
 
   try {
-    const res = await fetch(`${CMS_BASE_URL}/manager/employees/${encodeURIComponent(id)}`, {
+    const res = await cmsFetch(token, `${CMS_BASE_URL}/manager/employees/${encodeURIComponent(id)}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -90,9 +91,10 @@ export async function PUT(
         typeof body.salaryDate === "string" ? body.salaryDate.trim() : body.salaryDate === null ? null : undefined,
       salaryAmountMinor: salaryAmount,
       salaryScheduleDays: scheduleDays ?? (body.salaryScheduleDays === null ? null : undefined),
+      subOrganizationId: typeof body.subOrganizationId === "number" ? body.subOrganizationId : body.subOrganizationId === null ? null : undefined,
     }
 
-    const res = await fetch(`${CMS_BASE_URL}/manager/employees/${encodeURIComponent(id)}`, {
+    const res = await cmsFetch(token, `${CMS_BASE_URL}/manager/employees/${encodeURIComponent(id)}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -131,7 +133,7 @@ export async function DELETE(
   }
 
   try {
-    const res = await fetch(`${CMS_BASE_URL}/manager/employees/${encodeURIComponent(id)}`, {
+    const res = await cmsFetch(token, `${CMS_BASE_URL}/manager/employees/${encodeURIComponent(id)}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${token}`,

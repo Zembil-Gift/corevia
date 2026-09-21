@@ -12,6 +12,7 @@ import type {
   JobApplicationAiOverviewApi,
   JobApplicationApi,
 } from "@/lib/job-applications-api"
+import type { SubOrganization } from "@/lib/sub-orgs-api"
 
 const INTERVIEW_ELIGIBLE_STATUSES = new Set(["APPLIED", "UNDER_REVIEW"])
 const STATUS_FILTERS: Array<"ALL" | ApplicationStatus> = [
@@ -78,17 +79,28 @@ export default function AdminJobApplicantsPage() {
   const [statusUpdatingId, setStatusUpdatingId] = useState<number | null>(null)
   const [selectingInterview, setSelectingInterview] = useState(false)
   const [statusFilter, setStatusFilter] = useState<"ALL" | ApplicationStatus>("ALL")
+  const [subOrgs, setSubOrgs] = useState<SubOrganization[]>([])
   const [hireTarget, setHireTarget] = useState<JobApplicationApi | null>(null)
   const [hirePhone, setHirePhone] = useState("")
   const [hirePosition, setHirePosition] = useState("")
   const [hireSalaryDate, setHireSalaryDate] = useState("")
   const [hireSalaryAmount, setHireSalaryAmount] = useState("")
+  const [hireSubOrgId, setHireSubOrgId] = useState<number | "">("")
   const [hiring, setHiring] = useState(false)
   const [aiOverviewState, setAiOverviewState] = useState<Record<number, AiOverviewState>>({})
   const [aiModalOpen, setAiModalOpen] = useState(false)
   const [activeAiOverview, setActiveAiOverview] = useState<JobApplicationAiOverviewApi | null>(
     null
   )
+
+  useEffect(() => {
+    fetch("/api/admin/sub-organizations")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setSubOrgs(data)
+      })
+      .catch(() => {})
+  }, [])
 
   const fetchApplications = useCallback(async () => {
     if (!jobId) return
@@ -295,6 +307,8 @@ export default function AdminJobApplicantsPage() {
     setHirePosition("")
     setHireSalaryDate("")
     setHireSalaryAmount("")
+    const def = subOrgs.find((s) => s.isDefault)
+    setHireSubOrgId(def ? def.id : (subOrgs[0]?.id ?? ""))
   }
 
   const closeHireForm = () => {
@@ -304,6 +318,7 @@ export default function AdminJobApplicantsPage() {
     setHirePosition("")
     setHireSalaryDate("")
     setHireSalaryAmount("")
+    setHireSubOrgId("")
   }
 
   const handleHire = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -327,6 +342,7 @@ export default function AdminJobApplicantsPage() {
           position: hirePosition.trim(),
           salaryDate: hireSalaryDate,
           salaryAmountMinor: Math.round(majorAmount * 100),
+          subOrganizationId: hireSubOrgId ? Number(hireSubOrgId) : null,
         }),
       })
       const data = await res.json().catch(() => ({}))
@@ -393,7 +409,7 @@ export default function AdminJobApplicantsPage() {
       {hireTarget && (
         <form
           onSubmit={handleHire}
-          className="mb-6 grid gap-3 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 md:grid-cols-5"
+          className="mb-6 grid gap-3 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 md:grid-cols-6"
         >
           <Input
             value={hirePhone}
@@ -409,6 +425,19 @@ export default function AdminJobApplicantsPage() {
             required
             className="bg-zinc-800 border-zinc-700 text-white"
           />
+          {subOrgs.length > 0 && (
+            <select
+              value={hireSubOrgId}
+              onChange={(event) => setHireSubOrgId(event.target.value ? Number(event.target.value) : "")}
+              className="h-9 rounded-md border border-zinc-700 bg-zinc-800 px-3 text-sm text-white focus:border-[#e78a53] focus:outline-none"
+            >
+              {subOrgs.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name} {s.isDefault ? "(Main)" : ""}
+                </option>
+              ))}
+            </select>
+          )}
           <Input
             value={hireSalaryDate}
             onChange={(event) => setHireSalaryDate(event.target.value)}

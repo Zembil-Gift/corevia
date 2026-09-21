@@ -6,8 +6,9 @@ const ALLOWED_PERIODS = new Set(["daily", "weekly", "monthly"])
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { period: string } }
+  { params: paramsPromise }: { params: Promise<{ period: string }> }
 ) {
+  const params = await paramsPromise
   const token = getEmployeeToken(request.headers.get("cookie"))
   if (!token) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })

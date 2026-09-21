@@ -33,13 +33,30 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Protect admin: only admin users
+  // Protect admin: only admin or vice_manager users
   if (pathname.startsWith(ADMIN_PREFIX)) {
-    if (!session || session.role !== "admin") {
+    if (!session || (session.role !== "admin" && session.role !== "vice_manager")) {
       const loginUrl = new URL(LOGIN_PATH, request.url)
       loginUrl.searchParams.set("callbackUrl", pathname)
       return NextResponse.redirect(loginUrl)
     }
+
+    // Restrict vice managers from org-level administrative pages
+    if (session.role === "vice_manager") {
+      const forbiddenForViceManager = [
+        "/manager/jobs",
+        "/manager/profile",
+        "/manager/sub-organizations",
+        "/manager/vice-managers",
+        "/manager/blog",
+        "/manager/events",
+        "/manager/email-notifications",
+      ]
+      if (forbiddenForViceManager.some((prefix) => pathname.startsWith(prefix))) {
+        return NextResponse.redirect(new URL("/manager/employees", request.url))
+      }
+    }
+
     return NextResponse.next()
   }
 
@@ -60,7 +77,7 @@ export async function middleware(request: NextRequest) {
         callbackUrl && callbackUrl.startsWith(PLATFORM_PREFIX) ? callbackUrl : PLATFORM_PREFIX
       return NextResponse.redirect(new URL(redirectTarget, request.url))
     }
-    if (session.role === "admin") {
+    if (session.role === "admin" || session.role === "vice_manager") {
       const redirectTarget =
         callbackUrl && callbackUrl.startsWith(ADMIN_PREFIX) ? callbackUrl : ADMIN_PREFIX
       return NextResponse.redirect(new URL(redirectTarget, request.url))

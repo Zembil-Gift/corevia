@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAdminToken } from "@/lib/auth"
+import { cmsFetch } from "@/lib/cms-fetch"
 
 const CMS_BASE_URL = process.env.NEXT_PUBLIC_CMS_BASE_URL!
 
@@ -28,7 +29,7 @@ export async function POST(
       return NextResponse.json({ error: "At least one application id is required" }, { status: 400 })
     }
 
-    const res = await fetch(
+    const res = await cmsFetch(token,
       `${CMS_BASE_URL}/manager/job-applications/${encodeURIComponent(jobId)}/select-interview`,
       {
         method: "POST",

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAdminToken } from "@/lib/auth"
+import { cmsFetch } from "@/lib/cms-fetch"
 
 const CMS_BASE_URL = process.env.NEXT_PUBLIC_CMS_BASE_URL!
 
@@ -18,7 +19,7 @@ export async function DELETE(
   }
 
   try {
-    const res = await fetch(`${CMS_BASE_URL}/manager/blogs/${encodeURIComponent(id)}`, {
+    const res = await cmsFetch(token, `${CMS_BASE_URL}/manager/blogs/${encodeURIComponent(id)}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -66,9 +67,10 @@ export async function PUT(
       content: typeof body.content === "string" ? body.content : "",
       coverImageUrl: typeof body.coverImageUrl === "string" ? body.coverImageUrl : "",
       status: body.status === "DRAFT" ? "DRAFT" : "PUBLISHED",
+      subOrganizationId: typeof body.subOrganizationId === "number" ? body.subOrganizationId : null,
     }
 
-    const res = await fetch(`${CMS_BASE_URL}/manager/blogs/${encodeURIComponent(id)}`, {
+    const res = await cmsFetch(token, `${CMS_BASE_URL}/manager/blogs/${encodeURIComponent(id)}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

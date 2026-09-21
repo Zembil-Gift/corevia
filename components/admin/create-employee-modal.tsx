@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import * as Dialog from "@radix-ui/react-dialog"
 import { Loader2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -10,9 +10,11 @@ import { useLang, pick } from "@/lib/i18n"
 import { a } from "@/lib/i18n-admin"
 import { EmployeePhotoUpload } from "@/components/admin/employee-photo-upload"
 import { DAY_OF_WEEK_VALUES, type DayOfWeekApi } from "@/lib/employees-api"
+import type { SubOrganization } from "@/lib/sub-orgs-api"
 
 const c = {
   createEmployee: { en: "Create employee", am: "ሰራተኛ ፍጠር" },
+  subOrg: { en: "Sub-Organization / Branch", am: "ቅርንጫፍ" },
   linkedin: { en: "LinkedIn URL", am: "የLinkedIn URL" },
   salaryDate: { en: "Salary date", am: "የደመወዝ ቀን" },
   grossSalary: { en: "Gross salary amount", am: "የጠቅላላ ደመወዝ መጠን" },
@@ -37,6 +39,8 @@ export function CreateEmployeeModal({
   onSuccess,
 }: CreateEmployeeModalProps) {
   const { lang } = useLang()
+  const [subOrgs, setSubOrgs] = useState<SubOrganization[]>([])
+  const [subOrganizationId, setSubOrganizationId] = useState<number | "">("")
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
@@ -48,6 +52,21 @@ export function CreateEmployeeModal({
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
+
+  useEffect(() => {
+    if (open) {
+      fetch("/api/admin/sub-organizations")
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data)) {
+            setSubOrgs(data)
+            const def = data.find((s: SubOrganization) => s.isDefault)
+            if (def) setSubOrganizationId(def.id)
+          }
+        })
+        .catch(() => {})
+    }
+  }, [open])
 
   const toggleScheduleDay = (day: DayOfWeekApi) => {
     setSalaryScheduleDays((prev) =>
@@ -79,6 +98,7 @@ export function CreateEmployeeModal({
       for (const day of salaryScheduleDays) {
         formData.append("salaryScheduleDays", day)
       }
+      if (subOrganizationId) formData.append("subOrganizationId", String(subOrganizationId))
       if (photoFile) formData.append("file", photoFile)
 
       const res = await fetch(`/api/admin/employees`, {
@@ -99,6 +119,7 @@ export function CreateEmployeeModal({
       setSalaryDate("")
       setSalaryAmountMajor("")
       setSalaryScheduleDays([])
+      setSubOrganizationId("")
       setPhotoFile(null)
       onOpenChange(false)
       onSuccess?.()
@@ -135,6 +156,26 @@ export function CreateEmployeeModal({
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {subOrgs.length > 0 && (
+              <div className="space-y-2">
+                <Label htmlFor="employee-suborg" className="text-zinc-200">
+                  {pick(lang, c.subOrg)}
+                </Label>
+                <select
+                  id="employee-suborg"
+                  value={subOrganizationId}
+                  onChange={(e) => setSubOrganizationId(e.target.value ? Number(e.target.value) : "")}
+                  className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-[#e78a53]"
+                >
+                  <option value="">Select Sub-Organization / Branch...</option>
+                  {subOrgs.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} {s.isDefault ? "(Default Main)" : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="employee-name" className="text-zinc-200">
                 {pick(lang, a.name)}

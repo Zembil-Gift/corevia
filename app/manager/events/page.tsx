@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
-import { Loader2, Plus, Pencil } from "lucide-react"
+import { Loader2, Plus, Pencil, Building2, Filter } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useLang, pick } from "@/lib/i18n"
 import { a } from "@/lib/i18n-admin"
 import { formatEventDateShort } from "@/lib/event-data"
 import type { EventApi } from "@/lib/events-api"
+import type { SubOrganization } from "@/lib/sub-orgs-api"
 import { CreateEventModal } from "@/components/admin/create-event-modal"
 import { EditEventModal } from "@/components/admin/edit-event-modal"
 
@@ -21,22 +22,38 @@ const t = {
   inPerson: { en: "In-person", am: "በአካል" },
   eventsCount: { en: "events", am: "ዝግጅቶች" },
   failedLoad: { en: "Failed to load events", am: "ዝግጅቶችን መጫን አልተሳካም" },
+  allBranches: { en: "All Sub-Organizations", am: "ሁሉም ቅርንጫፎች" },
+  branch: { en: "Branch", am: "ቅርንጫፍ" },
 }
 
 export default function AdminEventsPage() {
   const { lang } = useLang()
   const [events, setEvents] = useState<EventApi[]>([])
+  const [subOrgs, setSubOrgs] = useState<SubOrganization[]>([])
+  const [selectedSubOrgId, setSelectedSubOrgId] = useState<string>("")
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [editEvent, setEditEvent] = useState<EventApi | null>(null)
   const [editModalOpen, setEditModalOpen] = useState(false)
 
+  useEffect(() => {
+    fetch("/api/admin/sub-organizations")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setSubOrgs(data)
+      })
+      .catch(() => {})
+  }, [])
+
   const fetchEventsList = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch("/api/admin/events?page=0&size=100&sortBy=startDate&direction=desc")
+      const url = selectedSubOrgId
+        ? `/api/admin/events?subOrganizationId=${selectedSubOrgId}&page=0&size=100&sortBy=startDate&direction=desc`
+        : `/api/admin/events?page=0&size=100&sortBy=startDate&direction=desc`
+      const res = await fetch(url)
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
         throw new Error((data as { message?: string }).message ?? `Failed to load: ${res.status}`)
@@ -49,7 +66,7 @@ export default function AdminEventsPage() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [selectedSubOrgId])
 
   useEffect(() => {
     fetchEventsList()
@@ -72,7 +89,26 @@ export default function AdminEventsPage() {
           <h1 className="text-2xl font-bold text-white">{pick(lang, t.events)}</h1>
           <p className="text-zinc-400 mt-1">{pick(lang, t.subtitle)}</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {subOrgs.length > 0 && (
+            <div className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-1.5">
+              <Filter className="size-4 text-zinc-400" />
+              <select
+                value={selectedSubOrgId}
+                onChange={(e) => setSelectedSubOrgId(e.target.value)}
+                className="bg-transparent text-sm text-zinc-200 focus:outline-none cursor-pointer"
+              >
+                <option value="" className="bg-zinc-900 text-zinc-200">
+                  {pick(lang, t.allBranches)}
+                </option>
+                {subOrgs.map((s) => (
+                  <option key={s.id} value={s.id} className="bg-zinc-900 text-zinc-200">
+                    {s.name} {s.isDefault ? "(Main)" : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <Button
             type="button"
             onClick={() => setCreateModalOpen(true)}
@@ -105,6 +141,7 @@ export default function AdminEventsPage() {
               <thead>
                 <tr className="border-b border-zinc-800 bg-zinc-900">
                   <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">{pick(lang, a.title)}</th>
+                  <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">{pick(lang, t.branch)}</th>
                   <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">{pick(lang, t.type)}</th>
                   <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">{pick(lang, a.date)}</th>
                   <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">{pick(lang, a.status)}</th>
@@ -116,6 +153,16 @@ export default function AdminEventsPage() {
                   <tr key={event.id} className="border-b border-zinc-800/80 hover:bg-zinc-800/30 transition-colors">
                     <td className="px-4 py-3">
                       <span className="font-medium text-white">{event.title}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {event.subOrganizationName ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-zinc-800 text-zinc-300 border border-zinc-700">
+                          <Building2 className="size-3 text-[#e78a53]" />
+                          {event.subOrganizationName}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-zinc-500">All Branches</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-zinc-400">
                       {pick(lang, event.eventType === "ONLINE" ? t.online : t.inPerson)}
