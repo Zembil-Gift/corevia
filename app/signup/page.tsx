@@ -41,6 +41,13 @@ const copy = {
   haveAccount: { en: "Already have an account?", am: "አስቀድሞ መለያ አለዎት?" },
   signIn: { en: "Sign in", am: "ግባ" },
   wrong: { en: "Something went wrong. Please try again.", am: "የሆነ ስህተት ተፈጥሯል። እባክዎ እንደገና ይሞክሩ።" },
+  sendingCode: { en: "Sending code...", am: "ኮድ በመላክ ላይ..." },
+  continue: { en: "Continue", am: "ቀጥል" },
+  verifyTitle: { en: "Verify your email", am: "ኢሜይልዎን ያረጋግጡ" },
+  codeSentTo: { en: "We sent a 6-digit code to", am: "ባለ 6 አሃዝ ኮድ ልከናል ወደ" },
+  code: { en: "Verification code", am: "የማረጋገጫ ኮድ" },
+  resend: { en: "Resend code", am: "ኮዱን እንደገና ላክ" },
+  editDetails: { en: "Edit details", am: "ዝርዝሮችን አርትዕ" },
 }
 
 export default function SignupPage() {
@@ -57,6 +64,8 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [submitted, setSubmitted] = useState(false)
+  const [codeSent, setCodeSent] = useState(false)
+  const [otp, setOtp] = useState("")
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -64,8 +73,30 @@ export default function SignupPage() {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
+  const sendCode = async () => {
+    setError("")
+    setIsLoading(true)
+    try {
+      const res = await fetch("/api/signup/otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email.trim() }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error((data as { error?: string }).error || pick(lang, copy.wrong))
+      }
+      setCodeSent(true)
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!codeSent) return sendCode()
     setError("")
     setIsLoading(true)
     try {
@@ -80,6 +111,7 @@ export default function SignupPage() {
           industry: formData.industry.trim() || undefined,
           websiteUrl: formData.website.trim() || undefined,
           message: formData.message.trim() || undefined,
+          otp: otp.trim(),
         }),
       })
       const data = await res.json().catch(() => ({}))
@@ -156,6 +188,71 @@ export default function SignupPage() {
                 {pick(lang, copy.goSignIn)}
               </Link>
             </div>
+          ) : codeSent ? (
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="text-center">
+                <h2 className="text-xl font-bold text-foreground">{pick(lang, copy.verifyTitle)}</h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {pick(lang, copy.codeSentTo)}{" "}
+                  <span className="font-semibold text-foreground">{formData.email}</span>
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="otp">
+                  {pick(lang, copy.code)} <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="otp"
+                  name="otp"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  pattern="\d{6}"
+                  maxLength={6}
+                  placeholder="123456"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                  required
+                  autoFocus
+                  className="text-center text-lg tracking-[0.5em]"
+                />
+              </div>
+
+              {error && (
+                <p
+                  className="rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+                  role="alert"
+                >
+                  {error}
+                </p>
+              )}
+
+              <Button
+                type="submit"
+                disabled={isLoading || otp.length !== 6}
+                className="w-full rounded-xl bg-emerald-500 py-3 font-semibold text-emerald-950 transition-colors hover:bg-emerald-400"
+              >
+                {isLoading ? pick(lang, copy.sending) : pick(lang, copy.requestWorkspace)}
+              </Button>
+
+              <div className="flex justify-between text-sm">
+                <button
+                  type="button"
+                  onClick={() => { setCodeSent(false); setOtp(""); setError("") }}
+                  className="font-medium text-muted-foreground hover:text-foreground"
+                >
+                  {pick(lang, copy.editDetails)}
+                </button>
+                <button
+                  type="button"
+                  onClick={sendCode}
+                  disabled={isLoading}
+                  className="font-medium text-emerald-400 hover:text-emerald-300 disabled:opacity-50"
+                >
+                  {pick(lang, copy.resend)}
+                </button>
+              </div>
+            </form>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
@@ -278,7 +375,7 @@ export default function SignupPage() {
                 disabled={isLoading}
                 className="w-full rounded-xl bg-emerald-500 py-3 font-semibold text-emerald-950 transition-colors hover:bg-emerald-400"
               >
-                {isLoading ? pick(lang, copy.sending) : pick(lang, copy.requestWorkspace)}
+                {isLoading ? pick(lang, copy.sendingCode) : pick(lang, copy.continue)}
               </Button>
             </form>
           )}

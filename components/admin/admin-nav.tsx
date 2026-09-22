@@ -16,6 +16,7 @@ import {
   Building2,
   ShieldCheck,
   Trello,
+  Settings,
   LogOut,
   type LucideIcon,
 } from "lucide-react"
@@ -38,6 +39,7 @@ const allNavItems: { href: string; label: { en: string; am: string }; icon: Luci
   { href: "/manager/payments", label: { en: "Payroll", am: "ደመወዝ" }, icon: Wallet },
   { href: "/manager/email-notifications", label: { en: "Email Notifications", am: "የኢሜይል ማሳወቂያ" }, icon: Mail, managerOnly: true },
   { href: "/manager/integrations", label: { en: "Integrations", am: "ውህደቶች" }, icon: Trello },
+  { href: "/manager/settings", label: { en: "Settings", am: "ቅንብሮች" }, icon: Settings, managerOnly: true },
 ]
 
 export function AdminNav({ onNavigate }: { onNavigate?: () => void }) {

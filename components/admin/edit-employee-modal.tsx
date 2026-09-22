@@ -27,6 +27,10 @@ const c = {
   activeEmployee: { en: "Active employee", am: "ንቁ ሰራተኛ" },
   invalidSalary: { en: "Salary amount must be a valid non-negative number", am: "የደመወዝ መጠን ትክክለኛ አሉታዊ ያልሆነ ቁጥር መሆን አለበት" },
   failed: { en: "Failed to update employee", am: "ሰራተኛ ማዘመን አልተሳካም" },
+  emailHint: {
+    en: "Changing the email resets the password and sends new login credentials to the new address.",
+    am: "ኢሜይሉን መቀየር የይለፍ ቃሉን ዳግም ያስጀምራል እና አዲስ የመግቢያ መረጃ ወደ አዲሱ አድራሻ ይልካል።",
+  },
   photoFailed: { en: "Failed to upload employee photo", am: "የሰራተኛ ፎቶ መስቀል አልተሳካም" },
 }
 
@@ -228,6 +232,9 @@ export function EditEmployeeModal({
                 required
                 className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
               />
+              {email.trim().toLowerCase() !== (employee?.email ?? "").toLowerCase() && (
+                <p className="text-xs text-amber-400">{pick(lang, c.emailHint)}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-employee-phone" className="text-zinc-200">

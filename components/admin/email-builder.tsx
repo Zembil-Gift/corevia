@@ -23,6 +23,7 @@ const AUDIENCE_ORDER = ["Employee", "Candidate", "Manager", "Vice manager"]
 
 const LABELS: Record<string, string> = {
   EMPLOYEE_PASSWORD: "Account credentials",
+  EMPLOYEE_EMAIL_CHANGED: "Sign-in email changed",
   EMPLOYEE_PAYMENT_RECEIVED: "Salary payment received",
   HIRING_SELECTED_FOR_INTERVIEW: "Selected for interview",
   HIRING_REJECTED_PRE_INTERVIEW: "Application declined",
