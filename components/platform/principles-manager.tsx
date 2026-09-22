@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import * as AlertDialog from "@radix-ui/react-alert-dialog";
 import {
   Loader2,
   Pencil,
@@ -44,6 +45,8 @@ export function PrinciplesManager({
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] =
+    useState<LeadershipPrincipleResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const run = async (key: string, action: () => Promise<unknown>) => {
     setBusy(key);
@@ -103,14 +106,11 @@ export function PrinciplesManager({
       }),
     );
 
-  const remove = (p: LeadershipPrincipleResponse) => {
-    if (
-      !window.confirm(
-        `Delete "${p.name}"? If it was already used in reviews it will be deactivated instead.`,
-      )
-    )
-      return;
-    return run(`delete-${p.id}`, () => send(`${API}/${p.id}`, "DELETE"));
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    const p = pendingDelete;
+    setPendingDelete(null);
+    await run(`delete-${p.id}`, () => send(`${API}/${p.id}`, "DELETE"));
   };
 
   const activeCount = principles.filter((p) => p.isActive).length;
@@ -218,7 +218,7 @@ export function PrinciplesManager({
                       variant="ghost"
                       aria-label={`Delete ${p.name}`}
                       disabled={busy !== null}
-                      onClick={() => remove(p)}
+                      onClick={() => setPendingDelete(p)}
                     >
                       <Trash2 className="size-4 text-red-400" />
                     </Button>
@@ -269,6 +269,40 @@ export function PrinciplesManager({
           </Button>
         </form>
       </div>
+
+      <AlertDialog.Root
+        open={pendingDelete !== null}
+        onOpenChange={(open) => !open && setPendingDelete(null)}
+      >
+        <AlertDialog.Portal>
+          <AlertDialog.Overlay className="fixed inset-0 z-50 bg-black/60" />
+          <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-zinc-800 bg-zinc-900 p-6 shadow-xl">
+            <AlertDialog.Title className="text-lg font-semibold text-white">
+              Delete principle
+            </AlertDialog.Title>
+            <AlertDialog.Description className="mt-2 text-sm text-zinc-400">
+              Delete &ldquo;{pendingDelete?.name}&rdquo;? If it was already
+              used in reviews it will be deactivated instead.
+            </AlertDialog.Description>
+            <div className="mt-6 flex justify-end gap-2">
+              <AlertDialog.Cancel asChild>
+                <Button type="button" variant="ghost" className="text-zinc-300">
+                  Cancel
+                </Button>
+              </AlertDialog.Cancel>
+              <AlertDialog.Action asChild>
+                <Button
+                  type="button"
+                  className="bg-red-500 text-white hover:bg-red-400"
+                  onClick={confirmDelete}
+                >
+                  Delete
+                </Button>
+              </AlertDialog.Action>
+            </div>
+          </AlertDialog.Content>
+        </AlertDialog.Portal>
+      </AlertDialog.Root>
     </section>
   );
 }

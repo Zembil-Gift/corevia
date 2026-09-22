@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState, useCallback } from "react"
-import { createPortal } from "react-dom"
+import * as Dialog from "@radix-ui/react-dialog"
 import { MapPin, Navigation, Search, Loader2, Maximize2, Minimize2, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -67,13 +67,11 @@ export function MapLocationPicker({
   radiusMeters = 500,
   onChange,
 }: MapLocationPickerProps) {
-  const mapContainerRef = useRef<HTMLDivElement>(null)
   const mapDivRef = useRef<HTMLDivElement | null>(null)
   const mapInstanceRef = useRef<google.maps.Map | null>(null)
   const markerRef = useRef<google.maps.Marker | null>(null)
   const circleRef = useRef<google.maps.Circle | null>(null)
 
-  const [mounted, setMounted] = useState(false)
   const [currentLat, setCurrentLat] = useState<number>(lat ?? 9.0105)
   const [currentLng, setCurrentLng] = useState<number>(lng ?? 38.7612)
   const [radius, setRadius] = useState<number>(radiusMeters ?? 500)
@@ -92,10 +90,6 @@ export function MapLocationPicker({
     mapDivRef.current = div
   }
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
   // Sync external props if they change
   useEffect(() => {
     if (lat != null && lat !== currentLat) setCurrentLat(lat)
@@ -110,31 +104,6 @@ export function MapLocationPicker({
       mapInstanceRef.current.panTo(pos)
     }
   }, [lat, lng, radiusMeters])
-
-  // Escape key exits fullscreen without bubbling to parent modal dialogs
-  useEffect(() => {
-    if (!fullscreen) return
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault()
-        e.stopPropagation()
-        e.stopImmediatePropagation()
-        setFullscreen(false)
-      }
-    }
-    window.addEventListener("keydown", handleKey, true)
-    return () => window.removeEventListener("keydown", handleKey, true)
-  }, [fullscreen])
-
-  // Lock body scroll when in fullscreen
-  useEffect(() => {
-    if (!fullscreen) return
-    const originalOverflow = document.body.style.overflow
-    document.body.style.overflow = "hidden"
-    return () => {
-      document.body.style.overflow = originalOverflow
-    }
-  }, [fullscreen])
 
   // Load Google Maps script
   useEffect(() => {
@@ -224,30 +193,18 @@ export function MapLocationPicker({
     circleRef.current = circle
   }, [mapLoaded])
 
-  // Attach persistent map DOM element to current rendered container & trigger resize
-  useEffect(() => {
-    if (!mapLoaded || !mapContainerRef.current || !mapDivRef.current) return
-
-    if (!mapContainerRef.current.contains(mapDivRef.current)) {
-      mapContainerRef.current.replaceChildren(mapDivRef.current)
-    }
-
-    const triggerResize = () => {
-      if (mapInstanceRef.current && window.google?.maps?.event) {
-        window.google.maps.event.trigger(mapInstanceRef.current, "resize")
-        // Re-center using the map's own current center to avoid stale state
-        const center = mapInstanceRef.current.getCenter()
-        if (center) mapInstanceRef.current.setCenter(center)
-      }
-    }
-
-    // Small delay to let the DOM settle after portal mount/unmount
-    const timer = setTimeout(triggerResize, 100)
-
-    return () => {
-      clearTimeout(timer)
-    }
-  }, [mapLoaded, fullscreen])
+  // Callback ref: whichever container (inline or fullscreen) mounts adopts the persistent map div
+  const mapContainerRef = useCallback((node: HTMLDivElement | null) => {
+    if (!node || !mapDivRef.current) return
+    node.replaceChildren(mapDivRef.current)
+    setTimeout(() => {
+      const map = mapInstanceRef.current
+      if (!map || !window.google?.maps?.event) return
+      window.google.maps.event.trigger(map, "resize")
+      const center = map.getCenter()
+      if (center) map.setCenter(center)
+    }, 100)
+  }, [])
 
   // Update radius circle dynamically
   useEffect(() => {
@@ -416,75 +373,68 @@ export function MapLocationPicker({
     </div>
   )
 
-  const handleExitFullscreen = (e?: React.SyntheticEvent) => {
-    if (e) {
-      e.preventDefault()
-      e.stopPropagation()
-    }
-    setFullscreen(false)
-  }
+  const handleExitFullscreen = () => setFullscreen(false)
 
-  // Fullscreen Overlay View rendered via React Portal to escape any parent dialog/transform container
-  if (fullscreen && mounted && typeof document !== "undefined") {
-    return createPortal(
-      <div
-        className="fixed inset-0 z-[99999] flex flex-col bg-zinc-950 p-4 sm:p-6 gap-3 text-zinc-100"
-        onPointerDown={(e) => e.stopPropagation()}
-        onMouseDown={(e) => e.stopPropagation()}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Fullscreen Header */}
-        <div className="flex items-center justify-between gap-4 pb-1 border-b border-zinc-800">
-          <div className="flex items-center gap-2">
-            <MapPin className="h-5 w-5 text-[#e78a53]" />
-            <div>
-              <h2 className="text-base font-semibold text-white">Select Location & Geofence (Fullscreen)</h2>
-              <p className="text-xs text-zinc-400">Click map or drag the pin to position your office / sub-organization</p>
-            </div>
-          </div>
-          <Button
-            type="button"
-            onClick={handleExitFullscreen}
-            onPointerDown={(e) => e.stopPropagation()}
-            className="bg-[#e78a53] hover:bg-[#e78a53]/90 text-white gap-1.5 shrink-0 text-sm font-medium px-4"
+  // Fullscreen is a nested Radix Dialog: a plain body portal sits outside a parent modal Dialog,
+  // whose pointer-events lock and focus trap would freeze every control in the overlay.
+  if (fullscreen) {
+    return (
+      <Dialog.Root open onOpenChange={setFullscreen}>
+        <Dialog.Portal>
+          <Dialog.Content
+            className="fixed inset-0 z-[99999] flex flex-col bg-zinc-950 p-4 sm:p-6 gap-3 text-zinc-100"
           >
-            <Check className="h-4 w-4" />
-            Done & Return
-          </Button>
-        </div>
-
-        {/* Search & GPS bar */}
-        <div>{controlsContent}</div>
-
-        {/* Map Canvas taking all remaining vertical and horizontal space */}
-        <div className="relative flex-1 min-h-0 w-full rounded-xl overflow-hidden border border-zinc-800 shadow-2xl bg-zinc-900">
-          <div ref={mapContainerRef} className="w-full h-full min-h-0 z-0" />
-          {!mapLoaded && (
-            <div className="absolute inset-0 flex items-center justify-center bg-zinc-950/70 z-10 text-zinc-300 gap-2">
-              <Loader2 className="h-5 w-5 animate-spin text-[#e78a53]" />
-              <span className="text-sm">Loading map...</span>
+            {/* Fullscreen Header */}
+            <div className="flex items-center justify-between gap-4 pb-1 border-b border-zinc-800">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-[#e78a53]" />
+                <div>
+                  <Dialog.Title className="text-base font-semibold text-white">Select Location & Geofence (Fullscreen)</Dialog.Title>
+                  <Dialog.Description className="text-xs text-zinc-400">Click map or drag the pin to position your office / sub-organization</Dialog.Description>
+                </div>
+              </div>
+              <Button
+                type="button"
+                onClick={handleExitFullscreen}
+                className="bg-[#e78a53] hover:bg-[#e78a53]/90 text-white gap-1.5 shrink-0 text-sm font-medium px-4"
+              >
+                <Check className="h-4 w-4" />
+                Done & Return
+              </Button>
             </div>
-          )}
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleExitFullscreen}
-            onPointerDown={(e) => e.stopPropagation()}
-            className="absolute top-3 right-3 z-10 h-9 w-9 p-0 border-zinc-700 bg-zinc-950/90 backdrop-blur hover:bg-zinc-800 text-zinc-200 shadow-md"
-            title="Exit fullscreen (Esc)"
-          >
-            <Minimize2 className="h-4 w-4" />
-          </Button>
-          <div className="absolute bottom-3 left-3 z-10 bg-zinc-950/90 backdrop-blur px-3 py-1.5 rounded-md border border-zinc-800 text-xs text-zinc-300 flex items-center gap-1.5 shadow-md">
-            <MapPin className="h-3.5 w-3.5 text-[#e78a53]" />
-            <span>Click map or drag pin | Radius: {radius}m</span>
-          </div>
-        </div>
 
-        {/* Bottom Coordinates & Radius */}
-        <div className="pt-1">{coordinateInputs}</div>
-      </div>,
-      document.body
+            {/* Search & GPS bar */}
+            <div>{controlsContent}</div>
+
+            {/* Map Canvas taking all remaining vertical and horizontal space */}
+            <div className="relative flex-1 min-h-0 w-full rounded-xl overflow-hidden border border-zinc-800 shadow-2xl bg-zinc-900">
+              <div ref={mapContainerRef} className="w-full h-full min-h-0 z-0" />
+              {!mapLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center bg-zinc-950/70 z-10 text-zinc-300 gap-2">
+                  <Loader2 className="h-5 w-5 animate-spin text-[#e78a53]" />
+                  <span className="text-sm">Loading map...</span>
+                </div>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleExitFullscreen}
+                className="absolute top-3 right-3 z-10 h-9 w-9 p-0 border-zinc-700 bg-zinc-950/90 backdrop-blur hover:bg-zinc-800 text-zinc-200 shadow-md"
+                title="Exit fullscreen (Esc)"
+              >
+                <Minimize2 className="h-4 w-4" />
+              </Button>
+              <div className="absolute bottom-3 left-3 z-10 bg-zinc-950/90 backdrop-blur px-3 py-1.5 rounded-md border border-zinc-800 text-xs text-zinc-300 flex items-center gap-1.5 shadow-md">
+                <MapPin className="h-3.5 w-3.5 text-[#e78a53]" />
+                <span>Click map or drag pin | Radius: {radius}m</span>
+              </div>
+            </div>
+
+            {/* Bottom Coordinates & Radius */}
+            <div className="pt-1">{coordinateInputs}</div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     )
   }
 
