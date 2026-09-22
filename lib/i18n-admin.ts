@@ -6,7 +6,7 @@
 
 export const a = {
   // actions / buttons
-  cancel: { en: "Cancel", am: "ሰርዝ" },
+  cancel: { en: "Cancel", am: "ተወው" },
   close: { en: "Close", am: "ዝጋ" },
   save: { en: "Save", am: "አስቀምጥ" },
   saveChanges: { en: "Save changes", am: "ለውጦችን አስቀምጥ" },

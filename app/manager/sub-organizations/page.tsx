@@ -7,6 +7,7 @@ import type { SubOrganization } from "@/lib/sub-orgs-api"
 import { CreateSubOrgModal } from "@/components/admin/create-sub-org-modal"
 import { EditSubOrgModal } from "@/components/admin/edit-sub-org-modal"
 import { RenameSubOrgModal } from "@/components/admin/rename-sub-org-modal"
+import { alertDialog, confirmDialog } from "@/components/ui/app-dialog"
 
 export default function SubOrganizationsPage() {
   const [subOrgs, setSubOrgs] = useState<SubOrganization[]>([])
@@ -45,10 +46,10 @@ export default function SubOrganizationsPage() {
 
   const handleDelete = async (subOrg: SubOrganization) => {
     if (subOrg.isDefault) {
-      alert("The default main sub-organization cannot be deleted. You can rename it instead.")
+      await alertDialog({ title: "Can't delete main sub-organization", message: "The default main sub-organization cannot be deleted. You can rename it instead." })
       return
     }
-    if (!confirm(`Are you sure you want to delete sub-organization "${subOrg.name}"?`)) return
+    if (!(await confirmDialog({ title: "Delete sub-organization", message: `Delete sub-organization "${subOrg.name}"?`, confirmText: "Delete", destructive: true }))) return
 
     setDeletingId(subOrg.id)
     try {
@@ -61,7 +62,7 @@ export default function SubOrganizationsPage() {
       }
       fetchSubOrgs()
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to delete sub-organization")
+      await alertDialog({ title: "Couldn't delete sub-organization", message: err instanceof Error ? err.message : "Failed to delete sub-organization", destructive: true })
     } finally {
       setDeletingId(null)
     }

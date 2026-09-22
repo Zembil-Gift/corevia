@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import type { SubOrganization, ViceManager } from "@/lib/sub-orgs-api"
 import { CreateViceManagerModal } from "@/components/admin/create-vice-manager-modal"
 import { EditViceManagerModal } from "@/components/admin/edit-vice-manager-modal"
+import { alertDialog, confirmDialog } from "@/components/ui/app-dialog"
 
 export default function ViceManagersPage() {
   const [viceManagers, setViceManagers] = useState<ViceManager[]>([])
@@ -51,7 +52,7 @@ export default function ViceManagersPage() {
   }, [fetchData])
 
   const handleDelete = async (vm: ViceManager) => {
-    if (!confirm(`Are you sure you want to deactivate and remove vice manager "${vm.fullName}"?`)) return
+    if (!(await confirmDialog({ title: "Remove vice manager", message: `Deactivate and remove vice manager "${vm.fullName}"?`, confirmText: "Remove", destructive: true }))) return
 
     setDeletingId(vm.id)
     try {
@@ -64,7 +65,7 @@ export default function ViceManagersPage() {
       }
       fetchData()
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to remove vice manager")
+      await alertDialog({ title: "Couldn't remove vice manager", message: err instanceof Error ? err.message : "Failed to remove vice manager", destructive: true })
     } finally {
       setDeletingId(null)
     }

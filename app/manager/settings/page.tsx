@@ -24,7 +24,7 @@ const c = {
   mismatch: { en: "Passwords do not match", am: "የይለፍ ቃሎቹ አይዛመዱም" },
   save: { en: "Change password", am: "የይለፍ ቃል ቀይር" },
   resend: { en: "Resend code", am: "ኮዱን እንደገና ላክ" },
-  cancel: { en: "Cancel", am: "ሰርዝ" },
+  cancel: { en: "Cancel", am: "ተወው" },
   done: { en: "Your password has been changed.", am: "የይለፍ ቃልዎ ተቀይሯል።" },
   wrong: { en: "Something went wrong. Please try again.", am: "የሆነ ስህተት ተፈጥሯል። እባክዎ እንደገና ይሞክሩ።" },
 }

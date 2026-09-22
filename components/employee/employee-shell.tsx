@@ -35,7 +35,7 @@ const t = {
   connect: { en: "Connect", am: "አገናኝ" },
   password: { en: "Password", am: "የይለፍ ቃል" },
   logout: { en: "Log out", am: "ውጣ" },
-  cancel: { en: "Cancel", am: "ሰርዝ" },
+  cancel: { en: "Cancel", am: "ተወው" },
   update: { en: "Update", am: "አዘምን" },
   grossSalary: { en: "Gross salary", am: "ጠቅላላ ደመወዝ" },
   due: { en: "Due", am: "የሚከፈልበት" },

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Inbox, Mail, Building2, UserPlus, X } from "lucide-react"
 import { fetchSignupRequests, rejectSignupRequest, slugify, type SignupRequest } from "@/lib/platform-api"
+import { confirmDialog } from "@/components/ui/app-dialog"
 
 function StatusBadge({ status }: { status: string }) {
   const s = status.toUpperCase()
@@ -54,7 +55,7 @@ export default function SignupRequestsPage() {
   }
 
   async function reject(req: SignupRequest) {
-    if (!confirm(`Reject the signup request from ${req.companyName}?`)) return
+    if (!(await confirmDialog({ title: "Reject signup request", message: `Reject the signup request from ${req.companyName}?`, confirmText: "Reject", destructive: true }))) return
     setBusyId(req.id)
     try {
       await rejectSignupRequest(req.id)

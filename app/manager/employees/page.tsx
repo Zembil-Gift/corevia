@@ -11,6 +11,7 @@ import { isViceManagerClient } from "@/lib/admin-client-auth"
 import { CreateEmployeeModal } from "@/components/admin/create-employee-modal"
 import { EditEmployeeModal } from "@/components/admin/edit-employee-modal"
 import { AttendanceModal } from "@/components/admin/attendance-modal"
+import { confirmDialog } from "@/components/ui/app-dialog"
 
 const t = {
   employees: { en: "Employees", am: "ሰራተኞች" },
@@ -96,7 +97,7 @@ export default function AdminEmployeesPage() {
   }
 
   const handleDelete = async (employee: EmployeeApi) => {
-    if (!confirm(`${pick(lang, t.confirmDelete)} "${employee.name}"?`)) return
+    if (!(await confirmDialog({ message: `${pick(lang, t.confirmDelete)} "${employee.name}"?`, confirmText: pick(lang, a.delete), cancelText: pick(lang, a.cancel), destructive: true }))) return
     setDeletingId(employee.id)
     setError(null)
     try {

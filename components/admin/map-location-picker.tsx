@@ -6,6 +6,7 @@ import { MapPin, Navigation, Search, Loader2, Maximize2, Minimize2, Check } from
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { alertDialog } from "@/components/ui/app-dialog"
 
 interface MapLocationPickerProps {
   lat?: number | null
@@ -235,7 +236,7 @@ export function MapLocationPicker({
 
   const handleUseCurrentLocation = () => {
     if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser.")
+      alertDialog({ title: "Location unavailable", message: "Geolocation is not supported by your browser." })
       return
     }
     setLocating(true)
@@ -248,7 +249,7 @@ export function MapLocationPicker({
       },
       (err) => {
         setLocating(false)
-        alert(`Failed to retrieve GPS location: ${err.message}`)
+        alertDialog({ title: "Location unavailable", message: `Failed to retrieve GPS location: ${err.message}`, destructive: true })
       },
       { enableHighAccuracy: true, timeout: 10000 }
     )
@@ -268,10 +269,10 @@ export function MapLocationPicker({
         const newLng = Number(location.lng().toFixed(6))
         moveMapTo(newLat, newLng, 16)
       } else {
-        alert("Location not found. Try searching with city or landmark name.")
+        alertDialog({ title: "Location not found", message: "Try searching with city or landmark name." })
       }
     } catch {
-      alert("Search failed. Please try again or click on the map directly.")
+      alertDialog({ title: "Search failed", message: "Please try again or click on the map directly.", destructive: true })
     } finally {
       setSearching(false)
     }

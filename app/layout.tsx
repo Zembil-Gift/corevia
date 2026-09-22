@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { Plus_Jakarta_Sans, Noto_Sans_Ethiopic } from "next/font/google"
 import { brand } from "@/lib/brand"
 import { LangProvider } from "@/lib/i18n"
+import { DialogHost } from "@/components/ui/app-dialog"
 import "./globals.css"
 
 const jakarta = Plus_Jakarta_Sans({
@@ -47,6 +48,7 @@ html {
       </head>
       <body className={`${jakarta.variable} ${ethiopic.variable} antialiased`}>
         <LangProvider>{children}</LangProvider>
+        <DialogHost />
       </body>
     </html>
   )

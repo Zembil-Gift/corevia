@@ -10,6 +10,7 @@ import { EditBlogModal } from "@/components/admin/edit-blog-modal"
 import { Button } from "@/components/ui/button"
 import { useLang, pick } from "@/lib/i18n"
 import { a } from "@/lib/i18n-admin"
+import { confirmDialog } from "@/components/ui/app-dialog"
 
 const t = {
   blog: { en: "Blog", am: "ብሎግ" },
@@ -114,7 +115,7 @@ export default function AdminBlogPage() {
   }
 
   const handleDelete = async (post: BlogPostApi) => {
-    if (!confirm(`${pick(lang, t.confirmDelete)} "${post.title}"? ${pick(lang, t.cannotUndo)}`)) return
+    if (!(await confirmDialog({ message: `${pick(lang, t.confirmDelete)} "${post.title}"? ${pick(lang, t.cannotUndo)}`, confirmText: pick(lang, a.delete), cancelText: pick(lang, a.cancel), destructive: true }))) return
     setDeletingId(post.id)
     try {
       const res = await fetch(`/api/admin/blogs/${post.id}`, { method: "DELETE" })
