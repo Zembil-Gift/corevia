@@ -14,7 +14,6 @@ export interface EmployeeMetricSummaryResponse {
   leadershipScore: MetricScoreValue
   attendanceScore: MetricScoreValue
   taskScore: MetricScoreValue
-  supportScore: MetricScoreValue
   overallScore: MetricScoreValue
   strengthSummary: string | null
   improvementSummary: string | null

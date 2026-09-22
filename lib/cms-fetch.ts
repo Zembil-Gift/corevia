@@ -10,7 +10,7 @@ const ANY = ["GET", "POST", "PUT", "PATCH", "DELETE"]
 const VICE_MANAGER_ROUTES: [string[], RegExp, string][] = [
   [["GET"], /^\/manager\/me(?=$|\?)/, "/vice-manager/me"],
   [["GET"], /^\/manager\/sub-organizations(?=$|\?)/, "/vice-manager/sub-organizations"],
-  [["GET"], /^\/manager\/employees\/(with-telegram|connected-accounts)(?=$|\?)/, "/vice-manager/employees/$1"],
+  [["GET"], /^\/manager\/employees\/(connected-accounts)(?=$|\?)/, "/vice-manager/employees/$1"],
   [["GET"], /^\/manager\/employees(?=$|\?)/, "/vice-manager/employees"],
   [["GET"], /^\/manager\/employees\/(\d+)(\/attendance)?(?=$|\?)/, "/vice-manager/employees/$1$2"],
   [["GET"], /^\/manager\/metrics\/employees(?=$|\?|\/\d+(?:$|\?|\/time-spent\/))/, "/vice-manager/metrics/employees"],
@@ -19,7 +19,6 @@ const VICE_MANAGER_ROUTES: [string[], RegExp, string][] = [
   [["GET"], /^\/manager\/metrics\/peer-reviews\/periods(?=$|\?|\/\d+\/(?:results|comments\/\d+)(?:$|\?))/,
     "/vice-manager/metrics/peer-reviews/periods"],
   [["GET"], /^\/manager\/(github|trello)\/report\//, "/vice-manager/trackers/$1/report/"],
-  [["GET"], /^\/manager\/telegram\/support\/report\//, "/vice-manager/trackers/telegram/report/"],
   [["POST"], /^\/manager\/(github|trello)\/sync(?=$|\?)/, "/vice-manager/trackers/$1/sync"],
   [ANY, /^\/manager\/(github|trello)\/connection(?=$|\?|\/)/, "/vice-manager/$1/connection"],
   [["GET"], /^\/manager\/payments\/(due|paid|paid\/filter)(?=$|\?)/, "/vice-manager/payments/$1"],

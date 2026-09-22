@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { GithubEmployeeReportResponse } from "@/lib/github-stats-api";
-import type { TelegramSupportReportResponse } from "@/lib/telegram-support-api";
 import type { TrelloEmployeeReportResponse } from "@/lib/trello-stats-api";
 import type { SubOrganization } from "@/lib/sub-orgs-api";
 import type {
@@ -53,20 +52,6 @@ const formatMinutes = (minutes: number | null | undefined) => {
   return `${hrs}h ${mins}m`;
 };
 
-const formatDurationMs = (value: number | null | undefined) => {
-  if (typeof value !== "number" || !Number.isFinite(value)) return "—";
-  const totalMinutes = Math.floor(value / 60000);
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  if (hours > 0) return `${hours}h ${minutes}m`;
-  return `${minutes}m`;
-};
-
-const isMissingTelegramUsername = (message: string) => {
-  const normalized = message.toLowerCase();
-  return normalized.includes("telegram") && normalized.includes("not set");
-};
-
 export default function AdminMetricsPage() {
   const [reportMonth, setReportMonth] = useState(getCurrentUTCMonth);
   const { periodStart, periodEnd } = useMemo(
@@ -109,18 +94,9 @@ export default function AdminMetricsPage() {
   const [trelloReport, setTrelloReport] =
     useState<TrelloEmployeeReportResponse | null>(null);
 
-  const [employeesWithTelegram, setEmployeesWithTelegram] = useState<
-    Set<number>
-  >(new Set());
-
   const [connectedAccountsMap, setConnectedAccountsMap] = useState<
-    Record<number, { githubUsername?: string | null; trelloUsername?: string | null; telegramUsername?: string | null }>
+    Record<number, { githubUsername?: string | null; trelloUsername?: string | null }>
   >({});
-  const [telegramLoading, setTelegramLoading] = useState(false);
-  const [telegramError, setTelegramError] = useState("");
-  const [telegramReport, setTelegramReport] =
-    useState<TelegramSupportReportResponse | null>(null);
-
   const [peerReviews, setPeerReviews] = useState<PeerReviewResponse[]>([]);
   const [peerReviewsError, setPeerReviewsError] = useState("");
   const [peerReviewSummaryByEmployeeId, setPeerReviewSummaryByEmployeeId] =
@@ -150,46 +126,19 @@ export default function AdminMetricsPage() {
     return total / scored.length;
   }, [metrics]);
 
-  const telegramRange = useMemo(() => {
-    if (!periodStart || !periodEnd) return null;
-    return {
-      from: `${periodStart}T00:00:00.000Z`,
-      to: `${periodEnd}T23:59:59.999Z`,
-    };
-  }, [periodEnd, periodStart]);
-
-  const loadEmployeesWithTelegram = useCallback(async () => {
-    try {
-      const res = await fetch("/api/admin/employees/with-telegram?size=1000");
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) return;
-      const ids = new Set<number>();
-      const content = (data as { content?: Array<{ id: number }> }).content;
-      if (Array.isArray(content)) {
-        content.forEach((emp) => {
-          if (typeof emp.id === "number") ids.add(emp.id);
-        });
-      }
-      setEmployeesWithTelegram(ids);
-    } catch {
-      // silently fail, telegram reports will just not be available
-    }
-  }, []);
-
   const loadConnectedAccounts = useCallback(async () => {
     try {
       const res = await fetch("/api/admin/employees/connected-accounts?size=1000");
       const data = await res.json().catch(() => ({}));
       if (!res.ok) return;
-      const map: Record<number, { githubUsername?: string | null; trelloUsername?: string | null; telegramUsername?: string | null }> = {};
-      const content = (data as { content?: Array<{ employeeId: number; githubUsername?: string | null; trelloUsername?: string | null; telegramUsername?: string | null }> }).content;
+      const map: Record<number, { githubUsername?: string | null; trelloUsername?: string | null }> = {};
+      const content = (data as { content?: Array<{ employeeId: number; githubUsername?: string | null; trelloUsername?: string | null }> }).content;
       if (Array.isArray(content)) {
         content.forEach((emp) => {
           if (typeof emp.employeeId === "number") {
             map[emp.employeeId] = {
               githubUsername: emp.githubUsername,
               trelloUsername: emp.trelloUsername,
-              telegramUsername: emp.telegramUsername,
             };
           }
         });
@@ -455,57 +404,6 @@ export default function AdminMetricsPage() {
     }
   }, [connectedAccountsMap]);
 
-  const loadTelegramReport = useCallback(
-    async (employeeId: number) => {
-      if (!telegramRange) {
-        setTelegramError("Select a month to load Telegram support stats.");
-        return;
-      }
-      if (!employeesWithTelegram.has(employeeId) || !connectedAccountsMap[employeeId]?.telegramUsername) {
-        setTelegramReport(null);
-        return;
-      }
-      setTelegramLoading(true);
-      setTelegramError("");
-      try {
-        const params = new URLSearchParams();
-        params.set("from", telegramRange.from);
-        params.set("to", telegramRange.to);
-        const res = await fetch(
-          `/api/admin/telegram/support/report/${employeeId}?${params.toString()}`,
-        );
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          const errorMessage =
-            (data as { error?: string }).error ??
-            "Failed to load Telegram support stats";
-          if (res.status === 400 && isMissingTelegramUsername(errorMessage)) {
-            setTelegramReport(null);
-            setTelegramError("");
-            return;
-          }
-          throw new Error(errorMessage);
-        }
-        setTelegramReport(data as TelegramSupportReportResponse);
-      } catch (err) {
-        const message =
-          err instanceof Error
-            ? err.message
-            : "Failed to load Telegram support stats";
-        if (isMissingTelegramUsername(message)) {
-          setTelegramReport(null);
-          setTelegramError("");
-          return;
-        }
-        setTelegramError(message);
-        setTelegramReport(null);
-      } finally {
-        setTelegramLoading(false);
-      }
-    },
-    [telegramRange, employeesWithTelegram, connectedAccountsMap],
-  );
-
   const handleSearch = () => {
     loadMetrics(0);
     if (selectedEmployeeId) {
@@ -521,9 +419,8 @@ export default function AdminMetricsPage() {
   }, [loadMetrics]);
 
   useEffect(() => {
-    loadEmployeesWithTelegram();
     loadConnectedAccounts();
-  }, [loadEmployeesWithTelegram, loadConnectedAccounts]);
+  }, [loadConnectedAccounts]);
 
   const handleSelect = (summary: EmployeeMetricSummaryResponse) => {
     setSelectedEmployeeId(summary.employeeId);
@@ -541,14 +438,11 @@ export default function AdminMetricsPage() {
     setGithubError("");
     setTrelloReport(null);
     setTrelloError("");
-    setTelegramReport(null);
-    setTelegramError("");
 
     loadDetails(summary.employeeId);
     loadTimeSpent(summary.employeeId);
     loadGithubReport(summary.employeeId);
     loadTrelloReport(summary.employeeId);
-    loadTelegramReport(summary.employeeId);
   };
 
   const handleSnapshotRefresh = async () => {
@@ -848,7 +742,6 @@ export default function AdminMetricsPage() {
                 <th className="px-4 py-3">Peer review</th>*/}
                 <th className="px-4 py-3">Attendance</th>
                 <th className="px-4 py-3">Task</th>
-                <th className="px-4 py-3">Support</th>
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
@@ -916,11 +809,6 @@ export default function AdminMetricsPage() {
                     </td>
                     <td className={`px-4 py-3 ${scoreTone(summary.taskScore)}`}>
                       {formatScore(summary.taskScore)}
-                    </td>
-                    <td
-                      className={`px-4 py-3 ${scoreTone(summary.supportScore)}`}
-                    >
-                      {formatScore(summary.supportScore)}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <Button
@@ -990,9 +878,6 @@ export default function AdminMetricsPage() {
           setTrelloReport(null);
           setTrelloError("");
           setTrelloLoading(false);
-          setTelegramReport(null);
-          setTelegramError("");
-          setTelegramLoading(false);
         }}
       >
         <Dialog.Portal>
@@ -1065,10 +950,6 @@ export default function AdminMetricsPage() {
                             value: detailSummary.attendanceScore,
                           },
                           { label: "Task", value: detailSummary.taskScore },
-                          {
-                            label: "Support",
-                            value: detailSummary.supportScore,
-                          },
                         ].map((item) => (
                           <div
                             key={item.label}
@@ -1330,133 +1211,6 @@ export default function AdminMetricsPage() {
                       <p className="mt-1 text-sm text-zinc-500">
                         Trello is not connected for this employee.
                       </p>
-                    </div>
-                  ) : null}
-
-                  {selectedEmployeeId && connectedAccountsMap[selectedEmployeeId]?.telegramUsername ? (
-                    <div className="mt-8">
-                      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                          <h3 className="text-base font-semibold text-white">
-                            Telegram Support
-                          </h3>
-                          <p className="text-sm text-zinc-400">
-                            Ticket totals and resolution timing.
-                          </p>
-                          {telegramReport?.telegramUsername && (
-                            <p className="text-xs text-zinc-500">
-                              @{telegramReport.telegramUsername}
-                            </p>
-                          )}
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="border-zinc-700 text-zinc-200 hover:bg-zinc-800"
-                          onClick={() =>
-                            selectedEmployeeId &&
-                            loadTelegramReport(selectedEmployeeId)
-                          }
-                          disabled={!selectedEmployeeId || telegramLoading}
-                        >
-                          {telegramLoading ? (
-                            <Loader2 className="mr-2 size-4 animate-spin" />
-                          ) : (
-                            <RefreshCw className="mr-2 size-4" />
-                          )}
-                          Reload
-                        </Button>
-                      </div>
-
-                      {telegramError && (
-                        <p className="mb-3 text-sm text-red-400">
-                          {telegramError}
-                        </p>
-                      )}
-
-                      {!employeesWithTelegram.has(
-                        selectedEmployeeId,
-                      ) ? (
-                        <p className="text-sm text-zinc-500">
-                          Telegram is not configured for this employee.
-                        </p>
-                      ) : telegramLoading ? (
-                        <div className="flex justify-center py-8">
-                          <Loader2 className="size-7 animate-spin text-[#e78a53]" />
-                        </div>
-                      ) : telegramReport ? (
-                        <>
-                          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                            <div className="rounded-lg border border-zinc-800 bg-zinc-900/70 p-4">
-                              <p className="text-xs uppercase tracking-wide text-zinc-500">
-                                Pending
-                              </p>
-                              <p className="mt-2 text-2xl font-semibold text-white">
-                                {telegramReport.totals.pending}
-                              </p>
-                            </div>
-                            <div className="rounded-lg border border-zinc-800 bg-zinc-900/70 p-4">
-                              <p className="text-xs uppercase tracking-wide text-zinc-500">
-                                In Progress
-                              </p>
-                              <p className="mt-2 text-2xl font-semibold text-white">
-                                {telegramReport.totals.inProgress}
-                              </p>
-                            </div>
-                            <div className="rounded-lg border border-zinc-800 bg-zinc-900/70 p-4">
-                              <p className="text-xs uppercase tracking-wide text-zinc-500">
-                                Resolved
-                              </p>
-                              <p className="mt-2 text-2xl font-semibold text-white">
-                                {telegramReport.totals.resolved}
-                              </p>
-                            </div>
-                            <div className="rounded-lg border border-zinc-800 bg-zinc-900/70 p-4">
-                              <p className="text-xs uppercase tracking-wide text-zinc-500">
-                                Total
-                              </p>
-                              <p className="mt-2 text-2xl font-semibold text-white">
-                                {telegramReport.totals.total}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                            <div className="rounded-lg border border-zinc-800 bg-zinc-900/70 p-4">
-                              <p className="text-xs uppercase tracking-wide text-zinc-500">
-                                First Status → Resolved
-                              </p>
-                              <p className="mt-2 text-xl font-semibold text-white">
-                                {formatDurationMs(
-                                  telegramReport.averages
-                                    .msFromFirstStatusChangeToResolved,
-                                )}
-                              </p>
-                            </div>
-                            <div className="rounded-lg border border-zinc-800 bg-zinc-900/70 p-4">
-                              <p className="text-xs uppercase tracking-wide text-zinc-500">
-                                Created → Resolved
-                              </p>
-                              <p className="mt-2 text-xl font-semibold text-white">
-                                {formatDurationMs(
-                                  telegramReport.averages
-                                    .msFromCreatedAtToResolved,
-                                )}
-                              </p>
-                            </div>
-                          </div>
-                        </>
-                      ) : (
-                        <p className="text-sm text-zinc-500">
-                          Telegram support stats are not available.
-                        </p>
-                      )}
-                    </div>
-                  ) : selectedEmployeeId ? (
-                    <div className="mt-8">
-                      {/*<h3 className="text-base font-semibold text-white">Telegram Support</h3>
-                      <p className="mt-1 text-sm text-zinc-500">
-                        Telegram is not connected for this employee.
-                      </p>*/}
                     </div>
                   ) : null}
 

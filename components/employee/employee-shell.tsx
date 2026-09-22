@@ -53,7 +53,6 @@ const t = {
   connectedAccounts: { en: "Connected Accounts", am: "የተገናኙ መለያዎች" },
   githubUsername: { en: "GitHub username", am: "የGitHub የተጠቃሚ ስም" },
   trelloUsername: { en: "Trello username", am: "የTrello የተጠቃሚ ስም" },
-  telegramUsername: { en: "Telegram username", am: "የTelegram የተጠቃሚ ስም" },
   connectWarn: {
     en: "Updating your connected accounts will reset your existing report progress. Your previous stats will be lost.",
     am: "የተገናኙ መለያዎችዎን ማዘመን ነባር የሪፖርት እድገትዎን ዳግም ያስጀምራል። የቀድሞ ስታቲስቲክስዎ ይጠፋል።",
@@ -106,9 +105,8 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
   const [connectedAccounts, setConnectedAccounts] = useState<{
     githubUsername?: string | null
     trelloUsername?: string | null
-    telegramUsername?: string | null
   } | null>(null)
-  const [connectForm, setConnectForm] = useState({ githubUsername: "", trelloUsername: "", telegramUsername: "" })
+  const [connectForm, setConnectForm] = useState({ githubUsername: "", trelloUsername: "" })
   const [connectSubmitting, setConnectSubmitting] = useState(false)
   const [connectError, setConnectError] = useState("")
   const [connectSuccess, setConnectSuccess] = useState("")
@@ -161,7 +159,6 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
       setConnectForm({
         githubUsername: data.githubUsername ?? "",
         trelloUsername: data.trelloUsername ?? "",
-        telegramUsername: data.telegramUsername ?? "",
       })
     } catch {
       // silently fail
@@ -187,15 +184,12 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
     try {
       const hasExisting =
         connectedAccounts?.githubUsername ||
-        connectedAccounts?.trelloUsername ||
-        connectedAccounts?.telegramUsername
+        connectedAccounts?.trelloUsername
       const body: Record<string, string | null> = {}
       const g = connectForm.githubUsername.trim()
       const t = connectForm.trelloUsername.trim()
-      const tg = connectForm.telegramUsername.trim()
       body.githubUsername = g || null
       body.trelloUsername = t || null
-      body.telegramUsername = tg || null
 
       const res = await fetch("/api/employee/me/connected-accounts", {
         method: "PATCH",
@@ -686,22 +680,8 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
                   className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="connect-telegram" className="text-zinc-200">
-                  {pick(lang, t.telegramUsername)}
-                </Label>
-                <Input
-                  id="connect-telegram"
-                  placeholder="e.g. serdesiyont (without @)"
-                  value={connectForm.telegramUsername}
-                  onChange={(e) =>
-                    setConnectForm((prev) => ({ ...prev, telegramUsername: e.target.value }))
-                  }
-                  className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
-                />
-              </div>
 
-              {connectedAccounts && (connectedAccounts.githubUsername || connectedAccounts.trelloUsername || connectedAccounts.telegramUsername) && (
+              {connectedAccounts && (connectedAccounts.githubUsername || connectedAccounts.trelloUsername) && (
                 <p className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-sm text-amber-400">
                   {pick(lang, t.connectWarn)}
                 </p>
@@ -724,7 +704,7 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
                   disabled={connectSubmitting}
                   className="flex-1 bg-[#e78a53] text-white hover:bg-[#e78a53]/90"
                 >
-                  {connectSubmitting ? pick(lang, t.saving) : connectedAccounts && (connectedAccounts.githubUsername || connectedAccounts.trelloUsername || connectedAccounts.telegramUsername) ? pick(lang, t.update) : pick(lang, t.connect)}
+                  {connectSubmitting ? pick(lang, t.saving) : connectedAccounts && (connectedAccounts.githubUsername || connectedAccounts.trelloUsername) ? pick(lang, t.update) : pick(lang, t.connect)}
                 </Button>
                 <Button
                   type="button"

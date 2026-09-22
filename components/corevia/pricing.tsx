@@ -40,7 +40,7 @@ const plans: Plan[] = [
       "Performance & peer reviews",
       "Payments & payroll tracking",
       "AI applicant overviews",
-      "GitHub, Trello & Telegram insights",
+      "GitHub & Trello insights",
       "Priority support",
     ],
   },

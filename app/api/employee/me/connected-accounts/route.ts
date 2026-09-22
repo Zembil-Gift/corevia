@@ -43,7 +43,6 @@ export async function PATCH(request: NextRequest) {
     const payload: Record<string, string | null> = {}
     if (body.githubUsername !== undefined) payload.githubUsername = body.githubUsername
     if (body.trelloUsername !== undefined) payload.trelloUsername = body.trelloUsername
-    if (body.telegramUsername !== undefined) payload.telegramUsername = body.telegramUsername
 
     const res = await fetch(`${CMS_BASE_URL}/employee/me/connected-accounts`, {
       method: "PATCH",

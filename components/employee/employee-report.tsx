@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { GithubEmployeeReportResponse } from "@/lib/github-stats-api";
-import type { TelegramSupportReportResponse } from "@/lib/telegram-support-api";
 import type { TrelloEmployeeReportResponse } from "@/lib/trello-stats-api";
 import type {
   EmployeeMetricSummaryResponse,
@@ -49,38 +48,6 @@ const formatMinutes = (minutes: number | null | undefined) => {
   return `${hrs}h ${mins}m`;
 };
 
-const formatDurationMs = (value: number | null | undefined) => {
-  if (typeof value !== "number" || !Number.isFinite(value)) return "—";
-  const totalMinutes = Math.floor(value / 60000);
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  if (hours > 0) return `${hours}h ${minutes}m`;
-  return `${minutes}m`;
-};
-
-const emptyTelegramReport: TelegramSupportReportResponse = {
-  employeeId: 0,
-  employeeName: "",
-  telegramUsername: "",
-  totals: {
-    pending: 0,
-    inProgress: 0,
-    resolved: 0,
-    total: 0,
-  },
-  averages: {
-    msFromFirstStatusChangeToResolved: 0,
-    msFromCreatedAtToResolved: 0,
-  },
-  countsByIssueType: [],
-  recentTickets: [],
-};
-
-const isMissingTelegramUsername = (message: string) => {
-  const normalized = message.toLowerCase();
-  return normalized.includes("telegram") && normalized.includes("not set");
-};
-
 export function EmployeeReport() {
   const [reportMonth, setReportMonth] = useState(getCurrentUTCMonth);
   const { periodStart, periodEnd } = useMemo(
@@ -107,22 +74,15 @@ export function EmployeeReport() {
   const [trelloReport, setTrelloReport] =
     useState<TrelloEmployeeReportResponse | null>(null);
 
-  const [telegramLoading, setTelegramLoading] = useState(false);
-  const [telegramError, setTelegramError] = useState("");
-  const [telegramReport, setTelegramReport] =
-    useState<TelegramSupportReportResponse | null>(null);
-
   const [peerReviewScore, setPeerReviewScore] = useState<number | null | undefined>(undefined);
   const [peerReviewScoreLoading, setPeerReviewScoreLoading] = useState(false);
 
   const [connectedAccounts, setConnectedAccounts] = useState<{
     githubUsername?: string | null
     trelloUsername?: string | null
-    telegramUsername?: string | null
   } | null>(null);
   const hasGithub = !!connectedAccounts?.githubUsername
   const hasTrello = !!connectedAccounts?.trelloUsername
-  const hasTelegram = !!connectedAccounts?.telegramUsername
 
   const fetchConnectedAccounts = useCallback(async () => {
     try {
@@ -134,16 +94,6 @@ export function EmployeeReport() {
       // silently fail
     }
   }, []);
-
-  const telegramRange = useMemo(() => {
-    if (!periodStart || !periodEnd) return null;
-    return {
-      from: `${periodStart}T00:00:00.000Z`,
-      to: `${periodEnd}T23:59:59.999Z`,
-    };
-  }, [periodEnd, periodStart]);
-  const telegramErrorToShow =
-    telegramError && !isMissingTelegramUsername(telegramError) ? telegramError : "";
 
   const loadReport = useCallback(
     async (persistSnapshot: boolean = false) => {
@@ -259,45 +209,6 @@ export function EmployeeReport() {
     }
   }, []);
 
-  const loadTelegramReport = useCallback(async () => {
-    if (!telegramRange) {
-      setTelegramError("Select a month to load Telegram support stats.");
-      return;
-    }
-    setTelegramLoading(true);
-    setTelegramError("");
-    try {
-      const params = new URLSearchParams();
-      params.set("from", telegramRange.from);
-      params.set("to", telegramRange.to);
-      const res = await fetch(
-        `/api/employee/me/telegram/support/report?${params.toString()}`,
-      );
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        const errorMessage =
-          (data as { error?: string }).error ??
-          "Failed to load Telegram support stats";
-        if (res.status === 400) {
-          setTelegramReport(emptyTelegramReport);
-          setTelegramError("");
-          return;
-        }
-        throw new Error(errorMessage);
-      }
-      setTelegramReport(data as TelegramSupportReportResponse);
-    } catch (err) {
-      const message =
-        err instanceof Error
-          ? err.message
-          : "Failed to load Telegram support stats";
-      setTelegramError(message);
-      setTelegramReport(null);
-    } finally {
-      setTelegramLoading(false);
-    }
-  }, [telegramRange]);
-
   const loadPeerReviewLeadershipScore = useCallback(async () => {
     if (!periodStart || !periodEnd) {
       setPeerReviewScore(undefined);
@@ -364,10 +275,6 @@ export function EmployeeReport() {
   useEffect(() => {
     if (hasTrello) loadTrelloReport()
   }, [loadTrelloReport, hasTrello]);
-
-  useEffect(() => {
-    if (hasTelegram) loadTelegramReport()
-  }, [loadTelegramReport, hasTelegram]);
 
   useEffect(() => {
     loadPeerReviewLeadershipScore();
@@ -482,7 +389,7 @@ export function EmployeeReport() {
       ) : summary ? (
         <section className="grid gap-4 lg:grid-cols-[2fr_1fr]">
           <div className="space-y-4">
-            <div className="grid gap-4  lg:grid-cols-4">
+            <div className="grid gap-4  lg:grid-cols-3">
               {renderScoreCard("Overall", summary.overallScore)}
               {/*{renderScoreCard("Leadership", peerReviewScoreLoading ? summary.leadershipScore : (peerReviewScore ?? summary.leadershipScore))}*/}
               {renderScoreCard("Attendance", summary.attendanceScore)}
@@ -491,14 +398,6 @@ export function EmployeeReport() {
                 <p className="text-xs uppercase tracking-wide text-zinc-500">Task</p>
                 <p className="mt-2 text-2xl font-semibold text-white">
                   {summary.taskScore}
-                </p>
-                {/*<p className="mt-1 text-xs text-zinc-500">Resolved tickets</p>*/}
-              </div>
-
-              <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-4">
-                <p className="text-xs uppercase tracking-wide text-zinc-500">Support</p>
-                <p className="mt-2 text-2xl font-semibold text-white">
-                  {telegramReport?.totals?.resolved ?? "—"}
                 </p>
                 {/*<p className="mt-1 text-xs text-zinc-500">Resolved tickets</p>*/}
               </div>
@@ -629,113 +528,6 @@ export function EmployeeReport() {
           ) : (
             <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-6 text-sm text-zinc-500">
               GitHub stats are not available for your account.
-            </div>
-          )}
-        </section>
-      ) : null}
-
-      {hasTelegram ? (
-        <section className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-6">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h3 className="text-base font-semibold text-white">
-                Telegram Support
-              </h3>
-              <p className="text-sm text-zinc-400">
-                Ticket totals and resolution timing.
-              </p>
-              {telegramReport?.telegramUsername && (
-                <p className="text-xs text-zinc-500">
-                  @{telegramReport.telegramUsername}
-                </p>
-              )}
-            </div>
-            <Button
-              size="sm"
-              variant="outline"
-              className="border-zinc-700 text-zinc-200 hover:bg-zinc-800"
-              onClick={loadTelegramReport}
-              disabled={telegramLoading}
-            >
-              {telegramLoading ? (
-                <Loader2 className="mr-2 size-4 animate-spin" />
-              ) : (
-                <RefreshCw className="mr-2 size-4" />
-              )}
-              Reload
-            </Button>
-          </div>
-
-          {telegramErrorToShow && (
-            <p className="mb-3 text-sm text-red-400">{telegramErrorToShow}</p>
-          )}
-
-          {telegramLoading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="size-7 animate-spin text-[#e78a53]" />
-            </div>
-          ) : telegramReport ? (
-            <>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-4">
-                  <p className="text-xs uppercase tracking-wide text-zinc-500">
-                    Pending
-                  </p>
-                  <p className="mt-2 text-2xl font-semibold text-white">
-                    {telegramReport.totals.pending}
-                  </p>
-                </div>
-                <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-4">
-                  <p className="text-xs uppercase tracking-wide text-zinc-500">
-                    In Progress
-                  </p>
-                  <p className="mt-2 text-2xl font-semibold text-white">
-                    {telegramReport.totals.inProgress}
-                  </p>
-                </div>
-                <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-4">
-                  <p className="text-xs uppercase tracking-wide text-zinc-500">
-                    Resolved
-                  </p>
-                  <p className="mt-2 text-2xl font-semibold text-white">
-                    {telegramReport.totals.resolved}
-                  </p>
-                </div>
-                <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-4">
-                  <p className="text-xs uppercase tracking-wide text-zinc-500">
-                    Total
-                  </p>
-                  <p className="mt-2 text-2xl font-semibold text-white">
-                    {telegramReport.totals.total}
-                  </p>
-                </div>
-              </div>
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-4">
-                  <p className="text-xs uppercase tracking-wide text-zinc-500">
-                    First Status → Resolved
-                  </p>
-                  <p className="mt-2 text-xl font-semibold text-white">
-                    {formatDurationMs(
-                      telegramReport.averages.msFromFirstStatusChangeToResolved,
-                    )}
-                  </p>
-                </div>
-                <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-4">
-                  <p className="text-xs uppercase tracking-wide text-zinc-500">
-                    Created → Resolved
-                  </p>
-                  <p className="mt-2 text-xl font-semibold text-white">
-                    {formatDurationMs(
-                      telegramReport.averages.msFromCreatedAtToResolved,
-                    )}
-                  </p>
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-6 text-sm text-zinc-500">
-              Telegram support stats are not available for your account.
             </div>
           )}
         </section>
