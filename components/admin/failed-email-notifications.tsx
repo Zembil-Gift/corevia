@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import type { FailedEmailNotificationsResponse } from "@/lib/job-applications-api"
+import type { FailedEmailNotificationsResponse, PageMetaApi } from "@/lib/job-applications-api"
 
 export function FailedEmailNotifications() {
   const [loading, setLoading] = useState(true)
@@ -31,10 +31,17 @@ export function FailedEmailNotifications() {
         const body = await res.json().catch(() => ({}))
         throw new Error((body as { error?: string }).error ?? "Failed to load failed notifications")
       }
-      const payload = (await res.json()) as FailedEmailNotificationsResponse
+      // The API returns a plain Spring Page (paging fields at the top level); `page` is the
+      // newer PagedModel shape, kept as a fallback.
+      const payload = (await res.json()) as Partial<FailedEmailNotificationsResponse> & Partial<PageMetaApi>
       setData({
         content: Array.isArray(payload.content) ? payload.content : [],
-        page: payload.page ?? { size: 10, number: page, totalElements: 0, totalPages: 0 },
+        page: payload.page ?? {
+          size: payload.size ?? 10,
+          number: payload.number ?? page,
+          totalElements: payload.totalElements ?? 0,
+          totalPages: payload.totalPages ?? 0,
+        },
       })
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load failed notifications")

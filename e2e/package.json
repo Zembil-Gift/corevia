@@ -1,0 +1,13 @@
+{
+  "name": "corevia-e2e",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "report": "playwright show-report .report"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@types/node": "^22",
+    "typescript": "^5.9.3"
+  }
+}

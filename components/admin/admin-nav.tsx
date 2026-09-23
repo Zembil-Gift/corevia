@@ -60,7 +60,9 @@ export function AdminNav({ onNavigate }: { onNavigate?: () => void }) {
   const navItems = isVice ? allNavItems.filter((i) => !i.managerOnly) : allNavItems
 
   return (
-    <nav className="flex flex-1 flex-col gap-1 p-3">
+    <nav className="flex min-h-0 flex-1 flex-col p-3">
+      {/* Links scroll on short screens so the language toggle and Log out stay reachable. */}
+      <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
       {navItems.map((item) => {
         const isActive =
           pathname === item.href || (item.href !== "/manager" && pathname.startsWith(item.href))
@@ -81,7 +83,8 @@ export function AdminNav({ onNavigate }: { onNavigate?: () => void }) {
           </Link>
         )
       })}
-      <div className="mt-auto flex flex-col gap-2 border-t border-zinc-800 pt-3">
+      </div>
+      <div className="mt-3 flex shrink-0 flex-col gap-2 border-t border-zinc-800 pt-3">
         <LangToggle className="self-start" />
         <Button
           variant="ghost"

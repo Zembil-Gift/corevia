@@ -43,7 +43,8 @@ export async function POST(
       salaryAmountMinor: Math.trunc(salaryAmountMinor),
       department: job?.department ?? null,
       employmentStatus: job?.employmentType ?? null,
-      subOrganizationId: typeof body.subOrganizationId === "number" ? body.subOrganizationId : (job?.subOrganizationId ?? null),
+      // null → the backend places the hire in the main sub-organization
+      subOrganizationId: typeof body.subOrganizationId === "number" ? body.subOrganizationId : null,
     }
 
     if (!Number.isFinite(payload.applicationId) || payload.applicationId <= 0) {

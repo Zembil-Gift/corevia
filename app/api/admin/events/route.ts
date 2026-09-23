@@ -66,7 +66,6 @@ export async function POST(request: NextRequest) {
       registrationUrl: typeof body.registrationUrl === "string" ? body.registrationUrl : "",
       coverImageUrl: typeof body.coverImageUrl === "string" ? body.coverImageUrl : "",
       status: normalizeStatus(body.status),
-      subOrganizationId: typeof body.subOrganizationId === "number" ? body.subOrganizationId : null,
     }
 
     const res = await cmsFetch(token, `${CMS_BASE_URL}/manager/events`, {

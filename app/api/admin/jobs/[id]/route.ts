@@ -45,7 +45,11 @@ export async function PUT(
       location: typeof body.location === "string" ? body.location : "",
       description: typeof body.description === "string" ? body.description : "",
       status: normalizeStatus(body.status),
-      subOrganizationId: typeof body.subOrganizationId === "number" ? body.subOrganizationId : null,
+      experienceLevel: typeof body.experienceLevel === "string" ? body.experienceLevel : null,
+      salaryRange: typeof body.salaryRange === "string" ? body.salaryRange : null,
+      applicationDeadline: typeof body.applicationDeadline === "string" ? body.applicationDeadline : null,
+      // Shape is validated by the backend (JobApplicationFormService).
+      applicationFields: Array.isArray(body.applicationFields) ? body.applicationFields : [],
     }
 
     const res = await cmsFetch(token, `${CMS_BASE_URL}/manager/jobs/${encodeURIComponent(id)}`, {

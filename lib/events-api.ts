@@ -16,8 +16,6 @@ export interface EventApi {
   registrationUrl: string
   coverImageUrl?: string
   status: EventStatusApi
-  subOrganizationId?: number | null
-  subOrganizationName?: string | null
 }
 
 export interface EventListResponse {

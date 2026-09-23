@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import * as Dialog from "@radix-ui/react-dialog"
-import { ShieldCheck, Loader2, X, Copy, Check } from "lucide-react"
+import { ShieldCheck, Loader2, X, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -26,8 +26,8 @@ export function CreateViceManagerModal({
   const [subOrganizationId, setSubOrganizationId] = useState<number | "">("")
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
-  const [createdResult, setCreatedResult] = useState<{ email: string; temporaryPassword?: string } | null>(null)
-  const [copied, setCopied] = useState(false)
+  // The API emails the generated password; it is never returned to the browser.
+  const [createdResult, setCreatedResult] = useState<{ email: string } | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -55,10 +55,7 @@ export function CreateViceManagerModal({
         throw new Error(data.error ?? "Failed to create vice manager")
       }
 
-      setCreatedResult({
-        email: email.trim(),
-        temporaryPassword: data.temporaryPassword,
-      })
+      setCreatedResult({ email: email.trim() })
       onSuccess?.()
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create vice manager")
@@ -76,16 +73,7 @@ export function CreateViceManagerModal({
       setSubOrganizationId("")
       setError("")
       setCreatedResult(null)
-      setCopied(false)
     }, 200)
-  }
-
-  const handleCopyPassword = () => {
-    if (createdResult?.temporaryPassword) {
-      navigator.clipboard.writeText(createdResult.temporaryPassword)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    }
   }
 
   return (
@@ -119,27 +107,6 @@ export function CreateViceManagerModal({
                   An email with login instructions has been sent to {createdResult.email}.
                 </p>
               </div>
-
-              {createdResult.temporaryPassword && (
-                <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-3 space-y-1">
-                  <Label className="text-xs text-zinc-400">Generated Password</Label>
-                  <div className="flex items-center justify-between gap-2">
-                    <code className="text-sm font-mono text-zinc-100 bg-zinc-950 px-2 py-1 rounded border border-zinc-800">
-                      {createdResult.temporaryPassword}
-                    </code>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={handleCopyPassword}
-                      className="border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs"
-                    >
-                      {copied ? <Check className="h-3.5 w-3.5 mr-1 text-emerald-400" /> : <Copy className="h-3.5 w-3.5 mr-1" />}
-                      {copied ? "Copied" : "Copy"}
-                    </Button>
-                  </div>
-                </div>
-              )}
 
               <div className="flex justify-end pt-2">
                 <Button

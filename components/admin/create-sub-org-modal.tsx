@@ -8,6 +8,17 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { MapLocationPicker } from "@/components/admin/map-location-picker"
 
+const DEFAULTS = {
+  lat: 9.0105,
+  lng: 38.7612,
+  geoRadiusM: 500,
+  officeStartTime: "08:30",
+  officeEndTime: "17:30",
+  graceMinutes: "15",
+  lunchBreakStart: "12:00",
+  lunchBreakEnd: "13:00",
+}
+
 interface CreateSubOrgModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -21,16 +32,36 @@ export function CreateSubOrgModal({
 }: CreateSubOrgModalProps) {
   const [name, setName] = useState("")
   const [location, setLocation] = useState("")
-  const [lat, setLat] = useState<number | null>(9.0105)
-  const [lng, setLng] = useState<number | null>(38.7612)
-  const [geoRadiusM, setGeoRadiusM] = useState<number>(500)
-  const [officeStartTime, setOfficeStartTime] = useState("08:30")
-  const [officeEndTime, setOfficeEndTime] = useState("17:30")
-  const [graceMinutes, setGraceMinutes] = useState("15")
-  const [lunchBreakStart, setLunchBreakStart] = useState("12:00")
-  const [lunchBreakEnd, setLunchBreakEnd] = useState("13:00")
+  const [lat, setLat] = useState<number | null>(DEFAULTS.lat)
+  const [lng, setLng] = useState<number | null>(DEFAULTS.lng)
+  const [geoRadiusM, setGeoRadiusM] = useState<number>(DEFAULTS.geoRadiusM)
+  const [officeStartTime, setOfficeStartTime] = useState(DEFAULTS.officeStartTime)
+  const [officeEndTime, setOfficeEndTime] = useState(DEFAULTS.officeEndTime)
+  const [graceMinutes, setGraceMinutes] = useState(DEFAULTS.graceMinutes)
+  const [lunchBreakStart, setLunchBreakStart] = useState(DEFAULTS.lunchBreakStart)
+  const [lunchBreakEnd, setLunchBreakEnd] = useState(DEFAULTS.lunchBreakEnd)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
+
+  // Every close (create, cancel, X) starts the next branch from the defaults, not the last one's values.
+  const resetForm = () => {
+    setName("")
+    setLocation("")
+    setLat(DEFAULTS.lat)
+    setLng(DEFAULTS.lng)
+    setGeoRadiusM(DEFAULTS.geoRadiusM)
+    setOfficeStartTime(DEFAULTS.officeStartTime)
+    setOfficeEndTime(DEFAULTS.officeEndTime)
+    setGraceMinutes(DEFAULTS.graceMinutes)
+    setLunchBreakStart(DEFAULTS.lunchBreakStart)
+    setLunchBreakEnd(DEFAULTS.lunchBreakEnd)
+    setError("")
+  }
+
+  const handleOpenChange = (next: boolean) => {
+    if (!next && !submitting) resetForm()
+    onOpenChange(next)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -68,11 +99,8 @@ export function CreateSubOrgModal({
       }
 
       onSuccess?.()
+      resetForm()
       onOpenChange(false)
-      // reset
-      setName("")
-      setLocation("")
-      setError("")
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create sub-organization")
     } finally {
@@ -81,7 +109,7 @@ export function CreateSubOrgModal({
   }
 
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+    <Dialog.Root open={open} onOpenChange={handleOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm animate-in fade-in" />
         <Dialog.Content
@@ -223,7 +251,7 @@ export function CreateSubOrgModal({
               <Button
                 type="button"
                 variant="ghost"
-                onClick={() => onOpenChange(false)}
+                onClick={() => handleOpenChange(false)}
                 className="text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
               >
                 Cancel

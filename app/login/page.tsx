@@ -66,7 +66,9 @@ export default function LoginPage() {
       }
       const prefix = role === "platform" ? "/platform" : role === "employee" ? "/employee" : "/manager"
       const isRoleMatchingCallback = typeof callbackUrl === "string" && callbackUrl.startsWith(prefix)
-      window.location.href = isRoleMatchingCallback ? callbackUrl : prefix
+      // Employees land on their reports page directly instead of hopping through /employee's redirect.
+      const home = role === "employee" ? "/employee/reports" : prefix
+      window.location.href = isRoleMatchingCallback ? callbackUrl : home
       return
     } catch {
       setError(pick(lang, copy.wrong))

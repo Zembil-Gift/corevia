@@ -83,7 +83,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL(redirectTarget, request.url))
     }
     const redirectTarget =
-      callbackUrl && callbackUrl.startsWith(EMPLOYEE_PREFIX) ? callbackUrl : EMPLOYEE_PREFIX
+      callbackUrl && callbackUrl.startsWith(EMPLOYEE_PREFIX) ? callbackUrl : `${EMPLOYEE_PREFIX}/reports`
     return NextResponse.redirect(new URL(redirectTarget, request.url))
   }
 

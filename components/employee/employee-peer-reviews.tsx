@@ -326,7 +326,9 @@ export function EmployeePeerReviews({ view = "new" }: EmployeePeerReviewsProps) 
       if (!res.ok) {
         throw new Error((data as { error?: string }).error ?? "Failed to load admin feedback")
       }
-      setAdminReview(data as AdminPeerReviewResponse)
+      const review = data as AdminPeerReviewResponse
+      // No feedback yet comes back as an empty review (id null) — show the empty state.
+      setAdminReview(review.id ? review : null)
     } catch (err) {
       setAdminReviewError(err instanceof Error ? err.message : "Failed to load admin feedback")
       setAdminReview(null)

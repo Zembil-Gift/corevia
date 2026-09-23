@@ -10,9 +10,11 @@ const TARGETS: Record<string, string> = {
   logo: "/manager/org/logo",
   cover: "/manager/org/cover",
   "email-logo": "/manager/email-templates/logo",
+  "blog-cover": "/manager/blogs/cover-image",
+  "event-cover": "/manager/events/cover-image",
 }
 
-// POST a company logo, cover image or email logo (multipart). Forwards to the matching TARGETS path.
+// POST a company logo, cover image, email logo or blog/event cover (multipart). Forwards to the matching TARGETS path.
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ target: string }> }

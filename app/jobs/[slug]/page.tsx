@@ -3,9 +3,10 @@ import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import { ArrowLeft, MapPin } from "lucide-react"
 import Image from "next/image"
-import { fetchJobBySlug, formatJobEmploymentType } from "@/lib/jobs-api"
+import { fetchJobBySlug, formatJobEmploymentType, isJobOpen } from "@/lib/jobs-api"
 import { Footer } from "@/components/afrodebab/footer"
 import { JobDetailApply } from "@/components/jobs/job-detail-apply"
+import { JobFacts } from "@/components/jobs/job-facts"
 
 interface JobDetailPageProps {
   params: Promise<{ slug: string }>
@@ -27,7 +28,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
   const { slug } = await params
   const job = await fetchJobBySlug(slug)
 
-  if (!job || job.status !== "OPEN") {
+  if (!job || !isJobOpen(job)) {
     notFound()
   }
 
@@ -86,6 +87,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
                 {job.location}
               </span>
             </div>
+            <JobFacts job={job} className="mt-3" />
           </header>
 
           <div className="prose prose-neutral dark:prose-invert max-w-none">
@@ -97,7 +99,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
             </p>
           </div>
 
-          <JobDetailApply jobTitle={job.title} jobId={job.id} />
+          <JobDetailApply jobTitle={job.title} jobId={job.id} fields={job.applicationFields} />
         </article>
       </main>
 

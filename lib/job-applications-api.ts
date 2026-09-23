@@ -17,6 +17,16 @@ export interface JobApplicationApi {
   hiredEmployeeId: number | null
   createdAt: string
   updatedAt: string
+  answers?: ApplicationAnswerApi[]
+}
+
+/** Answer to one of the job's custom form fields; value is the text, the link, or the uploaded file's URL. */
+export interface ApplicationAnswerApi {
+  fieldId: string
+  label: string
+  type: "LINK" | "FILE" | "TEXT"
+  value: string
+  fileName?: string | null
 }
 
 export type AiOverviewStatus = "PENDING" | "COMPLETED" | "FAILED"

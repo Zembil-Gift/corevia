@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label"
 import { useLang, pick } from "@/lib/i18n"
 import { a } from "@/lib/i18n-admin"
 import type { EventTypeApi, EventStatusApi } from "@/lib/events-api"
-import type { SubOrganization } from "@/lib/sub-orgs-api"
 import { ImageUpload } from "@/components/admin/image-upload"
 
 const EVENT_TYPES: EventTypeApi[] = ["ONLINE", "IN_PERSON"]
@@ -17,8 +16,6 @@ const STATUS_OPTIONS: EventStatusApi[] = ["DRAFT", "PUBLISHED"]
 
 const c = {
   createEvent: { en: "Create event", am: "ዝግጅት ፍጠር" },
-  subOrg: { en: "Sub-Organization / Branch", am: "ቅርንጫፍ" },
-  allBranches: { en: "All / Organization-wide", am: "ሁሉም / አጠቃላይ" },
   titlePlaceholder: { en: "Event title", am: "የዝግጅት ርዕስ" },
   descPlaceholder: { en: "Event description...", am: "የዝግጅት መግለጫ..." },
   eventType: { en: "Event type", am: "የዝግጅት አይነት" },
@@ -49,8 +46,6 @@ export function CreateEventModal({
   onSuccess,
 }: CreateEventModalProps) {
   const { lang } = useLang()
-  const [subOrgs, setSubOrgs] = useState<SubOrganization[]>([])
-  const [subOrganizationId, setSubOrganizationId] = useState<number | "">("")
   const [title, setTitle] = useState("")
   const [slug, setSlug] = useState("")
   const [description, setDescription] = useState("")
@@ -63,17 +58,6 @@ export function CreateEventModal({
   const [status, setStatus] = useState<EventStatusApi>("DRAFT")
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
-
-  useEffect(() => {
-    if (open) {
-      fetch("/api/admin/sub-organizations")
-        .then((res) => res.json())
-        .then((data) => {
-          if (Array.isArray(data)) setSubOrgs(data)
-        })
-        .catch(() => {})
-    }
-  }, [open])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -94,7 +78,6 @@ export function CreateEventModal({
           registrationUrl: registrationUrl.trim(),
           coverImageUrl: coverImageUrl.trim(),
           status,
-          subOrganizationId: subOrganizationId ? Number(subOrganizationId) : null,
         }),
       })
       const data = await res.json().catch(() => ({}))
@@ -178,6 +161,7 @@ export function CreateEventModal({
               <Label htmlFor="event-description" className="text-zinc-200">{pick(lang, a.description)}</Label>
               <textarea
                 id="event-description"
+                required
                 rows={3}
                 placeholder={pick(lang, c.descPlaceholder)}
                 value={description}
@@ -244,24 +228,8 @@ export function CreateEventModal({
                 className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
               />
             </div>
-            <ImageUpload value={coverImageUrl} onChange={setCoverImageUrl} />
+            <ImageUpload target="event-cover" value={coverImageUrl} onChange={setCoverImageUrl} />
 
-            <div className="space-y-2">
-              <Label htmlFor="event-sub-org" className="text-zinc-200">{pick(lang, c.subOrg)}</Label>
-              <select
-                id="event-sub-org"
-                value={subOrganizationId}
-                onChange={(e) => setSubOrganizationId(e.target.value ? Number(e.target.value) : "")}
-                className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white focus:border-[#e78a53] focus:outline-none focus:ring-1 focus:ring-[#e78a53]/20"
-              >
-                <option value="">{pick(lang, c.allBranches)}</option>
-                {subOrgs.map((org) => (
-                  <option key={org.id} value={org.id}>
-                    {org.name} {org.isDefault ? "(Main)" : ""}
-                  </option>
-                ))}
-              </select>
-            </div>
 
             <div className="space-y-2">
               <Label htmlFor="event-status" className="text-zinc-200">{pick(lang, a.status)}</Label>

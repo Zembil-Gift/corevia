@@ -23,6 +23,7 @@ const c = {
     am: "ጠቅላላ ደመወዝ ያስገቡ። የገቢ ግብር እና ጡረታ በራስ-ሰር ይቀነሳሉ።",
   },
   scheduleDays: { en: "Office schedule days", am: "የቢሮ የስራ ቀናት" },
+  daysRequired: { en: "Select at least one office day", am: "ቢያንስ አንድ የቢሮ ቀን ይምረጡ" },
   invalidSalary: { en: "Salary amount must be a valid non-negative number", am: "የደመወዝ መጠን ትክክለኛ አሉታዊ ያልሆነ ቁጥር መሆን አለበት" },
   failed: { en: "Failed to create employee", am: "ሰራተኛ መፍጠር አልተሳካም" },
 }
@@ -77,6 +78,10 @@ export function CreateEmployeeModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+    if (salaryScheduleDays.length === 0) {
+      setError(pick(lang, c.daysRequired))
+      return
+    }
     setSubmitting(true)
     try {
       const formData = new FormData()
@@ -269,7 +274,9 @@ export function CreateEmployeeModal({
               </div>
             </div>
             <div className="space-y-2">
-              <Label className="text-zinc-200">{pick(lang, c.scheduleDays)}</Label>
+              <Label className="text-zinc-200">
+                {pick(lang, c.scheduleDays)} <span className="text-red-400">*</span>
+              </Label>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {DAY_OF_WEEK_VALUES.map((day) => (
                   <label key={day} className="flex items-center gap-2 rounded-md border border-zinc-700 px-2 py-1.5 text-sm">

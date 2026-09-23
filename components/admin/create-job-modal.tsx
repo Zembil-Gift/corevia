@@ -9,15 +9,13 @@ import { Label } from "@/components/ui/label"
 import { useLang, pick } from "@/lib/i18n"
 import { a } from "@/lib/i18n-admin"
 import type { JobEmploymentTypeApi, JobStatusApi } from "@/lib/jobs-api"
-import { JOB_EMPLOYMENT_TYPES, formatJobEmploymentType } from "@/lib/jobs-api"
-import type { SubOrganization } from "@/lib/sub-orgs-api"
+import { EXPERIENCE_LEVELS, JOB_EMPLOYMENT_TYPES, formatJobEmploymentType, type ApplicationField } from "@/lib/jobs-api"
+import { ApplicationFieldsBuilder, validateApplicationFields } from "@/components/admin/application-fields-builder"
 
 const STATUS_OPTIONS: JobStatusApi[] = ["DRAFT", "OPEN", "CLOSED"]
 
 const c = {
   createJob: { en: "Create job", am: "ስራ ፍጠር" },
-  subOrg: { en: "Sub-Organization / Branch", am: "ቅርንጫፍ" },
-  allBranches: { en: "All / Organization-wide", am: "ሁሉም / አጠቃላይ" },
   titlePlaceholder: { en: "Job title", am: "የስራ ርዕስ" },
   deptPlaceholder: { en: "e.g. Engineering", am: "ለምሳሌ ኢንጂነሪንግ" },
   locationPlaceholder: { en: "e.g. Remote", am: "ለምሳሌ ከርቀት" },
@@ -37,8 +35,6 @@ export function CreateJobModal({
   onSuccess,
 }: CreateJobModalProps) {
   const { lang } = useLang()
-  const [subOrgs, setSubOrgs] = useState<SubOrganization[]>([])
-  const [subOrganizationId, setSubOrganizationId] = useState<number | "">("")
   const [title, setTitle] = useState("")
   const [slug, setSlug] = useState("")
   const [department, setDepartment] = useState("")
@@ -46,23 +42,21 @@ export function CreateJobModal({
   const [location, setLocation] = useState("")
   const [description, setDescription] = useState("")
   const [status, setStatus] = useState<JobStatusApi>("DRAFT")
+  const [experienceLevel, setExperienceLevel] = useState("")
+  const [salaryRange, setSalaryRange] = useState("")
+  const [applicationDeadline, setApplicationDeadline] = useState("")
+  const [applicationFields, setApplicationFields] = useState<ApplicationField[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
-
-  useEffect(() => {
-    if (open) {
-      fetch("/api/admin/sub-organizations")
-        .then((res) => res.json())
-        .then((data) => {
-          if (Array.isArray(data)) setSubOrgs(data)
-        })
-        .catch(() => {})
-    }
-  }, [open])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+    const fieldsError = validateApplicationFields(applicationFields)
+    if (fieldsError) {
+      setError(fieldsError)
+      return
+    }
     setSubmitting(true)
     try {
       const res = await fetch("/api/admin/jobs", {
@@ -76,7 +70,14 @@ export function CreateJobModal({
           location: location.trim(),
           description: description.trim(),
           status,
-          subOrganizationId: subOrganizationId ? Number(subOrganizationId) : null,
+          experienceLevel: experienceLevel || null,
+          salaryRange: salaryRange.trim() || null,
+          applicationDeadline: applicationDeadline || null,
+          applicationFields: applicationFields.map((f) => ({
+            ...f,
+            label: f.label.trim(),
+            helpText: f.helpText?.trim() || null,
+          })),
         }),
       })
       const data = await res.json().catch(() => ({}))
@@ -92,6 +93,10 @@ export function CreateJobModal({
       setLocation("")
       setDescription("")
       setStatus("DRAFT")
+      setExperienceLevel("")
+      setSalaryRange("")
+      setApplicationDeadline("")
+      setApplicationFields([])
       onOpenChange(false)
       onSuccess?.()
     } catch {
@@ -110,7 +115,7 @@ export function CreateJobModal({
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-[10000] bg-black/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
         <Dialog.Content
-          className="fixed left-1/2 top-1/2 z-[10001] w-full max-w-lg -translate-x-1/2 -translate-y-1/2 max-h-[90vh] overflow-y-auto rounded-xl border border-zinc-800 bg-zinc-900 p-6 shadow-xl focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
+          className="fixed left-1/2 top-1/2 z-[10001] w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 max-h-[90vh] overflow-y-auto rounded-xl border border-zinc-800 bg-zinc-900 p-6 shadow-xl focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
           aria-describedby={undefined}
         >
           <div className="flex items-center justify-between mb-6">
@@ -194,6 +199,7 @@ export function CreateJobModal({
               <Label htmlFor="job-description" className="text-zinc-200">{pick(lang, a.description)}</Label>
               <textarea
                 id="job-description"
+                required
                 rows={4}
                 placeholder={pick(lang, c.descPlaceholder)}
                 value={description}
@@ -201,22 +207,45 @@ export function CreateJobModal({
                 className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white placeholder:text-zinc-500 focus:border-[#e78a53] focus:outline-none focus:ring-1 focus:ring-[#e78a53]/20 resize-y min-h-[100px]"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="job-sub-org" className="text-zinc-200">{pick(lang, c.subOrg)}</Label>
-              <select
-                id="job-sub-org"
-                value={subOrganizationId}
-                onChange={(e) => setSubOrganizationId(e.target.value ? Number(e.target.value) : "")}
-                className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white focus:border-[#e78a53] focus:outline-none focus:ring-1 focus:ring-[#e78a53]/20"
-              >
-                <option value="">{pick(lang, c.allBranches)}</option>
-                {subOrgs.map((org) => (
-                  <option key={org.id} value={org.id}>
-                    {org.name} {org.isDefault ? "(Main)" : ""}
-                  </option>
-                ))}
-              </select>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="job-experience" className="text-zinc-200">Experience level</Label>
+                <select
+                  id="job-experience"
+                  value={experienceLevel}
+                  onChange={(e) => setExperienceLevel(e.target.value)}
+                  className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white focus:border-[#e78a53] focus:outline-none focus:ring-1 focus:ring-[#e78a53]/20"
+                >
+                  <option value="">Not specified</option>
+                  {EXPERIENCE_LEVELS.map((l) => (
+                    <option key={l} value={l}>{l}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="job-salary" className="text-zinc-200">Salary range <span className="text-zinc-500">(optional)</span></Label>
+                <Input
+                  id="job-salary"
+                  type="text"
+                  placeholder="e.g. ETB 30,000 – 45,000 / month"
+                  maxLength={120}
+                  value={salaryRange}
+                  onChange={(e) => setSalaryRange(e.target.value)}
+                  className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
+                />
+              </div>
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="job-deadline" className="text-zinc-200">Application deadline <span className="text-zinc-500">(optional, last day to apply)</span></Label>
+              <Input
+                id="job-deadline"
+                type="date"
+                value={applicationDeadline}
+                onChange={(e) => setApplicationDeadline(e.target.value)}
+                className="bg-zinc-800 border-zinc-700 text-white [color-scheme:dark]"
+              />
+            </div>
+            <ApplicationFieldsBuilder value={applicationFields} onChange={setApplicationFields} />
             <div className="space-y-2">
               <Label htmlFor="job-status" className="text-zinc-200">{pick(lang, a.status)}</Label>
               <select

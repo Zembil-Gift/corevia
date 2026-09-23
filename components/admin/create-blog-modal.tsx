@@ -5,16 +5,14 @@ import * as Dialog from "@radix-ui/react-dialog"
 import { X, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { ImageUpload } from "@/components/admin/image-upload"
 import { Label } from "@/components/ui/label"
 import { useLang, pick } from "@/lib/i18n"
 import { a } from "@/lib/i18n-admin"
-import type { SubOrganization } from "@/lib/sub-orgs-api"
 
 const c = {
   createPost: { en: "Create new blog post", am: "አዲስ የብሎግ ጽሁፍ ፍጠር" },
   createPostBtn: { en: "Create post", am: "ጽሁፍ ፍጠር" },
-  subOrg: { en: "Sub-Organization / Branch", am: "ቅርንጫፍ" },
-  allBranches: { en: "All / Organization-wide", am: "ሁሉም / አጠቃላይ" },
   titlePlaceholder: { en: "Post title", am: "የጽሁፍ ርዕስ" },
   excerptPlaceholder: { en: "Short summary...", am: "አጭር ማጠቃለያ..." },
   contentLabel: { en: "Content", am: "ይዘት" },
@@ -35,8 +33,6 @@ export function CreateBlogModal({
   onSuccess,
 }: CreateBlogModalProps) {
   const { lang } = useLang()
-  const [subOrgs, setSubOrgs] = useState<SubOrganization[]>([])
-  const [subOrganizationId, setSubOrganizationId] = useState<number | "">("")
   const [title, setTitle] = useState("")
   const [slug, setSlug] = useState("")
   const [excerpt, setExcerpt] = useState("")
@@ -45,17 +41,6 @@ export function CreateBlogModal({
   const [status, setStatus] = useState<"PUBLISHED" | "DRAFT">("PUBLISHED")
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
-
-  useEffect(() => {
-    if (open) {
-      fetch("/api/admin/sub-organizations")
-        .then((res) => res.json())
-        .then((data) => {
-          if (Array.isArray(data)) setSubOrgs(data)
-        })
-        .catch(() => {})
-    }
-  }, [open])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -72,7 +57,6 @@ export function CreateBlogModal({
           content: content.trim(),
           coverImageUrl: coverImageUrl.trim(),
           status,
-          subOrganizationId: subOrganizationId ? Number(subOrganizationId) : null,
         }),
       })
       const data = await res.json().catch(() => ({}))
@@ -173,6 +157,7 @@ export function CreateBlogModal({
               </Label>
               <textarea
                 id="blog-content"
+                required
                 rows={4}
                 placeholder={pick(lang, c.contentPlaceholder)}
                 value={content}
@@ -180,37 +165,7 @@ export function CreateBlogModal({
                 className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white placeholder:text-zinc-500 focus:border-[#e78a53] focus:outline-none focus:ring-1 focus:ring-[#e78a53]/20 resize-y min-h-[100px]"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="blog-cover" className="text-zinc-200">
-                {pick(lang, c.coverLabel)}
-              </Label>
-              <Input
-                id="blog-cover"
-                type="url"
-                placeholder="https://..."
-                value={coverImageUrl}
-                onChange={(e) => setCoverImageUrl(e.target.value)}
-                className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="blog-sub-org" className="text-zinc-200">
-                {pick(lang, c.subOrg)}
-              </Label>
-              <select
-                id="blog-sub-org"
-                value={subOrganizationId}
-                onChange={(e) => setSubOrganizationId(e.target.value ? Number(e.target.value) : "")}
-                className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-white focus:border-[#e78a53] focus:outline-none focus:ring-1 focus:ring-[#e78a53]/20"
-              >
-                <option value="">{pick(lang, c.allBranches)}</option>
-                {subOrgs.map((org) => (
-                  <option key={org.id} value={org.id}>
-                    {org.name} {org.isDefault ? "(Main)" : ""}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <ImageUpload target="blog-cover" value={coverImageUrl} onChange={setCoverImageUrl} label={pick(lang, c.coverLabel)} />
 
             <div className="space-y-2">
               <Label htmlFor="blog-status" className="text-zinc-200">

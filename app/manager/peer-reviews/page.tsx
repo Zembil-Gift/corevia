@@ -280,7 +280,8 @@ export default function AdminPeerReviewsPage() {
           );
         }
         const review = data as AdminPeerReviewResponse;
-        setAdminReview(review);
+        // No feedback yet comes back as an empty review (id null) — show the empty state.
+        setAdminReview(review.id ? review : null);
         if (review.rating) setAdminReviewRating(review.rating);
         setAdminReviewFeedback(review.feedback ?? "");
       } catch (err) {

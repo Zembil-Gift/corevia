@@ -67,7 +67,6 @@ export async function PUT(
       content: typeof body.content === "string" ? body.content : "",
       coverImageUrl: typeof body.coverImageUrl === "string" ? body.coverImageUrl : "",
       status: body.status === "DRAFT" ? "DRAFT" : "PUBLISHED",
-      subOrganizationId: typeof body.subOrganizationId === "number" ? body.subOrganizationId : null,
     }
 
     const res = await cmsFetch(token, `${CMS_BASE_URL}/manager/blogs/${encodeURIComponent(id)}`, {

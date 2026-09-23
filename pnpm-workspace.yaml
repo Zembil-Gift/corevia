@@ -1,0 +1,4 @@
+allowBuilds:
+  '@tailwindcss/oxide': false
+  inotify: false
+  sharp: false

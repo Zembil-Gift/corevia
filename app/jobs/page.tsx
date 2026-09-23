@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 import {
   formatJobEmploymentType,
+  isJobOpen,
   JOB_EMPLOYMENT_TYPES,
   type JobApi,
   type JobEmploymentTypeApi,
@@ -30,7 +31,7 @@ function filterJobs(
   searchQuery: string,
   employmentFilter: JobEmploymentTypeApi | null
 ): JobApi[] {
-  let result = jobs.filter((j) => j.status === "OPEN")
+  let result = jobs.filter(isJobOpen)
   if (employmentFilter) {
     result = result.filter((j) => j.employmentType === employmentFilter)
   }
@@ -303,6 +304,7 @@ export default function JobsPage() {
         onOpenChange={setApplyModalOpen}
         jobTitle={selectedJob?.title ?? ""}
         jobId={selectedJob?.id ?? null}
+        fields={selectedJob?.applicationFields}
       />
 
       <Footer />

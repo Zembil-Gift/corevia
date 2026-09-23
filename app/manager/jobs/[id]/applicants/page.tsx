@@ -307,8 +307,9 @@ export default function AdminJobApplicantsPage() {
     setHirePosition("")
     setHireSalaryDate("")
     setHireSalaryAmount("")
-    const def = subOrgs.find((s) => s.isDefault)
-    setHireSubOrgId(def ? def.id : (subOrgs[0]?.id ?? ""))
+    // With several sub-orgs the manager picks one (preselected: main); with one, null lets the backend use main.
+    const def = subOrgs.length > 1 ? (subOrgs.find((s) => s.isDefault) ?? subOrgs[0]) : undefined
+    setHireSubOrgId(def?.id ?? "")
   }
 
   const closeHireForm = () => {
@@ -425,8 +426,9 @@ export default function AdminJobApplicantsPage() {
             required
             className="bg-zinc-800 border-zinc-700 text-white"
           />
-          {subOrgs.length > 0 && (
+          {subOrgs.length > 1 && (
             <select
+              aria-label="Sub-organization"
               value={hireSubOrgId}
               onChange={(event) => setHireSubOrgId(event.target.value ? Number(event.target.value) : "")}
               className="h-9 rounded-md border border-zinc-700 bg-zinc-800 px-3 text-sm text-white focus:border-[#e78a53] focus:outline-none"
@@ -526,6 +528,34 @@ export default function AdminJobApplicantsPage() {
                         >
                           View resume
                         </a>
+                      )}
+                      {!!application.answers?.length && (
+                        <details className="mt-2 max-w-sm text-xs">
+                          <summary className="cursor-pointer text-zinc-400 hover:text-white">
+                            Answers ({application.answers.length})
+                          </summary>
+                          <dl className="mt-2 space-y-2">
+                            {application.answers.map((answer) => (
+                              <div key={answer.fieldId}>
+                                <dt className="font-medium text-zinc-300">{answer.label}</dt>
+                                <dd className="text-zinc-400">
+                                  {answer.type === "TEXT" ? (
+                                    <p className="whitespace-pre-wrap break-words">{answer.value}</p>
+                                  ) : (
+                                    <a
+                                      href={answer.value}
+                                      target="_blank"
+                                      rel="noopener noreferrer nofollow"
+                                      className="break-all text-[#e78a53] hover:underline"
+                                    >
+                                      {answer.type === "FILE" ? answer.fileName || "Download file" : answer.value}
+                                    </a>
+                                  )}
+                                </dd>
+                              </div>
+                            ))}
+                          </dl>
+                        </details>
                       )}
                     </td>
                     <td className="px-4 py-3 text-zinc-300">

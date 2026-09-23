@@ -2,7 +2,9 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { ArrowLeft, MapPin, Briefcase } from "lucide-react"
 import { fetchOrgJobBySlug, fetchOrgInfo } from "@/lib/org-content-api"
-import { formatJobEmploymentType } from "@/lib/jobs-api"
+import { formatJobEmploymentType, isJobOpen } from "@/lib/jobs-api"
+import { JobDetailApply } from "@/components/jobs/job-detail-apply"
+import { JobFacts } from "@/components/jobs/job-facts"
 
 export default async function OrgJobDetailPage({
   params,
@@ -42,9 +44,25 @@ export default async function OrgJobDetailPage({
         )}
       </div>
 
+      <JobFacts job={job} className="mt-2" />
+
       <div className="mt-6 whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
         {job.description}
       </div>
+
+      {isJobOpen(job) ? (
+        <JobDetailApply
+          jobTitle={job.title}
+          jobId={job.id}
+          orgSlug={slug}
+          allJobsHref={`/o/${slug}/jobs`}
+          fields={job.applicationFields}
+        />
+      ) : (
+        <p className="mt-12 border-t border-border/50 pt-8 text-sm text-muted-foreground">
+          This role is no longer accepting applications.
+        </p>
+      )}
     </article>
   )
 }

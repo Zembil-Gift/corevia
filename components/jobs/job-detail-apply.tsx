@@ -5,13 +5,17 @@ import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ApplyModal } from "@/components/jobs/apply-modal"
+import type { ApplicationField } from "@/lib/jobs-api"
 
 interface JobDetailApplyProps {
   jobTitle: string
   jobId: number
+  orgSlug?: string
+  allJobsHref?: string
+  fields?: ApplicationField[]
 }
 
-export function JobDetailApply({ jobTitle, jobId }: JobDetailApplyProps) {
+export function JobDetailApply({ jobTitle, jobId, orgSlug, allJobsHref = "/jobs", fields }: JobDetailApplyProps) {
   const [applyModalOpen, setApplyModalOpen] = useState(false)
 
   return (
@@ -21,9 +25,11 @@ export function JobDetailApply({ jobTitle, jobId }: JobDetailApplyProps) {
         onOpenChange={setApplyModalOpen}
         jobTitle={jobTitle}
         jobId={jobId}
+        orgSlug={orgSlug}
+        fields={fields}
       />
       <Link
-        href="/jobs"
+        href={allJobsHref}
         className="inline-flex items-center gap-2 text-primary font-medium hover:underline"
       >
         <ArrowLeft className="size-4" />
