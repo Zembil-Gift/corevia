@@ -54,7 +54,7 @@ const features: Feature[] = [
       body: "የኩባንያዎን መገለጫ በደቂቃዎች ውስጥ ያዋቅሩ — አርማ፣ መግለጫ እና አገናኞች። ከቀጥታ በኋላ ብሎጎችን፣ የስራ ማስታወቂያዎችን እና መጪ ዝግጅቶችን ወደ የህዝብ ገጽዎ ለማውጣት እንደ መነሻ ይጠቀሙበት።",
       bullets: ["የግል የህዝብ ገጽ", "ብሎግ ጽሁፎችን ይለጥፉ", "ክፍት ስራዎችን ይዘርዝሩ", "መጪ ዝግጅቶችን ያጋሩ"],
     },
-    image: { src: "/assets/Z_company_profile_1180x741.png", w: 1180, h: 741, alt: "Company profile page in Corevia" },
+    image: { src: "/assets/Z_company_profile_1180x741.png", w: 1180, h: 741, alt: "Company profile page in Mahberix" },
     frameMax: "max-w-[52.8rem]",
     glow: "rgba(52,211,153,0.26)",
     overlays: (
@@ -82,7 +82,7 @@ const features: Feature[] = [
       body: "ማስታወቂያዎችን ወደ የህዝብ የስራ ገጽዎ ይለጥፉ፣ ሁሉንም ማመልከቻ በአንድ ኢንቦክስ ይሰብስቡ፣ እና በAI በታገዙ ማጠቃለያዎች አመልካቾችን ይምረጡ። ሰዎችን በደረጃዎች ያንቀሳቅሱ፣ ቃለ መጠይቆችን ያቀናብሩ፣ እና በጅምላ ይቅጠሩ ወይም ውድቅ ያድርጉ።",
       bullets: ["የህዝብ የስራ ገጽ", "የAI አመልካች ማጠቃለያ", "የቃለ መጠይቅ ዕቅድ", "በጅምላ ቅጥር እና ውድቅ"],
     },
-    image: { src: "/assets/Z_jobs_1650x482.png", w: 1650, h: 482, alt: "Jobs and applicants pipeline in Corevia" },
+    image: { src: "/assets/Z_jobs_1650x482.png", w: 1650, h: 482, alt: "Jobs and applicants pipeline in Mahberix" },
     frameMax: "max-w-6xl",
     glow: "rgba(52,211,153,0.28)",
     overlays: (
@@ -110,7 +110,7 @@ const features: Feature[] = [
       body: "እያንዳንዱ ሰው ምን ያህል እንደሚገባው በትክክል ይመልከቱ፣ ክፍያዎችን በአንድ ጠቅታ እንደተከፈሉ ምልክት ያድርጉ፣ እና ለእያንዳንዱ ሰራተኛ ግልጽ የሆነ የራሱ ታሪክ ይስጡ።",
       bullets: ["የሚከፈለው በአንድ እይታ", "በአንድ ጠቅታ እንደተከፈለ ምልክት", "የእያንዳንዱ ሰራተኛ ታሪክ", "ከመገኘት ጋር የተያያዘ"],
     },
-    image: { src: "/assets/Z_payroll_1661x637.png", w: 1661, h: 637, alt: "Payroll and payments dashboard in Corevia" },
+    image: { src: "/assets/Z_payroll_1661x637.png", w: 1661, h: 637, alt: "Payroll and payments dashboard in Mahberix" },
     frameMax: "max-w-6xl",
     glow: "rgba(250,204,21,0.22)",
     overlays: (
@@ -138,7 +138,7 @@ const features: Feature[] = [
       body: "ከእያንዳንዱ ሰራተኛ ጋር የተያያዘ በአካባቢ የሚያውቅ መግቢያ እና መውጫ ከምሳ እረፍት ጋር። ",
       bullets: ["በጂፒኤስ መግቢያ / መውጫ", "የምሳ እረፍት ክትትል", "የዛሬ መገኘት ቀጥታ እይታ", "ደመወዝ እና ግምገማ ይመግባል"],
     },
-    image: { src: "/assets/Z_attendance_953x647.png", w: 953, h: 647, alt: "Geofenced attendance tracking in Corevia" },
+    image: { src: "/assets/Z_attendance_953x647.png", w: 953, h: 647, alt: "Geofenced attendance tracking in Mahberix" },
     frameMax: "max-w-[52.8rem]",
     glow: "rgba(45,212,191,0.26)",
     overlays: (
@@ -337,7 +337,7 @@ function FeatureChapter({ f, last }: { f: Feature; last: boolean }) {
                 <span className="h-3 w-3 rounded-full bg-green-400/90" />
                 <div className="ml-3 hidden items-center gap-2 rounded-md bg-black/40 px-3 py-1 text-xs text-muted-foreground sm:flex">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                  app.corevia.com/{f.id}
+                  app.mahberix.com/{f.id}
                 </div>
               </div>
 

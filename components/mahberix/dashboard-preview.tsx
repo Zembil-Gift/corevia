@@ -27,7 +27,7 @@ export function DashboardPreview() {
           <span className="h-3 w-3 rounded-full bg-amber-400" />
           <span className="h-3 w-3 rounded-full bg-green-400" />
           <div className="ml-3 hidden rounded-md bg-background px-3 py-1 text-xs text-muted-foreground sm:block">
-            app.corevia.com/overview
+            app.mahberix.com/overview
           </div>
         </div>
 

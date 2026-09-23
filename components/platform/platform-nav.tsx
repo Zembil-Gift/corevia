@@ -3,8 +3,8 @@
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { LayoutDashboard, Building2, PlusCircle, Inbox, Scale, LogOut } from "lucide-react"
-import { Logo } from "@/components/corevia/logo"
-import { LangToggle } from "@/components/corevia/lang-toggle"
+import { Logo } from "@/components/mahberix/logo"
+import { LangToggle } from "@/components/mahberix/lang-toggle"
 import { useLang, pick } from "@/lib/i18n"
 
 const links = [

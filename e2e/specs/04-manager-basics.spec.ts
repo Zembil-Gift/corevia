@@ -134,7 +134,7 @@ test("company profile: every field, logo/cover upload, save, persists, public pa
   await expect(pub.getByRole("link", { name: companyEmail })).toHaveAttribute("href", `mailto:${companyEmail}`)
   for (const social of ["LinkedIn", "X", "Facebook", "Instagram"]) await expect(pub.getByRole("link", { name: social, exact: true })).toBeVisible()
   await expect(pub.getByRole("link", { name: "Visit website" })).toHaveAttribute("href", "https://example.com")
-  await expect(pub.getByRole("link", { name: "Powered by Corevia" })).toBeVisible()
+  await expect(pub.getByRole("link", { name: "Powered by Mahberix" })).toBeVisible()
   await pub.close()
 })
 

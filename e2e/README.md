@@ -1,4 +1,4 @@
-# Corevia end-to-end tests (Playwright)
+# Mahberix end-to-end tests (Playwright)
 
 Drives the real UI against the real stack — Next.js (`:3000`), the Spring API (`:8080`),
 Postgres, SendGrid, Cloudflare R2 and Google Maps. Nothing in the app is mocked except the

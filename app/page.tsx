@@ -1,12 +1,12 @@
-import { SiteHeader } from "@/components/corevia/site-header"
-import { Hero } from "@/components/corevia/hero"
-import { Features } from "@/components/corevia/features"
-import { Showcase } from "@/components/corevia/showcase"
-import { HowItWorks } from "@/components/corevia/how-it-works"
-import { Pricing } from "@/components/corevia/pricing"
-import { Faq } from "@/components/corevia/faq"
-import { CtaBand } from "@/components/corevia/cta-band"
-import { SiteFooter } from "@/components/corevia/site-footer"
+import { SiteHeader } from "@/components/mahberix/site-header"
+import { Hero } from "@/components/mahberix/hero"
+import { Features } from "@/components/mahberix/features"
+import { Showcase } from "@/components/mahberix/showcase"
+import { HowItWorks } from "@/components/mahberix/how-it-works"
+import { Pricing } from "@/components/mahberix/pricing"
+import { Faq } from "@/components/mahberix/faq"
+import { CtaBand } from "@/components/mahberix/cta-band"
+import { SiteFooter } from "@/components/mahberix/site-footer"
 
 export default function HomePage() {
   return (

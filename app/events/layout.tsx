@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Events | Corevia",
+  title: "Events | Mahberix",
   description:
     "Meetups, app launches, and tech events. Join us online or in person.",
 }

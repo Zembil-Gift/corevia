@@ -11,8 +11,8 @@ const copy = {
   badge: { en: "All-in-one company operations", am: "የተቋም ስራዎች በአንድ ቦታ" },
   headlinePrefix: { en: "One platform to run your ", am: "አንድ መድረክ ለ" },
   subtitle: {
-    en: "Hiring, employees, attendance, performance, payments and content. Corevia gives every company one operations platform, without stitching six tools together.",
-    am: "ቅጥር፣ ሰራተኞች፣ መገኘት፣ አፈጻጸም፣ ክፍያዎች እና ይዘት። Corevia ለእያንዳንዱ ኩባንያ ስድስት መሳሪያዎችን ሳያገናኙ አንድ የስራ መድረክ ይሰጣል።",
+    en: "Hiring, employees, attendance, performance, payments and content. Mahberix gives every company one operations platform, without stitching six tools together.",
+    am: "ቅጥር፣ ሰራተኞች፣ መገኘት፣ አፈጻጸም፣ ክፍያዎች እና ይዘት። Mahberix ለእያንዳንዱ ኩባንያ ስድስት መሳሪያዎችን ሳያገናኙ አንድ የስራ መድረክ ይሰጣል።",
   },
   startTrial: { en: "Start free trial", am: "ነጻ ሙከራ ጀምር" },
   seeHow: { en: "See how it works", am: "እንዴት እንደሚሰራ ይመልከቱ" },

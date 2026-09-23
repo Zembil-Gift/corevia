@@ -1,6 +1,6 @@
-# Corevia — Frontend
+# Mahberix — Frontend
 
-Marketing site **and** product dashboards for **Corevia**, a multi-tenant SaaS that gives any
+Marketing site **and** product dashboards for **Mahberix**, a multi-tenant SaaS that gives any
 company one platform for hiring, employee management, attendance, performance/peer reviews,
 payments and content (blog & events).
 
@@ -27,8 +27,8 @@ Requires network access on first run/build so `next/font` can fetch **Plus Jakar
 
 ## Structure
 
-- `app/page.tsx` — **new** Corevia marketing landing (hero, features, how-it-works, pricing, FAQ, CTA).
-- `components/corevia/*` — landing sections + shared `Logo`. Brand text lives in `lib/brand.ts`.
+- `app/page.tsx` — **new** Mahberix marketing landing (hero, features, how-it-works, pricing, FAQ, CTA).
+- `components/mahberix/*` — landing sections + shared `Logo`. Brand text lives in `lib/brand.ts`.
 - `app/admin/**`, `app/employee/**`, `app/blog/**`, `app/events/**`, `app/jobs/**`, `app/attendance/**`
   — product dashboards & public pages, reused from the company-profile app and rewired to the
   multi-tenant API.
@@ -40,8 +40,8 @@ Requires network access on first run/build so `next/font` can fetch **Plus Jakar
   surface + AfroDebab emerald/lime accent `#34d399` / `#a3e635`) live in `app/globals.css`;
   `<html>` carries the `dark` class in `app/layout.tsx`.
 - The brand mark is the AfroDebab green leaf-triangle "A" (forest → lime gradient) in
-  `components/corevia/logo.tsx`; the wordmark text stays the product name.
-- Pricing tiers are **placeholders** — edit `components/corevia/pricing.tsx`.
+  `components/mahberix/logo.tsx`; the wordmark text stays the product name.
+- Pricing tiers are **placeholders** — edit `components/mahberix/pricing.tsx`.
 
 ## API wiring (multi-tenant)
 

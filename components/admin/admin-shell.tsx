@@ -25,7 +25,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   const Brand = (
     <Link href="/manager" className="flex items-center gap-2 font-semibold text-[#e78a53]">
-      <span>Corevia</span>
+      <span>Mahberix</span>
     </Link>
   )
 

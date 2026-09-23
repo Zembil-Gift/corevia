@@ -159,7 +159,7 @@ export function Pricing() {
         </div>
         <p className="mt-8 text-center text-xs text-muted-foreground">
           Prices are placeholders for demonstration. Update them in{" "}
-          <code className="rounded bg-muted px-1 py-0.5">components/corevia/pricing.tsx</code>.
+          <code className="rounded bg-muted px-1 py-0.5">components/mahberix/pricing.tsx</code>.
         </p>
       </div>
     </section>

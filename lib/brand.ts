@@ -1,15 +1,15 @@
 /**
- * Central brand configuration for the Corevia SaaS product.
+ * Central brand configuration for the Mahberix SaaS product.
  * Rename the platform, tagline, or marketing copy here in one place.
  */
 export const brand = {
-  name: "Corevia",
+  name: "Mahberix",
   // Short value proposition used in hero + meta description.
   tagline: "Run your whole company from one platform",
   subtitle:
-    "Hiring, employees, attendance, performance, payments and content. Corevia gives every company one operations platform, without stitching six tools together.",
-  domain: "corevia.com",
-  email: "hello@corevia.com",
+    "Hiring, employees, attendance, performance, payments and content. Mahberix gives every company one operations platform, without stitching six tools together.",
+  domain: "mahberix.com",
+  email: "hello@mahberix.com",
   // Primary marketing nav (section anchors on the landing page).
   nav: [
     { label: "Features", href: "#features" },

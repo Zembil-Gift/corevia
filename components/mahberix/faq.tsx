@@ -11,11 +11,11 @@ const faqs = {
   en: [
     {
       q: "Is my company's data isolated from other companies?",
-      a: "Yes. Corevia is multi-tenant by design — every organization's data is scoped to its own tenant, so companies never see each other's employees, jobs, or reports.",
+      a: "Yes. Mahberix is multi-tenant by design — every organization's data is scoped to its own tenant, so companies never see each other's employees, jobs, or reports.",
     },
     {
       q: "Do employees and managers log in separately?",
-      a: "Everyone signs in with their email and password. Corevia resolves the right organization and role automatically, then routes managers and employees to the correct dashboard.",
+      a: "Everyone signs in with their email and password. Mahberix resolves the right organization and role automatically, then routes managers and employees to the correct dashboard.",
     },
     {
       q: "Can we publish our jobs and blog to our own site?",
@@ -23,7 +23,7 @@ const faqs = {
     },
     {
       q: "How does attendance tracking work?",
-      a: "Employees clock in and out from their device. Corevia verifies they're within your configured geofence before recording attendance, keeping time data honest.",
+      a: "Employees clock in and out from their device. Mahberix verifies they're within your configured geofence before recording attendance, keeping time data honest.",
     },
     {
       q: "What happens after the free trial?",
@@ -33,11 +33,11 @@ const faqs = {
   am: [
     {
       q: "የኩባንያዬ መረጃ ከሌሎች ኩባንያዎች ተለይቷል?",
-      a: "አዎ። Corevia በንድፍ ብዙ-ተከራይ ነው — የእያንዳንዱ ድርጅት መረጃ ለራሱ ተከራይ የተከለለ ስለሆነ ኩባንያዎች የሌላውን ሰራተኞች፣ ስራዎች ወይም ሪፖርቶች አያዩም።",
+      a: "አዎ። Mahberix በንድፍ ብዙ-ተከራይ ነው — የእያንዳንዱ ድርጅት መረጃ ለራሱ ተከራይ የተከለለ ስለሆነ ኩባንያዎች የሌላውን ሰራተኞች፣ ስራዎች ወይም ሪፖርቶች አያዩም።",
     },
     {
       q: "ሰራተኞች እና አስተዳዳሪዎች ለየብቻ ይገባሉ?",
-      a: "ሁሉም ሰው በኢሜይሉ እና በይለፍ ቃሉ ይገባል። Corevia ትክክለኛውን ድርጅት እና ሚና በራስ-ሰር ይለያል፣ ከዚያም አስተዳዳሪዎችን እና ሰራተኞችን ወደ ትክክለኛው ዳሽቦርድ ይመራል።",
+      a: "ሁሉም ሰው በኢሜይሉ እና በይለፍ ቃሉ ይገባል። Mahberix ትክክለኛውን ድርጅት እና ሚና በራስ-ሰር ይለያል፣ ከዚያም አስተዳዳሪዎችን እና ሰራተኞችን ወደ ትክክለኛው ዳሽቦርድ ይመራል።",
     },
     {
       q: "ስራዎቻችንን እና ብሎጋችንን ወደ የራሳችን ጣቢያ ማውጣት እንችላለን?",
@@ -45,7 +45,7 @@ const faqs = {
     },
     {
       q: "የመገኘት ክትትል እንዴት ይሰራል?",
-      a: "ሰራተኞች ከመሳሪያቸው ይገባሉ እና ይወጣሉ። Corevia መገኘትን ከመመዝገቡ በፊት በተዋቀረው ጂኦፌንስ ውስጥ መሆናቸውን ያረጋግጣል፣ የጊዜ መረጃውን ትክክለኛ ያደርገዋል።",
+      a: "ሰራተኞች ከመሳሪያቸው ይገባሉ እና ይወጣሉ። Mahberix መገኘትን ከመመዝገቡ በፊት በተዋቀረው ጂኦፌንስ ውስጥ መሆናቸውን ያረጋግጣል፣ የጊዜ መረጃውን ትክክለኛ ያደርገዋል።",
     },
     {
       q: "ከነጻ ሙከራው በኋላ ምን ይሆናል?",

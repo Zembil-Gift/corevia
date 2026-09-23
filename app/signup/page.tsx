@@ -9,8 +9,8 @@ import { ArrowLeft, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Logo } from "@/components/corevia/logo"
-import { LangToggle } from "@/components/corevia/lang-toggle"
+import { Logo } from "@/components/mahberix/logo"
+import { LangToggle } from "@/components/mahberix/lang-toggle"
 import { useLang, pick } from "@/lib/i18n"
 
 const copy = {

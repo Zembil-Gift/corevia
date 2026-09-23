@@ -21,7 +21,7 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { LangToggle } from "@/components/corevia/lang-toggle"
+import { LangToggle } from "@/components/mahberix/lang-toggle"
 import { useLang, pick } from "@/lib/i18n"
 import { clearAdminClientToken, isViceManagerClient } from "@/lib/admin-client-auth"
 

@@ -69,7 +69,7 @@ export default async function OrgLayout({
             © {new Date().getFullYear()} {org.name}
           </span>
           <Link href="/" className="hover:text-foreground">
-            Powered by Corevia
+            Powered by Mahberix
           </Link>
         </div>
       </footer>

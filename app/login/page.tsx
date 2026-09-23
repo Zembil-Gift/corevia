@@ -10,8 +10,8 @@ import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Logo } from "@/components/corevia/logo"
-import { LangToggle } from "@/components/corevia/lang-toggle"
+import { Logo } from "@/components/mahberix/logo"
+import { LangToggle } from "@/components/mahberix/lang-toggle"
 import { useLang, pick } from "@/lib/i18n"
 import { clearAdminClientToken, setAdminClientToken } from "@/lib/admin-client-auth"
 
@@ -26,7 +26,7 @@ const copy = {
   forgot: { en: "Forgot password?", am: "የይለፍ ቃል ረሱ?" },
   signingIn: { en: "Signing in...", am: "በመግባት ላይ..." },
   signIn: { en: "Sign in", am: "ግባ" },
-  newHere: { en: "New to Corevia?", am: "Corevia አዲስ ነዎት?" },
+  newHere: { en: "New to Mahberix?", am: "Mahberix አዲስ ነዎት?" },
   startTrial: { en: "Start your free trial", am: "ነጻ ሙከራዎን ይጀምሩ" },
   invalid: { en: "Invalid email or password", am: "የተሳሳተ ኢሜይል ወይም የይለፍ ቃል" },
   wrong: { en: "Something went wrong. Please try again.", am: "የሆነ ስህተት ተፈጥሯል። እባክዎ እንደገና ይሞክሩ።" },
