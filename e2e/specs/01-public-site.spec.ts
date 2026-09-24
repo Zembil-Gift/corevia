@@ -61,13 +61,10 @@ test.describe("marketing landing page", () => {
       await expect(page).toHaveURL(url)
       await page.goto("/")
     }
-    for (const label of ["Jobs", "Blog", "Events"]) {
-      await expect(footer.getByRole("link", { name: label, exact: true })).toHaveAttribute("href", `/${label.toLowerCase()}`)
-    }
   })
 })
 
-test.describe("legacy single-company pages (NEXT_PUBLIC_ORG_SLUG)", () => {
+test.describe("other public pages", () => {
   test("about page and its gallery lightbox", async ({ page }) => {
     await page.goto("/about")
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible()
@@ -78,38 +75,6 @@ test.describe("legacy single-company pages (NEXT_PUBLIC_ORG_SLUG)", () => {
       await page.getByRole("button", { name: "Close gallery" }).click({ position: { x: 5, y: 5 } })
       await expect(page.getByRole("button", { name: "Close gallery" })).toBeHidden()
     }
-  })
-
-  test("jobs board: search box and employment-type chips filter the list", async ({ page }) => {
-    await page.goto("/jobs")
-    await expect(page.getByRole("heading", { name: "Jobs", level: 1 })).toBeVisible()
-    const search = page.getByRole("searchbox", { name: "Search jobs" })
-    await search.fill("zzz-no-such-role")
-    await expect(page.getByText("No jobs match your search")).toBeVisible()
-    await search.fill("")
-    for (const chip of ["Full-time", "Contract", "All"]) {
-      const button = page.getByRole("button", { name: new RegExp(`^${chip}$`, "i") })
-      if (await button.count()) await button.click()
-    }
-    await page.getByRole("link", { name: "Back to Home" }).click()
-    await expect(page).toHaveURL(/\/$/)
-  })
-
-  test("events board: sort select and direction toggle", async ({ page }) => {
-    await page.goto("/events")
-    await expect(page.getByRole("heading", { name: "Events", level: 1 })).toBeVisible()
-    const direction = page.getByRole("button", { name: /first$/ })
-    const before = await direction.textContent()
-    await direction.click()
-    await expect(direction).not.toHaveText(before ?? "")
-    const sort = page.locator("select").first()
-    const options = await sort.locator("option").allTextContents()
-    await sort.selectOption({ label: options[options.length - 1] })
-  })
-
-  test("blog index renders", async ({ page }) => {
-    await page.goto("/blog")
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible()
   })
 
   test("unknown org public profile is a 404", async ({ page }) => {

@@ -1,8 +1,5 @@
 /**
  * Server-side fetchers for the per-organization public browse pages (`/o/{slug}`).
- * Unlike lib/jobs-api / blog-api / events-api (which are pinned to a single
- * NEXT_PUBLIC_ORG_SLUG), every function here takes the org slug explicitly so one
- * deployment can surface any organization's public content by URL.
  */
 import type { JobApi } from "@/lib/jobs-api"
 import type { BlogPostApi } from "@/lib/blog-api"

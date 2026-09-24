@@ -47,7 +47,7 @@ Prerequisites: the API and `pnpm dev` are running; `psql` and `ffmpeg` are on `P
 
 | Spec | Covers |
 |---|---|
-| 01 public site | landing nav anchors, CTAs, FAQ, EN/አማ toggle + persistence, mobile menu, footer; `/about` gallery; legacy `/jobs` search + chips, `/events` sort, `/blog`; unknown org 404 |
+| 01 public site | landing nav anchors, CTAs, FAQ, EN/አማ toggle + persistence, mobile menu, footer; `/about` gallery; unknown org 404 |
 | 02 auth + signup | route guards for every role, bad/empty login, callbackUrl, redirect when signed in, sign-out, login i18n; signup → OTP (edit, resend, cooldown, wrong/right code) → request received |
 | 03 platform admin | overview stats, nav + i18n, approve request → register (prefilled), reject (cancel/confirm), direct register (slug auto/validation/duplicate), suspend/activate (public page 404s), principles CRUD |
 | 04 manager basics | dashboard KPIs/links, every sidebar page, drawer, company profile (all fields, logo/cover upload, URL paste, public page), OTP password change, log out |
@@ -65,9 +65,7 @@ Prerequisites: the API and `pnpm dev` are running; `psql` and `ffmpeg` are on `P
 | 16 QR attendance | portal clock-in by scan, kiosk lunch in/out + clock out, repeated clock-in refused, no-location message, manager sees the record |
 | 17 wrap-up | platform stats reflect the org; deleting a used principle deactivates it |
 
-Not covered: the legacy single-company `/jobs/[slug]`, `/blog/[slug]`, `/events/[slug]`
-detail pages (they read `NEXT_PUBLIC_ORG_SLUG=afrodebab`, which doesn't exist in `cms3`),
-and Reports pagination (needs >1 page of employees).
+Not covered: Reports pagination (needs >1 page of employees).
 
 ## Bugs the suite surfaced (all fixed; the tests now guard against regressions)
 

@@ -442,24 +442,30 @@ export function DashboardView({ data }: { data: DashboardData }) {
       <div className="mt-6 rounded-xl border border-zinc-800 bg-zinc-900/30 p-5">
         <h2 className="mb-3 text-sm font-semibold text-white">{pick(lang, tr.quickLinks)}</h2>
         <div className="flex flex-wrap gap-3 text-sm">
-          <Link
-            href={orgSlug ? `/o/${orgSlug}/blog` : "/blog"}
-            className="rounded-lg border border-zinc-800 px-3 py-1.5 text-[#e78a53] transition-colors hover:bg-zinc-800/60"
-          >
-            {pick(lang, tr.viewPublicBlog)}
-          </Link>
-          <Link
-            href={orgSlug ? `/o/${orgSlug}/jobs` : "/jobs"}
-            className="rounded-lg border border-zinc-800 px-3 py-1.5 text-[#e78a53] transition-colors hover:bg-zinc-800/60"
-          >
-            {pick(lang, tr.viewPublicJobs)}
-          </Link>
-          <Link
-            href={orgSlug ? `/o/${orgSlug}/events` : "/events"}
-            className="rounded-lg border border-zinc-800 px-3 py-1.5 text-[#e78a53] transition-colors hover:bg-zinc-800/60"
-          >
-            {pick(lang, tr.viewPublicEvents)}
-          </Link>
+          {orgSlug && (
+            <Link
+              href={`/o/${orgSlug}/blog`}
+              className="rounded-lg border border-zinc-800 px-3 py-1.5 text-[#e78a53] transition-colors hover:bg-zinc-800/60"
+            >
+              {pick(lang, tr.viewPublicBlog)}
+            </Link>
+          )}
+          {orgSlug && (
+            <Link
+              href={`/o/${orgSlug}/jobs`}
+              className="rounded-lg border border-zinc-800 px-3 py-1.5 text-[#e78a53] transition-colors hover:bg-zinc-800/60"
+            >
+              {pick(lang, tr.viewPublicJobs)}
+            </Link>
+          )}
+          {orgSlug && (
+            <Link
+              href={`/o/${orgSlug}/events`}
+              className="rounded-lg border border-zinc-800 px-3 py-1.5 text-[#e78a53] transition-colors hover:bg-zinc-800/60"
+            >
+              {pick(lang, tr.viewPublicEvents)}
+            </Link>
+          )}
         </div>
       </div>
     </div>

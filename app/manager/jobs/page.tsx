@@ -140,14 +140,16 @@ export default function AdminJobsPage() {
             <Plus className="size-4 mr-2" />
             {pick(lang, t.createJob)}
           </Button>
-          <Link
-            href={orgSlug ? `/o/${orgSlug}/jobs` : "/jobs"}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm font-medium text-zinc-200 hover:bg-zinc-700 hover:text-white transition-colors"
-          >
-            {pick(lang, t.viewPublic)}
-          </Link>
+          {orgSlug && (
+            <Link
+              href={`/o/${orgSlug}/jobs`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm font-medium text-zinc-200 hover:bg-zinc-700 hover:text-white transition-colors"
+            >
+              {pick(lang, t.viewPublic)}
+            </Link>
+          )}
         </div>
       </div>
 
@@ -251,14 +253,16 @@ export default function AdminJobsPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <Link
-                          href={orgSlug ? `/o/${orgSlug}/jobs/${job.slug}` : `/jobs/${job.slug}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-[#e78a53] hover:underline"
-                        >
-                          {pick(lang, a.view)}
-                        </Link>
+                        {orgSlug && (
+                          <Link
+                            href={`/o/${orgSlug}/jobs/${job.slug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-[#e78a53] hover:underline"
+                          >
+                            {pick(lang, a.view)}
+                          </Link>
+                        )}
                         <Button
                           type="button"
                           variant="ghost"

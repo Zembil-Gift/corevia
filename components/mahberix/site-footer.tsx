@@ -21,14 +21,11 @@ const columns: (lang: Lang) => Col[] = (lang) => [
     links: [
       { label: pick(lang, { en: "Sign in", am: "ግባ" }), href: "/login" },
       { label: pick(lang, { en: "Start free", am: "በነጻ ጀምር" }), href: "/signup" },
-      { label: pick(lang, { en: "Jobs", am: "ስራዎች" }), href: "/jobs" },
-      { label: pick(lang, { en: "Blog", am: "ብሎግ" }), href: "/blog" },
     ],
   },
   {
     title: pick(lang, { en: "Company", am: "ኩባንያ" }),
     links: [
-      { label: pick(lang, { en: "Events", am: "ዝግጅቶች" }), href: "/events" },
       { label: `${pick(lang, { en: "Contact", am: "አግኙን" })}: ${brand.email}`, href: `mailto:${brand.email}` },
     ],
   },

@@ -10,12 +10,12 @@ import type { ApplicationField } from "@/lib/jobs-api"
 interface JobDetailApplyProps {
   jobTitle: string
   jobId: number
-  orgSlug?: string
-  allJobsHref?: string
+  orgSlug: string
+  allJobsHref: string
   fields?: ApplicationField[]
 }
 
-export function JobDetailApply({ jobTitle, jobId, orgSlug, allJobsHref = "/jobs", fields }: JobDetailApplyProps) {
+export function JobDetailApply({ jobTitle, jobId, orgSlug, allJobsHref, fields }: JobDetailApplyProps) {
   const [applyModalOpen, setApplyModalOpen] = useState(false)
 
   return (

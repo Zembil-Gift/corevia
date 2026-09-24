@@ -23,8 +23,8 @@ interface ApplyModalProps {
   onOpenChange: (open: boolean) => void
   jobTitle: string
   jobId: number | null
-  /** Organization whose job this is; omitted on this site's own /jobs pages. */
-  orgSlug?: string
+  /** Organization whose job this is. */
+  orgSlug: string
   /** Extra questions the manager added to this job's application form. */
   fields?: ApplicationField[]
 }
@@ -236,7 +236,7 @@ export function ApplyModal({
         }
       }
 
-      const res = await fetch(`/api/jobs/${jobId}/apply/form${orgSlug ? `?org=${encodeURIComponent(orgSlug)}` : ""}`, {
+      const res = await fetch(`/api/jobs/${jobId}/apply/form?org=${encodeURIComponent(orgSlug)}`, {
         method: "POST",
         body: formData,
       })

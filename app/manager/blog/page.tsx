@@ -142,14 +142,16 @@ export default function AdminBlogPage() {
             <Plus className="size-4 mr-2" />
             {pick(lang, t.createBlog)}
           </Button>
-          <Link
-            href={orgSlug ? `/o/${orgSlug}/blog` : "/blog"}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm font-medium text-zinc-200 hover:bg-zinc-700 hover:text-white transition-colors"
-          >
-            {pick(lang, t.viewPublic)}
-          </Link>
+          {orgSlug && (
+            <Link
+              href={`/o/${orgSlug}/blog`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm font-medium text-zinc-200 hover:bg-zinc-700 hover:text-white transition-colors"
+            >
+              {pick(lang, t.viewPublic)}
+            </Link>
+          )}
         </div>
       </div>
 
@@ -187,9 +189,9 @@ export default function AdminBlogPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        {post.status !== "DRAFT" && (
+                        {post.status !== "DRAFT" && orgSlug && (
                           <Link
-                            href={orgSlug ? `/o/${orgSlug}/blog/${post.slug}` : `/blog/${post.slug}`}
+                            href={`/o/${orgSlug}/blog/${post.slug}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-sm text-[#e78a53] hover:underline"

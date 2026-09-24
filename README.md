@@ -21,7 +21,6 @@ Requires network access on first run/build so `next/font` can fetch **Plus Jakar
 | Var | Purpose |
 | --- | --- |
 | `NEXT_PUBLIC_CMS_BASE_URL` | Base URL of the CMS API (default `http://localhost:8080`) |
-| `NEXT_PUBLIC_ORG_SLUG` | Org slug for public (unauthenticated) blog/events/jobs pages → `/public/{slug}/...` |
 | `APP_ATTENDANCE_GEOFENCE_LAT` / `_LNG` | Geofence center for attendance clock-in |
 | `S3_API`, `ACCESS_KEY_ID`, `SECRET_ACCESS_KEY`, … | R2/S3 upload config (admin uploads) |
 
@@ -49,7 +48,7 @@ The reused dashboards were rewired for the SaaS backend:
 
 - Manager (formerly "admin") CMS calls → `/manager/**` (org resolved from JWT).
 - Manager login → `/manager/auth/login`; employee login → `/employee/auth/login`.
-- Public blog/events/jobs → `/public/${ORG_SLUG}/...`.
+- Public blog/events/jobs → `/o/{slug}/...` pages, backed by `/public/{slug}/...`.
 - Attendance clock-in/out drops the old shared `X-Employee-Attendance-Key`; the employee (and their
   org) is resolved from the email in the request body.
 
@@ -61,6 +60,5 @@ The reused dashboards were rewired for the SaaS backend:
 - **Self-serve signup is not wired.** `/signup` collects company + admin details and shows a
   confirmation, but does not yet provision an organization — backend org creation currently requires
   a platform admin (none seeded). Wire a provisioning endpoint in `app/signup/page.tsx`.
-- Public tenant pages use a single `NEXT_PUBLIC_ORG_SLUG`; per-tenant public sites (subdomain
-  routing) are not implemented.
+- Per-tenant public sites on subdomains are not implemented; public pages live at `/o/{slug}`.
 - End-to-end behavior against a live backend is unverified (backend needs Postgres + a seeded org).

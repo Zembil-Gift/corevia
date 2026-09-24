@@ -3,7 +3,6 @@ import { buildMultipartBody } from "@/lib/multipart"
 import { postRaw } from "@/lib/raw-http"
 
 const CMS_BASE_URL = process.env.NEXT_PUBLIC_CMS_BASE_URL!
-const ORG_SLUG = process.env.NEXT_PUBLIC_ORG_SLUG ?? "afrodebab"
 const SLUG_RE = /^[a-z0-9-]+$/
 // Application-form answers: answer.<fieldId> (links/text) and file.<fieldId> (uploads).
 const ANSWER_KEY_RE = /^(answer|file)\.[a-z0-9-]{1,40}$/
@@ -17,8 +16,7 @@ export async function POST(
   if (!id) {
     return NextResponse.json({ error: "Missing job id" }, { status: 400 })
   }
-  // ?org=<slug> applies to that organization's job (/o/{slug} pages); defaults to this site's own org.
-  const org = request.nextUrl.searchParams.get("org") || ORG_SLUG
+  const org = request.nextUrl.searchParams.get("org") ?? ""
   if (!SLUG_RE.test(org)) {
     return NextResponse.json({ error: "Invalid organization" }, { status: 400 })
   }

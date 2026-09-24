@@ -92,14 +92,16 @@ export default function AdminEventsPage() {
             <Plus className="size-4 mr-2" />
             {pick(lang, t.createEvent)}
           </Button>
-          <Link
-            href={orgSlug ? `/o/${orgSlug}/events` : "/events"}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm font-medium text-zinc-200 hover:bg-zinc-700 hover:text-white transition-colors"
-          >
-            {pick(lang, t.viewPublic)}
-          </Link>
+          {orgSlug && (
+            <Link
+              href={`/o/${orgSlug}/events`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm font-medium text-zinc-200 hover:bg-zinc-700 hover:text-white transition-colors"
+            >
+              {pick(lang, t.viewPublic)}
+            </Link>
+          )}
         </div>
       </div>
 
@@ -147,9 +149,9 @@ export default function AdminEventsPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        {event.status === "PUBLISHED" && (
+                        {event.status === "PUBLISHED" && orgSlug && (
                           <Link
-                            href={orgSlug ? `/o/${orgSlug}/events/${event.slug}` : `/events/${event.slug}`}
+                            href={`/o/${orgSlug}/events/${event.slug}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-sm text-[#e78a53] hover:underline"
