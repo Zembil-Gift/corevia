@@ -378,7 +378,7 @@ export function EmailBuilder() {
                 </button>
               </div>
             </div>
-            <div className="flex justify-center bg-[#0a0c0b]">
+            <div className="flex justify-center bg-[#eef3f0]">
               <iframe
                 title="Email preview"
                 sandbox=""
