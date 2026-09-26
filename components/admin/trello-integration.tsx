@@ -18,6 +18,7 @@ import {
 export function TrelloIntegration() {
   const [loading, setLoading] = useState(true)
   const [connected, setConnected] = useState(false)
+  const [account, setAccount] = useState<string | null>(null)
   const [selected, setSelected] = useState<TrelloBoard[]>([])
   const [available, setAvailable] = useState<TrelloBoard[] | null>(null)
   const [busy, setBusy] = useState(false)
@@ -28,6 +29,7 @@ export function TrelloIntegration() {
 
   const applyConnection = (conn: TrelloConnection) => {
     setConnected(conn.connected)
+    setAccount(conn.account ?? null)
     setSelected(conn.selectedBoards)
     setBranchName(conn.subOrganizationName ?? null)
     setBranchLocked(Boolean(conn.subOrganizationLocked))
@@ -149,7 +151,7 @@ export function TrelloIntegration() {
             {connected && <CheckCircle2 className="size-4 text-emerald-400" />}
           </h2>
           <p className="mt-1 text-sm text-zinc-400">
-            {loading ? "Loading…" : connected ? "Your Trello account is connected." : "Not connected."}
+            {loading ? "Loading…" : connected ? (account ? `Connected as ${account}.` : "Your Trello account is connected.") : "Not connected."}
           </p>
           {!loading && !connected && (
             <p className="mt-1 text-xs text-zinc-500">

@@ -12,6 +12,8 @@ export interface TrelloBoard {
 
 export interface TrelloConnection {
   connected: boolean
+  /** Email of the connected account, or @username when none is shared. */
+  account?: string | null
   selectedBoards: TrelloBoard[]
   /** Vice managers only: their branch, which everything they track credits. */
   subOrganizationId?: number | null
@@ -72,7 +74,7 @@ export function trelloAuthorizeUrl(returnUrl: string): string {
   const key = process.env.NEXT_PUBLIC_TRELLO_KEY
   const params = new URLSearchParams({
     key: key ?? "",
-    scope: "read",
+    scope: "read,account",
     expiration: "never",
     name: "AfroDebab CMS",
     response_type: "token",

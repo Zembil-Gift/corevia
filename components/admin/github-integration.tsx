@@ -20,6 +20,7 @@ const STATE_KEY = "github_oauth_state"
 export function GitHubIntegration() {
   const [loading, setLoading] = useState(true)
   const [connected, setConnected] = useState(false)
+  const [account, setAccount] = useState<string | null>(null)
   const [selected, setSelected] = useState<GitHubOrg[]>([])
   const [available, setAvailable] = useState<GitHubOrg[] | null>(null)
   const [busy, setBusy] = useState(false)
@@ -30,6 +31,7 @@ export function GitHubIntegration() {
 
   const applyConnection = (conn: GitHubConnection) => {
     setConnected(conn.connected)
+    setAccount(conn.account ?? null)
     setSelected(conn.selectedOrgs)
     setBranchName(conn.subOrganizationName ?? null)
     setBranchLocked(Boolean(conn.subOrganizationLocked))
@@ -163,7 +165,7 @@ export function GitHubIntegration() {
             {connected && <CheckCircle2 className="size-4 text-emerald-400" />}
           </h2>
           <p className="mt-1 text-sm text-zinc-400">
-            {loading ? "Loading…" : connected ? "Your GitHub account is connected." : "Not connected."}
+            {loading ? "Loading…" : connected ? (account ? `Connected as ${account}.` : "Your GitHub account is connected.") : "Not connected."}
           </p>
           {!loading && !connected && (
             <p className="mt-1 text-xs text-zinc-500">
@@ -205,7 +207,23 @@ export function GitHubIntegration() {
 
           {orgsToShow.length === 0 ? (
             <p className="mt-4 text-sm text-zinc-500">
-              {available ? "No organizations found on your GitHub account." : "Load your orgs to pick which to track."}
+              {available ? (
+                <>
+                  No organizations visible. Orgs that restrict third-party apps stay hidden until access is
+                  granted —{" "}
+                  <a
+                    href={`https://github.com/settings/connections/applications/${process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID ?? ""}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-emerald-400 underline"
+                  >
+                    grant or request org access on GitHub
+                  </a>
+                  , then reload.
+                </>
+              ) : (
+                "Load your orgs to pick which to track."
+              )}
             </p>
           ) : (
             <ul className="mt-4 space-y-2">

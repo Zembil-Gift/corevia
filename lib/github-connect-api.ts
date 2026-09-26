@@ -12,6 +12,8 @@ export interface GitHubOrg {
 
 export interface GitHubConnection {
   connected: boolean
+  /** Email of the connected account, or @username when none is shared. */
+  account?: string | null
   selectedOrgs: GitHubOrg[]
   /** Vice managers only: their branch, which everything they track credits. */
   subOrganizationId?: number | null
@@ -74,7 +76,7 @@ export function githubAuthorizeUrl(returnUrl: string, state: string): string {
   const params = new URLSearchParams({
     client_id: clientId ?? "",
     redirect_uri: returnUrl,
-    scope: "read:org,repo",
+    scope: "read:org,repo,user:email",
     state,
   })
   return `https://github.com/login/oauth/authorize?${params.toString()}`
