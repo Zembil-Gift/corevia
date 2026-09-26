@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { PrinciplesManager } from "@/components/platform/principles-manager"
+import { PrinciplesManager } from "@/components/principles-manager"
 import type { LeadershipPrincipleResponse } from "@/lib/metrics-api"
 
 export default function PrinciplesPage() {
@@ -28,10 +28,17 @@ export default function PrinciplesPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Leadership principles</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          The principles employees in every organization rate each other against in peer reviews.
+          The default set organizations can copy into their own rating principles. Edits here don&apos;t
+          change principles an organization already has.
         </p>
       </div>
-      <PrinciplesManager principles={principles} loading={loading} onChanged={load} />
+      <PrinciplesManager
+        api="/api/platform/principles"
+        description="Organizations copy the active ones as their starting set"
+        principles={principles}
+        loading={loading}
+        onChanged={load}
+      />
     </div>
   )
 }

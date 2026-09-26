@@ -15,13 +15,24 @@ test("platform stats reflect the org's activity", async ({ browser }) => {
 })
 
 test("deleting a principle already used in reviews deactivates it instead", async ({ browser }) => {
-  const page = await session(browser, PLATFORM_EMAIL, PASSWORD, /\/platform$/)
+  const page = await session(browser, need("managerEmail"), PASSWORD, /\/manager$/)
   const name = need("principleA")
-  await page.goto("/platform/principles")
+  await page.goto("/manager/peer-reviews")
+  await page.getByRole("button", { name: /^Show/ }).click()
   await page.getByRole("button", { name: `Delete ${name}` }).click()
   await page.getByRole("alertdialog").getByRole("button", { name: "Delete" }).click()
   const item = page.getByRole("listitem").filter({ hasText: name })
   await expect(item.getByText(name)).toHaveClass(/line-through/)
   await expect(item.getByRole("button", { name: "Activate" })).toBeVisible()
+  await page.context().close()
+})
+
+test("platform default principles are templates: deleting one removes it outright", async ({ browser }) => {
+  const page = await session(browser, PLATFORM_EMAIL, PASSWORD, /\/platform$/)
+  const name = need("principleA")
+  await page.goto("/platform/principles")
+  await page.getByRole("button", { name: `Delete ${name}` }).click()
+  await page.getByRole("alertdialog").getByRole("button", { name: "Delete" }).click()
+  await expect(page.getByText(name, { exact: true })).toHaveCount(0)
   await page.context().close()
 })

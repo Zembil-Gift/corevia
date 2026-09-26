@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { SubOrganization } from "@/lib/sub-orgs-api";
+import { PrinciplesManager } from "@/components/principles-manager";
 import { isViceManagerClient } from "@/lib/admin-client-auth";
 import type {
   AdminPeerReviewResponse,
@@ -71,6 +72,9 @@ export default function AdminPeerReviewsPage() {
     [],
   );
   const [principlesLoading, setPrinciplesLoading] = useState(false);
+  const [defaultPrinciples, setDefaultPrinciples] = useState<
+    LeadershipPrincipleResponse[]
+  >([]);
   const activePrincipleCount = principles.filter((p) => p.isActive).length;
 
   const [periods, setPeriods] = useState<PeerReviewPeriodResponse[]>([]);
@@ -246,6 +250,10 @@ export default function AdminPeerReviewsPage() {
     setIsVice(vice);
     if (vice) return;
     loadPrinciples();
+    fetch("/api/admin/metrics/peer-reviews/principles/defaults")
+      .then((res) => res.json())
+      .then((data) => Array.isArray(data) && setDefaultPrinciples(data))
+      .catch(() => {});
   }, [loadPrinciples]);
 
   useEffect(() => {
@@ -425,6 +433,19 @@ export default function AdminPeerReviewsPage() {
       </div>
 
       {!isVice && (
+        <PrinciplesManager
+          api="/api/admin/metrics/peer-reviews/principles"
+          description="Employees rate each other against your active principles"
+          principles={principles}
+          defaultPrinciples={defaultPrinciples}
+          accentClassName="bg-[#e78a53] text-white hover:bg-[#e78a53]/90"
+          collapsible
+          loading={principlesLoading}
+          onChanged={loadPrinciples}
+        />
+      )}
+
+      {!isVice && (
         <section className="mb-6 rounded-xl border border-zinc-800 bg-zinc-900/60 p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -433,8 +454,8 @@ export default function AdminPeerReviewsPage() {
               </h2>
               <p className="text-sm text-zinc-400">
                 Open a named period so employees can submit peer reviews against
-                the platform&apos;s {activePrincipleCount} active rating
-                principle{activePrincipleCount === 1 ? "" : "s"}.
+                your {activePrincipleCount} active rating principle
+                {activePrincipleCount === 1 ? "" : "s"}.
               </p>
             </div>
             <Button
@@ -458,9 +479,9 @@ export default function AdminPeerReviewsPage() {
               id="no-principles-hint"
               className="mt-4 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-sm text-amber-200"
             >
-              There are no active rating principles yet. The platform admin
-              manages them; ask them to add or activate some, then create a
-              review period.
+              You have no active rating principles yet. Add your own or the
+              defaults under Rating principles above, then create a review
+              period.
             </p>
           )}
 

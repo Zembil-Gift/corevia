@@ -19,7 +19,11 @@ test("manager creates a review period (modal cancel, validation, success)", asyn
   await expect(manager.getByText("Select a period to load results.")).toBeVisible()
 
   const open = manager.getByRole("button", { name: "Create review period" })
-  await expect(open).toBeEnabled() // platform has active principles (spec 03)
+  // New orgs start with no principles; copy the platform defaults (incl. spec 03's principleA).
+  await expect(open).toBeDisabled()
+  await manager.getByRole("button", { name: /^Add the \d+ default principles?$/ }).click()
+  await expect(manager.getByText(need("principleA"), { exact: true })).toBeVisible()
+  await expect(open).toBeEnabled()
   await open.click()
   const form = manager.locator("form", { has: manager.getByPlaceholder("2026 Q2") })
   await form.getByRole("button", { name: "Cancel" }).click()
