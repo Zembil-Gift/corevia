@@ -60,7 +60,7 @@ test("sidebar language toggle translates the nav", async () => {
   const sidebar = page.locator("aside").first()
   await sidebar.getByRole("button", { name: "አማ" }).click()
   await expect(sidebar.getByRole("link", { name: "ሰራተኞች" })).toBeVisible()
-  await sidebar.getByRole("button", { name: "EN" }).click()
+  await sidebar.getByRole("button", { name: "EN", exact: true }).click()
   await expect(sidebar.getByRole("link", { name: "Employees" })).toBeVisible()
 })
 

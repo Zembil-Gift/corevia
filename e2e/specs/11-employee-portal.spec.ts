@@ -34,7 +34,7 @@ test("tabs navigate between report, payments, peer review and my review", async 
 test("language toggle", async () => {
   await page.getByRole("button", { name: "አማ" }).click()
   await expect(page.getByRole("heading", { name: "የሰራተኛ ፖርታል" })).toBeVisible()
-  await page.getByRole("button", { name: "EN" }).click()
+  await page.getByRole("button", { name: "EN", exact: true }).click()
 })
 
 test("report: load a month and change the time-spent date", async () => {

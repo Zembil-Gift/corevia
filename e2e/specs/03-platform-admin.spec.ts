@@ -38,7 +38,7 @@ test("sidebar navigation reaches every platform page", async () => {
   }
   await page.getByRole("button", { name: "አማ" }).click()
   await expect(nav.getByRole("link", { name: "ድርጅቶች" })).toBeVisible()
-  await page.getByRole("button", { name: "EN" }).click()
+  await page.getByRole("button", { name: "EN", exact: true }).click()
 })
 
 test("signup request → Register (prefilled) → organization created → request approved", async () => {

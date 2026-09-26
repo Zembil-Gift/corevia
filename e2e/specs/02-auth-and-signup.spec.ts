@@ -57,7 +57,7 @@ test.describe("login page", () => {
     await page.goto("/login")
     await page.getByRole("button", { name: "አማ" }).click()
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("እንኳን ደህና ተመለሱ")
-    await page.getByRole("button", { name: "EN" }).click()
+    await page.getByRole("button", { name: "EN", exact: true }).click()
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Welcome back")
   })
 })

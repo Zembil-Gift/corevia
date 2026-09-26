@@ -38,7 +38,7 @@ test.describe("marketing landing page", () => {
     await expect(page.locator("#faq")).toContainText("የኩባንያዬ መረጃ")
     await page.reload()
     await expect(page.locator("#faq")).toContainText("የኩባንያዬ መረጃ")
-    await page.getByRole("group", { name: "Language" }).first().getByRole("button", { name: "EN" }).click()
+    await page.getByRole("group", { name: "Language" }).first().getByRole("button", { name: "EN", exact: true }).click()
     await expect(page.locator("#faq")).toContainText("Is my company's data isolated")
   })
 
