@@ -2,6 +2,7 @@ import Link from "next/link"
 import { MapPin, CalendarDays, Globe } from "lucide-react"
 import { fetchOrgEvents } from "@/lib/org-content-api"
 import { OrgSubShell } from "@/components/org/org-subpage"
+import { SubscribeCalendarLinks } from "@/components/org/calendar-links"
 
 export default async function OrgEventsPage({
   params,
@@ -13,6 +14,12 @@ export default async function OrgEventsPage({
 
   return (
     <OrgSubShell slug={slug} title="Events">
+      <div className="mb-6 rounded-xl border border-border bg-card p-4">
+        <p className="mb-3 text-sm text-muted-foreground">
+          Subscribe to get every event in your calendar. New and changed events update automatically.
+        </p>
+        <SubscribeCalendarLinks orgSlug={slug} />
+      </div>
       {events.length === 0 ? (
         <p className="text-sm text-muted-foreground">No published events yet.</p>
       ) : (

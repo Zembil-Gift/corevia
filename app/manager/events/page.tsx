@@ -105,6 +105,8 @@ export default function AdminEventsPage() {
         </div>
       </div>
 
+      {/* Company calendar bar hidden until the .ics feed works; restore with SubscribeCalendarLinks. */}
+
       {error && (
         <p className="mb-4 text-sm text-red-400">{error}</p>
       )}

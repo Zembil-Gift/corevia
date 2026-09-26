@@ -2,6 +2,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { ArrowLeft, MapPin, CalendarDays, Globe } from "lucide-react"
 import { fetchOrgEventBySlug, fetchOrgInfo } from "@/lib/org-content-api"
+import { AddToCalendarLinks } from "@/components/org/calendar-links"
 
 function formatDate(value?: string) {
   if (!value) return null
@@ -57,6 +58,12 @@ export default async function OrgEventDetailPage({
           </span>
         )}
       </div>
+
+      {ev.startDate && (
+        <div className="mt-4">
+          <AddToCalendarLinks orgSlug={slug} event={{ ...ev, startDate: ev.startDate }} />
+        </div>
+      )}
 
       {ev.coverImageUrl && (
         // eslint-disable-next-line @next/next/no-img-element
