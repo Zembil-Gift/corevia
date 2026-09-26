@@ -19,7 +19,7 @@ import {
   type EmailTemplates,
 } from "@/lib/email-templates-api"
 
-const AUDIENCE_ORDER = ["Employee", "Candidate", "Manager", "Vice manager"]
+const AUDIENCE_ORDER = ["Employee", "Candidate", "Interviewer", "Manager", "Vice manager"]
 
 const LABELS: Record<string, string> = {
   EMPLOYEE_PASSWORD: "Account credentials",
@@ -29,6 +29,9 @@ const LABELS: Record<string, string> = {
   HIRING_REJECTED_PRE_INTERVIEW: "Application declined",
   HIRING_HIRED: "Hired",
   HIRING_REJECTED_POST_INTERVIEW: "Declined after interview",
+  INTERVIEW_INVITATION: "Interview invitation",
+  INTERVIEW_CANCELLED: "Interview cancelled",
+  INTERVIEW_PANEL_INVITATION: "Interview panel invitation",
   ADMIN_PAYROLL_REMINDER: "Payroll reminder",
   MANAGER_NEW_JOB_APPLICATION: "New job application",
   VICE_MANAGER_WELCOME: "Account credentials",

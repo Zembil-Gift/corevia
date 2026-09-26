@@ -20,9 +20,11 @@ const VICE_MANAGER_ROUTES: [string[], RegExp, string][] = [
     "/vice-manager/metrics/peer-reviews/periods"],
   [["GET"], /^\/manager\/(github|trello)\/report\//, "/vice-manager/trackers/$1/report/"],
   [["POST"], /^\/manager\/(github|trello)\/sync(?=$|\?)/, "/vice-manager/trackers/$1/sync"],
-  [ANY, /^\/manager\/(github|trello)\/connection(?=$|\?|\/)/, "/vice-manager/$1/connection"],
+  [ANY, /^\/manager\/(github|trello|google)\/connection(?=$|\?|\/)/, "/vice-manager/$1/connection"],
   [["GET"], /^\/manager\/payments\/(due|paid|paid\/filter)(?=$|\?)/, "/vice-manager/payments/$1"],
   [["POST"], /^\/manager\/payments\/(\d+)\/mark-paid(?=$|\?)/, "/vice-manager/payments/$1/mark-paid"],
+  [["GET", "POST"], /^\/manager\/(broadcasts|notifications)(?=$|\?|\/)/, "/vice-manager/$1"],
+  [ANY, /^\/manager\/google\/sheets(?=$|\?|\/)/, "/vice-manager/google/sheets"],
 ]
 
 export function viceManagerPath(path: string, method = "GET"): string {

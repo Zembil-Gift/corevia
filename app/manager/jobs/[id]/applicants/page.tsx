@@ -13,6 +13,8 @@ import type {
   JobApplicationApi,
 } from "@/lib/job-applications-api"
 import type { SubOrganization } from "@/lib/sub-orgs-api"
+import { ApplicationInterviews } from "@/components/admin/application-interviews"
+import { fetchJobInterviews, type Interview } from "@/lib/interviews-api"
 
 const INTERVIEW_ELIGIBLE_STATUSES = new Set(["APPLIED", "UNDER_REVIEW"])
 const STATUS_FILTERS: Array<"ALL" | ApplicationStatus> = [
@@ -73,6 +75,7 @@ export default function AdminJobApplicantsPage() {
   const params = useParams<{ id: string }>()
   const jobId = params?.id
   const [applications, setApplications] = useState<JobApplicationApi[]>([])
+  const [interviews, setInterviews] = useState<Interview[]>([])
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -159,6 +162,17 @@ export default function AdminJobApplicantsPage() {
   useEffect(() => {
     fetchApplications()
   }, [fetchApplications])
+
+  useEffect(() => {
+    if (!jobId) return
+    fetchJobInterviews(jobId).then(setInterviews).catch(() => setInterviews([]))
+  }, [jobId])
+
+  // Scheduling can move an applicant to SELECTED_FOR_INTERVIEW, so reload the list too.
+  const handleInterviewChange = (changed: Interview) => {
+    setInterviews((prev) => [changed, ...prev.filter((i) => i.id !== changed.id)])
+    void fetchApplications()
+  }
 
   useEffect(() => {
     if (applications.length === 0) return
@@ -485,7 +499,7 @@ export default function AdminJobApplicantsPage() {
           No applicants found with status {statusFilter}.
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/50">
+        <div className="overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-900/50">
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-zinc-800 bg-zinc-900">
@@ -497,6 +511,7 @@ export default function AdminJobApplicantsPage() {
                 <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">
                   AI Overview
                 </th>
+                <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Interview</th>
                 <th className="px-4 py-3 text-xs font-medium uppercase tracking-wider text-zinc-500">Actions</th>
               </tr>
             </thead>
@@ -589,6 +604,15 @@ export default function AdminJobApplicantsPage() {
                     </td>
                     <td className="px-4 py-3 text-zinc-400">{formatTimestamp(application.createdAt)}</td>
                     <td className="px-4 py-3">{renderAiOverviewCell(application.id)}</td>
+                    <td className="min-w-56 px-4 py-3">
+                      <ApplicationInterviews
+                        application={application}
+                        interviews={interviews
+                          .filter((i) => i.applicationId === application.id)
+                          .sort((a, b) => b.startAt.localeCompare(a.startAt))}
+                        onChange={handleInterviewChange}
+                      />
+                    </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-2">
                         <Button
