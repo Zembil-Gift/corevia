@@ -17,6 +17,7 @@ import {
   Pencil,
   QrCode,
   Star,
+  Bell,
   User,
   X,
 } from "lucide-react"
@@ -28,6 +29,7 @@ import { LangToggle } from "@/components/mahberix/lang-toggle"
 import { useLang, pick } from "@/lib/i18n"
 import { clearAdminClientToken } from "@/lib/admin-client-auth"
 import { QRScanner } from "@/components/employee/qr-scanner"
+import { useUnreadCount } from "@/components/notifications/use-unread-count"
 
 const t = {
   portal: { en: "Employee Portal", am: "የሰራተኛ ፖርታል" },
@@ -44,6 +46,7 @@ const t = {
   payments: { en: "Payments", am: "ክፍያዎች" },
   peerReview: { en: "Peer Review", am: "የእኩዮች ግምገማ" },
   myReview: { en: "My Review", am: "የእኔ ግምገማ" },
+  notifications: { en: "Notifications", am: "ማሳወቂያዎች" },
   changePassword: { en: "Change Password", am: "የይለፍ ቃል ቀይር" },
   currentPassword: { en: "Current password", am: "የአሁኑ የይለፍ ቃል" },
   newPassword: { en: "New password", am: "አዲስ የይለፍ ቃል" },
@@ -124,12 +127,15 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
   const [attendanceLoading, setAttendanceLoading] = useState(false)
   const [attendanceMessage, setAttendanceMessage] = useState("")
 
+  const unread = useUnreadCount("employee")
+
   const tabs = useMemo(
     () => [
       { href: "/employee/reports", label: t.report, icon: BarChart3 },
       { href: "/employee/payments", label: t.payments, icon: CreditCard },
       { href: "/employee/peer-reviews", label: t.peerReview, icon: MessageSquare },
       { href: "/employee/my-review", label: t.myReview, icon: Star },
+      { href: "/employee/notifications", label: t.notifications, icon: Bell },
     ],
     []
   )
@@ -540,6 +546,11 @@ export function EmployeeShell({ children }: EmployeeShellProps) {
                 <Link href={tab.href}>
                   <Icon className="mr-2 size-4" />
                   {pick(lang, tab.label)}
+                  {tab.href === "/employee/notifications" && unread > 0 && (
+                    <span className="ml-2 rounded-full bg-white/90 px-1.5 text-[11px] font-semibold text-zinc-900" aria-label={`${unread} unread`}>
+                      {unread > 99 ? "99+" : unread}
+                    </span>
+                  )}
                 </Link>
               </Button>
             )

@@ -18,12 +18,15 @@ import {
   Trello,
   Settings,
   LogOut,
+  Megaphone,
+  Bell,
   type LucideIcon,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { LangToggle } from "@/components/mahberix/lang-toggle"
 import { useLang, pick } from "@/lib/i18n"
 import { clearAdminClientToken, isViceManagerClient } from "@/lib/admin-client-auth"
+import { useUnreadCount } from "@/components/notifications/use-unread-count"
 
 const allNavItems: { href: string; label: { en: string; am: string }; icon: LucideIcon; managerOnly?: boolean }[] = [
   { href: "/manager", label: { en: "Dashboard", am: "ዳሽቦርድ" }, icon: LayoutDashboard },
@@ -37,6 +40,8 @@ const allNavItems: { href: string; label: { en: string; am: string }; icon: Luci
   { href: "/manager/metrics", label: { en: "Reports", am: "ሪፖርቶች" }, icon: BarChart3 },
   { href: "/manager/peer-reviews", label: { en: "Peer Reviews", am: "የእኩዮች ግምገማ" }, icon: Star },
   { href: "/manager/payments", label: { en: "Payroll", am: "ደመወዝ" }, icon: Wallet },
+  { href: "/manager/broadcasts", label: { en: "Broadcasts", am: "ማስታወቂያዎች" }, icon: Megaphone },
+  { href: "/manager/notifications", label: { en: "Notifications", am: "ማሳወቂያዎች" }, icon: Bell },
   { href: "/manager/email-notifications", label: { en: "Email Notifications", am: "የኢሜይል ማሳወቂያ" }, icon: Mail, managerOnly: true },
   { href: "/manager/integrations", label: { en: "Integrations", am: "ውህደቶች" }, icon: Trello },
   { href: "/manager/settings", label: { en: "Settings", am: "ቅንብሮች" }, icon: Settings, managerOnly: true },
@@ -46,6 +51,7 @@ export function AdminNav({ onNavigate }: { onNavigate?: () => void }) {
   const { lang } = useLang()
   const pathname = usePathname()
   const [isVice, setIsVice] = useState(false)
+  const unread = useUnreadCount("manager")
 
   useEffect(() => {
     setIsVice(isViceManagerClient())
@@ -80,6 +86,11 @@ export function AdminNav({ onNavigate }: { onNavigate?: () => void }) {
           >
             <Icon className="h-4 w-4 shrink-0" />
             <span className="truncate">{pick(lang, item.label)}</span>
+            {item.href === "/manager/notifications" && unread > 0 && (
+              <span className="ml-auto rounded-full bg-[#e78a53] px-1.5 text-[11px] font-semibold text-white" aria-label={`${unread} unread`}>
+                {unread > 99 ? "99+" : unread}
+              </span>
+            )}
           </Link>
         )
       })}
