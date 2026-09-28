@@ -11,9 +11,9 @@ const columns: (lang: Lang) => Col[] = (lang) => [
   {
     title: pick(lang, { en: "Product", am: "ምርት" }),
     links: [
-      { label: pick(lang, { en: "Features", am: "ገጽታዎች" }), href: "#features" },
-      { label: pick(lang, { en: "Tour", am: "ጉብኝት" }), href: "#showcase" },
-      { label: pick(lang, { en: "FAQ", am: "ተደጋጋሚ ጥያቄ" }), href: "#faq" },
+      { label: pick(lang, { en: "Features", am: "ገጽታዎች" }), href: "/#features" },
+      { label: pick(lang, { en: "Tour", am: "ጉብኝት" }), href: "/#showcase" },
+      { label: pick(lang, { en: "FAQ", am: "ተደጋጋሚ ጥያቄ" }), href: "/#faq" },
     ],
   },
   {
@@ -26,6 +26,8 @@ const columns: (lang: Lang) => Col[] = (lang) => [
   {
     title: pick(lang, { en: "Company", am: "ኩባንያ" }),
     links: [
+      { label: pick(lang, { en: "Terms of Service", am: "የአገልግሎት ውል" }), href: "/terms" },
+      { label: pick(lang, { en: "Privacy Policy", am: "የግላዊነት ፖሊሲ" }), href: "/privacy" },
       { label: `${pick(lang, { en: "Contact", am: "አግኙን" })}: ${brand.email}`, href: `mailto:${brand.email}` },
     ],
   },

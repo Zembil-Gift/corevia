@@ -351,11 +351,11 @@ export default function SignupPage() {
                 />
                 <label htmlFor="terms" className="text-sm text-muted-foreground">
                   {pick(lang, copy.agree)}{" "}
-                  <Link href="#" className="font-medium text-emerald-400 hover:text-emerald-300">
+                  <Link href="/terms" target="_blank" className="font-medium text-emerald-400 hover:text-emerald-300">
                     {pick(lang, copy.terms)}
                   </Link>{" "}
                   {pick(lang, copy.and)}{" "}
-                  <Link href="#" className="font-medium text-emerald-400 hover:text-emerald-300">
+                  <Link href="/privacy" target="_blank" className="font-medium text-emerald-400 hover:text-emerald-300">
                     {pick(lang, copy.privacy)}
                   </Link>
                 </label>
