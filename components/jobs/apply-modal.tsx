@@ -29,7 +29,7 @@ interface ApplyModalProps {
   fields?: ApplicationField[]
 }
 
-const RESUME_TYPES: ApplicationFileType[] = ["PDF", "DOC", "DOCX"]
+const RESUME_TYPES: ApplicationFileType[] = ["PDF", "DOCX"]
 
 /** Shared drag-and-drop file picker for the CV and any file fields. */
 function FileDrop({
@@ -386,7 +386,9 @@ export function ApplyModal({
                     const describedBy = errors[key] ? `${inputId}-error` : undefined
 
                     if (f.type === "FILE") {
-                      const types = f.fileTypes?.length ? f.fileTypes : RESUME_TYPES
+                      // Older forms may still list types the API no longer accepts.
+                      const allowed = f.fileTypes?.filter((t) => t in APPLICATION_FILE_TYPES) ?? []
+                      const types = allowed.length ? allowed : RESUME_TYPES
                       return (
                         <div key={f.id} className="space-y-2">
                           {label}

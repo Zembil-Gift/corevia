@@ -7,7 +7,7 @@ export type JobEmploymentTypeApi =
 export type JobStatusApi = "DRAFT" | "OPEN" | "CLOSED"
 
 export type ApplicationFieldType = "LINK" | "FILE" | "TEXT"
-export type ApplicationFileType = "PDF" | "DOC" | "DOCX" | "ODT" | "RTF" | "TXT" | "MD"
+export type ApplicationFileType = "PDF" | "DOCX"
 
 /** A manager-defined question on a job's application form. */
 export interface ApplicationField {
@@ -43,12 +43,7 @@ export const EXPERIENCE_LEVELS = ["Entry level", "Junior", "Mid level", "Senior"
 /** Readable document formats applicants may upload (mirrors the backend's FileType). */
 export const APPLICATION_FILE_TYPES: Record<ApplicationFileType, { label: string; extensions: string[] }> = {
   PDF: { label: "PDF", extensions: ["pdf"] },
-  DOC: { label: "Word (.doc)", extensions: ["doc"] },
   DOCX: { label: "Word (.docx)", extensions: ["docx"] },
-  ODT: { label: "OpenDocument (.odt)", extensions: ["odt"] },
-  RTF: { label: "Rich text (.rtf)", extensions: ["rtf"] },
-  TXT: { label: "Plain text (.txt)", extensions: ["txt"] },
-  MD: { label: "Markdown (.md)", extensions: ["md", "markdown"] },
 }
 
 export const MAX_APPLICATION_FILE_BYTES = 10 * 1024 * 1024
