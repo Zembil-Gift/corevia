@@ -29,7 +29,7 @@ export function ApplicationInterviews({ application, interviews, onChange }: Pro
   const [dialog, setDialog] = useState<{ interview: Interview | null } | null>(null)
   const [busyId, setBusyId] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const closed = application.status === "HIRED" || application.status === "REJECTED"
+  const canSchedule = application.status === "SELECTED_FOR_INTERVIEW"
 
   const run = async (id: number, work: () => Promise<Interview>) => {
     setBusyId(id)
@@ -103,7 +103,7 @@ export function ApplicationInterviews({ application, interviews, onChange }: Pro
         )
       })}
 
-      {!closed && (
+      {canSchedule && (
         <Button type="button" size="sm" variant="outline" onClick={() => setDialog({ interview: null })}>
           <CalendarClock className="size-4" /> {interviews.length ? "Schedule another" : "Schedule interview"}
         </Button>

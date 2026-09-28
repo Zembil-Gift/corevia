@@ -168,10 +168,8 @@ export default function AdminJobApplicantsPage() {
     fetchJobInterviews(jobId).then(setInterviews).catch(() => setInterviews([]))
   }, [jobId])
 
-  // Scheduling can move an applicant to SELECTED_FOR_INTERVIEW, so reload the list too.
   const handleInterviewChange = (changed: Interview) => {
     setInterviews((prev) => [changed, ...prev.filter((i) => i.id !== changed.id)])
-    void fetchApplications()
   }
 
   useEffect(() => {
