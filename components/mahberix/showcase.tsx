@@ -180,7 +180,7 @@ const features: Feature[] = [
 
 export function Showcase() {
   return (
-    <section id="showcase" className="relative scroll-mt-20 overflow-hidden border-t border-border bg-background">
+    <section id="showcase" className="relative scroll-mt-20 overflow-hidden border-t border-border bg-background pt-24 sm:pt-28">
       {/* Ambient backdrop */}
       <div
         aria-hidden
