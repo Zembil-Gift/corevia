@@ -15,6 +15,7 @@ import type {
 import type { SubOrganization } from "@/lib/sub-orgs-api"
 import { ApplicationInterviews } from "@/components/admin/application-interviews"
 import { fetchJobInterviews, type Interview } from "@/lib/interviews-api"
+import { parseAiOverview } from "@/lib/ai-overview"
 
 const INTERVIEW_ELIGIBLE_STATUSES = new Set(["APPLIED", "UNDER_REVIEW"])
 const STATUS_FILTERS: Array<"ALL" | ApplicationStatus> = [
@@ -30,32 +31,6 @@ type AiOverviewState =
   | { state: "loading" }
   | { state: "error"; message: string }
   | { state: "loaded"; data: JobApplicationAiOverviewApi }
-
-type ParsedAiOverview = {
-  matchScore: number | null
-  strengths: string[]
-  weaknesses: string[]
-  overallAssessment: string | null
-}
-
-const parseAiOverview = (text: string | null): ParsedAiOverview | null => {
-  if (!text) return null
-  try {
-    const raw = JSON.parse(text) as Record<string, unknown>
-    const matchScore = typeof raw.matchScore === "number" ? raw.matchScore : null
-    const strengths = Array.isArray(raw.strengths)
-      ? raw.strengths.filter((item): item is string => typeof item === "string")
-      : []
-    const weaknesses = Array.isArray(raw.weaknesses)
-      ? raw.weaknesses.filter((item): item is string => typeof item === "string")
-      : []
-    const overallAssessment =
-      typeof raw.overallAssessment === "string" ? raw.overallAssessment : null
-    return { matchScore, strengths, weaknesses, overallAssessment }
-  } catch {
-    return null
-  }
-}
 
 const normalizeScore = (value: number | null) => {
   if (typeof value !== "number" || !Number.isFinite(value)) return null

@@ -25,7 +25,26 @@ export type Interview = {
   /** True when the invites went out through the organizer's Google Calendar. */
   googleCalendarEvent: boolean
   participants: InterviewParticipant[]
+  /** One entry per interviewer; recommendation/comments/submittedAt stay null until they submit. */
+  feedback: InterviewFeedback[]
   createdAt: string
+}
+
+export type Recommendation = "STRONG_HIRE" | "HIRE" | "NO_HIRE" | "STRONG_NO_HIRE"
+
+export const RECOMMENDATION_LABEL: Record<Recommendation, string> = {
+  STRONG_HIRE: "Strong hire",
+  HIRE: "Hire",
+  NO_HIRE: "No hire",
+  STRONG_NO_HIRE: "Strong no hire",
+}
+
+export type InterviewFeedback = {
+  interviewerName: string | null
+  interviewerEmail: string
+  recommendation: Recommendation | null
+  comments: string | null
+  submittedAt: string | null
 }
 
 export type InterviewInput = {

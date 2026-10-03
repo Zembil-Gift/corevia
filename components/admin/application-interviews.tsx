@@ -5,13 +5,55 @@ import { CalendarClock, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { confirmDialog } from "@/components/ui/app-dialog"
 import { InterviewDialog } from "@/components/admin/interview-dialog"
-import { cancelInterview, setInterviewOutcome, type Interview } from "@/lib/interviews-api"
+import { RECOMMENDATION_LABEL, cancelInterview, setInterviewOutcome, type Interview } from "@/lib/interviews-api"
 
 const STATUS_LABEL: Record<Interview["status"], string> = {
   SCHEDULED: "Scheduled",
   COMPLETED: "Completed",
   CANCELLED: "Cancelled",
   NO_SHOW: "No-show",
+}
+
+const RECOMMENDATION_TONE: Record<keyof typeof RECOMMENDATION_LABEL, string> = {
+  STRONG_HIRE: "text-emerald-400",
+  HIRE: "text-emerald-300",
+  NO_HIRE: "text-rose-300",
+  STRONG_NO_HIRE: "text-rose-400",
+}
+
+/** Interviewers' feedback from their no-login links; pending ones are listed by name. */
+function InterviewFeedbackList({ interview }: { interview: Interview }) {
+  const feedback = interview.feedback ?? []
+  if (!feedback.length) return null
+  const submitted = feedback.filter((f) => f.submittedAt)
+  const pending = feedback.filter((f) => !f.submittedAt)
+  return (
+    <details className="mt-1.5" open={submitted.length > 0}>
+      <summary className="cursor-pointer text-zinc-400 hover:text-white">
+        Feedback {submitted.length}/{feedback.length}
+      </summary>
+      <ul className="mt-1.5 space-y-2">
+        {submitted.map((f) => (
+          <li key={f.interviewerEmail} className="rounded-md border border-zinc-800 p-2">
+            <p className="font-medium text-zinc-200">
+              {f.interviewerName ?? f.interviewerEmail}
+              {f.recommendation && (
+                <span className={`ml-1.5 ${RECOMMENDATION_TONE[f.recommendation]}`}>
+                  · {RECOMMENDATION_LABEL[f.recommendation]}
+                </span>
+              )}
+            </p>
+            <p className="mt-1 whitespace-pre-wrap break-words text-zinc-400">{f.comments}</p>
+          </li>
+        ))}
+      </ul>
+      {pending.length > 0 && interview.status !== "CANCELLED" && interview.status !== "NO_SHOW" && (
+        <p className="mt-1.5 text-zinc-500">
+          Waiting for: {pending.map((f) => f.interviewerName ?? f.interviewerEmail).join(", ")}
+        </p>
+      )}
+    </details>
+  )
 }
 
 const formatWhen = (i: Interview) =>
@@ -74,6 +116,7 @@ export function ApplicationInterviews({ application, interviews, onChange }: Pro
                 Meeting link
               </a>
             )}
+            <InterviewFeedbackList interview={i} />
             {i.status === "SCHEDULED" && (
               <div className="mt-1.5 flex flex-wrap gap-1.5">
                 {busyId === i.id ? (
