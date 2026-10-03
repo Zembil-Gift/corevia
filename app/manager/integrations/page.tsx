@@ -1,5 +1,6 @@
 import { TrelloIntegration } from "@/components/admin/trello-integration"
 import { GitHubIntegration } from "@/components/admin/github-integration"
+import { ZoomIntegration } from "@/components/admin/zoom-integration"
 
 export default function IntegrationsPage() {
   return (
@@ -16,6 +17,7 @@ export default function IntegrationsPage() {
         {/* Google (Calendar + Sheets) hidden until it works; restore <GoogleIntegration />. */}
         <TrelloIntegration />
         <GitHubIntegration />
+        <ZoomIntegration />
       </div>
     </div>
   )

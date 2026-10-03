@@ -1,4 +1,5 @@
 export type InterviewMode = "ONLINE" | "IN_PERSON"
+export type MeetingProvider = "GOOGLE_MEET" | "ZOOM"
 export type InterviewStatus = "SCHEDULED" | "COMPLETED" | "CANCELLED" | "NO_SHOW"
 
 export type InterviewParticipant = {
@@ -53,6 +54,8 @@ export type InterviewInput = {
   mode: InterviewMode
   location: string
   meetingUrl: string
+  /** Creates the link in the manager's connected account when meetingUrl is empty. */
+  meetingProvider: MeetingProvider | null
   notes: string
   managerIds: number[]
   employeeIds: number[]

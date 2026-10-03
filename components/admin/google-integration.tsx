@@ -17,7 +17,7 @@ const FEATURES: { key: GoogleFeature; label: string; description: string; icon: 
   {
     key: "calendar",
     label: "Google Calendar",
-    description: "Interviews you schedule go into your calendar, and Google sends the invites with a Meet link.",
+    description: "Interviews you schedule go into your calendar, and Google sends the invites with a Meet link guests join without asking.",
     icon: CalendarDays,
     managerOnly: true,
   },

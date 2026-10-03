@@ -7,17 +7,20 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { fetchGoogleConnection } from "@/lib/google-connect-api"
+import { fetchZoomConnection } from "@/lib/zoom-connect-api"
 import {
   fetchParticipantOptions,
   rescheduleInterview,
   scheduleInterview,
   type Interview,
   type InterviewMode,
+  type MeetingProvider,
   type ParticipantOption,
   type ParticipantOptions,
 } from "@/lib/interviews-api"
 
 const DURATIONS = [30, 45, 60, 90, 120]
+const PROVIDER_LABEL: Record<MeetingProvider, string> = { GOOGLE_MEET: "Google Meet", ZOOM: "Zoom" }
 
 const pad = (n: number) => String(n).padStart(2, "0")
 const localDate = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
@@ -36,6 +39,9 @@ type Props = {
 export function InterviewDialog({ open, onOpenChange, applicationId, candidateName, interview, onSaved }: Props) {
   const [options, setOptions] = useState<ParticipantOptions | null>(null)
   const [calendarConnected, setCalendarConnected] = useState(false)
+  const [providers, setProviders] = useState<MeetingProvider[]>([])
+  /** null = the manager pastes a link. */
+  const [provider, setProvider] = useState<MeetingProvider | null>(null)
   const [date, setDate] = useState("")
   const [time, setTime] = useState("10:00")
   const [duration, setDuration] = useState(60)
@@ -52,9 +58,15 @@ export function InterviewDialog({ open, onOpenChange, applicationId, candidateNa
   useEffect(() => {
     if (!open) return
     setError(null)
-    fetchGoogleConnection()
-      .then((c) => setCalendarConnected(c.calendar))
-      .catch(() => setCalendarConnected(false))
+    Promise.all([
+      fetchGoogleConnection().then((c) => c.calendar).catch(() => false),
+      fetchZoomConnection().then((c) => c.connected).catch(() => false),
+    ]).then(([google, zoom]) => {
+      const available: MeetingProvider[] = [...(google ? ["GOOGLE_MEET" as const] : []), ...(zoom ? ["ZOOM" as const] : [])]
+      setCalendarConnected(google)
+      setProviders(available)
+      setProvider(interview?.meetingUrl ? null : (available[0] ?? null))
+    })
     const me: Promise<{ email?: string } | null> = interview
       ? Promise.resolve(null)
       : fetch("/api/manager/me", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).catch(() => null)
@@ -104,7 +116,8 @@ export function InterviewDialog({ open, onOpenChange, applicationId, candidateNa
       endAt: new Date(start.getTime() + duration * 60000).toISOString(),
       mode,
       location: mode === "IN_PERSON" ? location : "",
-      meetingUrl: mode === "ONLINE" ? meetingUrl : "",
+      meetingUrl: mode === "ONLINE" && !provider ? meetingUrl : "",
+      meetingProvider: mode === "ONLINE" ? provider : null,
       notes,
       managerIds,
       employeeIds,
@@ -125,8 +138,8 @@ export function InterviewDialog({ open, onOpenChange, applicationId, candidateNa
   const delivery = calendarConnected
     ? interview && !interview.googleCalendarEvent
       ? "Updates are emailed with a calendar attachment, like the original invitation."
-      : `Added to your Google Calendar. Google sends the invitations${mode === "ONLINE" && !meetingUrl ? " with a Meet link" : ""}.`
-    : "Invitations are emailed with a calendar attachment. Connect Google Calendar in Integrations to send them from your calendar with a Meet link."
+      : "Added to your Google Calendar. Google sends the invitations."
+    : "Invitations are emailed with a calendar attachment. Connect Google Calendar in Integrations to send them from your calendar."
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -186,13 +199,32 @@ export function InterviewDialog({ open, onOpenChange, applicationId, candidateNa
                 ))}
               </div>
               {mode === "ONLINE" ? (
-                <Input
-                  aria-label="Meeting link"
-                  type="url"
-                  placeholder={calendarConnected ? "Leave empty to create a Google Meet link" : "Meeting link (Zoom, Meet, Teams…)"}
-                  value={meetingUrl}
-                  onChange={(e) => setMeetingUrl(e.target.value)}
-                />
+                <>
+                  {/* Rescheduling keeps the existing link, so only new links get a provider choice. */}
+                  {providers.length > 0 && !interview?.meetingUrl && (
+                    <div className="flex flex-wrap gap-4 text-sm text-zinc-300">
+                      {[...providers, null].map((p) => (
+                        <label key={p ?? "link"} className="flex items-center gap-2">
+                          <input type="radio" name="iv-provider" checked={provider === p} onChange={() => setProvider(p)} />
+                          {p ? PROVIDER_LABEL[p] : "Paste a link"}
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                  {provider ? (
+                    <p className="text-sm text-zinc-400">
+                      A {PROVIDER_LABEL[provider]} link is created automatically. Everyone invited joins without waiting to be admitted.
+                    </p>
+                  ) : (
+                    <Input
+                      aria-label="Meeting link"
+                      type="url"
+                      placeholder="Meeting link (Zoom, Meet, Teams…)"
+                      value={meetingUrl}
+                      onChange={(e) => setMeetingUrl(e.target.value)}
+                    />
+                  )}
+                </>
               ) : (
                 <Input aria-label="Location" placeholder="Office address or room" value={location} onChange={(e) => setLocation(e.target.value)} />
               )}

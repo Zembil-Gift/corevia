@@ -10,7 +10,8 @@ export type GoogleConnection = {
 export type GoogleFeature = "calendar" | "sheets"
 
 const SCOPES: Record<GoogleFeature, string> = {
-  calendar: "https://www.googleapis.com/auth/calendar.events",
+  // Meet lets interview links open without knocking.
+  calendar: "https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/meetings.space.created",
   sheets: "https://www.googleapis.com/auth/drive.file",
 }
 
