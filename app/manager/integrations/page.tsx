@@ -1,3 +1,4 @@
+import { GoogleIntegration } from "@/components/admin/google-integration"
 import { TrelloIntegration } from "@/components/admin/trello-integration"
 import { GitHubIntegration } from "@/components/admin/github-integration"
 import { ZoomIntegration } from "@/components/admin/zoom-integration"
@@ -14,7 +15,7 @@ export default function IntegrationsPage() {
       </div>
 
       <div className="space-y-6">
-        {/* Google (Calendar + Sheets) hidden until it works; restore <GoogleIntegration />. */}
+        <GoogleIntegration />
         <TrelloIntegration />
         <GitHubIntegration />
         <ZoomIntegration />
